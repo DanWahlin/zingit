@@ -30,6 +30,19 @@ export class PokeToolbar extends LitElement {
       color: #9ca3af;
     }
 
+    .status.clickable {
+      cursor: pointer;
+      padding: 4px 8px;
+      margin: -4px -8px;
+      border-radius: 4px;
+      transition: background 0.15s ease;
+    }
+
+    .status.clickable:hover {
+      background: #374151;
+      color: #d1d5db;
+    }
+
     .status-dot {
       width: 8px;
       height: 8px;
@@ -195,7 +208,11 @@ export class PokeToolbar extends LitElement {
 
         <div class="divider"></div>
 
-        <div class="status">
+        <div
+          class="status ${this.connected && this.agent ? 'clickable' : ''}"
+          title="${this.connected && this.agent ? 'Change AI agent' : ''}"
+          @click=${this.handleAgentClick}
+        >
           <span class="status-dot ${statusClass}"></span>
           <span>${statusText}</span>
         </div>
@@ -360,6 +377,12 @@ export class PokeToolbar extends LitElement {
 
   private handleToggleResponse() {
     this.dispatchEvent(new CustomEvent('toggle-response', { bubbles: true, composed: true }));
+  }
+
+  private handleAgentClick() {
+    if (this.connected && this.agent) {
+      this.dispatchEvent(new CustomEvent('change-agent', { bubbles: true, composed: true }));
+    }
   }
 }
 

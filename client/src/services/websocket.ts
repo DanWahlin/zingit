@@ -108,10 +108,15 @@ export class WebSocketClient {
     }
   }
 
-  sendBatch(data: BatchData, projectDir?: string): void {
+  sendBatch(data: BatchData, projectDir?: string, agent?: string): void {
     // Include projectDir if specified (overrides server default)
+    // Include agent if specified (for initial batch without prior agent selection)
     const batchData = projectDir ? { ...data, projectDir } : data;
-    this.send({ type: 'batch', data: batchData });
+    const message: { type: string; data: BatchData; agent?: string } = { type: 'batch', data: batchData };
+    if (agent) {
+      message.agent = agent;
+    }
+    this.send(message);
   }
 
   sendMessage(content: string): void {
@@ -124,6 +129,14 @@ export class WebSocketClient {
 
   sendStop(): void {
     this.send({ type: 'stop' });
+  }
+
+  requestAgents(): void {
+    this.send({ type: 'get_agents' });
+  }
+
+  selectAgent(agent: string): void {
+    this.send({ type: 'select_agent', agent });
   }
 
   on(event: WSEventType, handler: WSEventHandler): void {

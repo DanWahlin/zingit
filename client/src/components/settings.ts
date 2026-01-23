@@ -3,7 +3,7 @@
 
 import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import type { PokeSettings } from '../types/index.js';
+import type { PokeSettings, AgentInfo } from '../types/index.js';
 
 @customElement('poke-settings')
 export class PokeSettingsPanel extends LitElement {
@@ -86,7 +86,8 @@ export class PokeSettingsPanel extends LitElement {
     }
 
     input[type="text"],
-    input[type="url"] {
+    input[type="url"],
+    select {
       width: 100%;
       padding: 10px 12px;
       font-size: 14px;
@@ -98,7 +99,22 @@ export class PokeSettingsPanel extends LitElement {
       box-sizing: border-box;
     }
 
-    input:focus {
+    select {
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 36px;
+    }
+
+    select option {
+      background: #111827;
+      color: white;
+    }
+
+    input:focus,
+    select:focus {
       outline: none;
       border-color: #3b82f6;
     }
@@ -196,6 +212,7 @@ export class PokeSettingsPanel extends LitElement {
 
   @property({ type: Boolean }) open = false;
   @property({ type: String }) serverProjectDir = '';  // Server's default
+  @property({ type: Array }) agents: AgentInfo[] = [];  // Available agents from server
   @property({ type: Object }) settings: PokeSettings = {
     wsUrl: 'ws://localhost:8765',
     highlightColor: '#fbbf24',
@@ -204,7 +221,9 @@ export class PokeSettingsPanel extends LitElement {
     completedColor: '#22c55e',
     autoConnect: true,
     projectDir: '',
-    playSoundOnComplete: true
+    playSoundOnComplete: true,
+    selectedAgent: '',
+    autoRefresh: false
   };
 
   private localSettings: PokeSettings = { ...this.settings };
@@ -243,6 +262,28 @@ export class PokeSettingsPanel extends LitElement {
                 @input=${(e: Event) => this.updateSetting('wsUrl', (e.target as HTMLInputElement).value)}
                 placeholder="ws://localhost:8765"
               />
+            </div>
+
+            <div class="field">
+              <label for="agent">AI Agent</label>
+              <select
+                id="agent"
+                @change=${(e: Event) => this.handleAgentChange((e.target as HTMLSelectElement).value)}
+              >
+                ${this.agents.length === 0 ? html`
+                  <option value="">Connect to server to see agents</option>
+                ` : html`
+                  ${this.agents.map(agent => html`
+                    <option
+                      value=${agent.name}
+                      ?disabled=${!agent.available}
+                      ?selected=${agent.name === this.localSettings.selectedAgent}
+                    >
+                      ${agent.displayName}${agent.available ? '' : ' (not available)'}
+                    </option>
+                  `)}
+                `}
+              </select>
             </div>
 
             <div class="field">
@@ -327,6 +368,18 @@ export class PokeSettingsPanel extends LitElement {
                 <label class="checkbox-label" for="playSoundOnComplete">Play sound when agent completes</label>
               </div>
             </div>
+
+            <div class="field">
+              <div class="checkbox-field">
+                <input
+                  type="checkbox"
+                  id="autoRefresh"
+                  .checked=${this.localSettings.autoRefresh}
+                  @change=${(e: Event) => this.updateSetting('autoRefresh', (e.target as HTMLInputElement).checked)}
+                />
+                <label class="checkbox-label" for="autoRefresh">Auto refresh page when agent completes</label>
+              </div>
+            </div>
           </div>
 
           <div class="footer">
@@ -345,6 +398,16 @@ export class PokeSettingsPanel extends LitElement {
   private updateSetting<K extends keyof PokeSettings>(key: K, value: PokeSettings[K]) {
     this.localSettings = { ...this.localSettings, [key]: value };
     this.requestUpdate();
+  }
+
+  private handleAgentChange(agentName: string) {
+    this.updateSetting('selectedAgent', agentName);
+    // Dispatch event so parent can immediately select the agent
+    this.dispatchEvent(new CustomEvent('agent-change', {
+      bubbles: true,
+      composed: true,
+      detail: { agent: agentName }
+    }));
   }
 
   private handleClose() {

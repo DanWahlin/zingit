@@ -3,7 +3,7 @@
 
 import { LitElement, html, css } from 'lit';
 import { customElement, state, query } from 'lit/decorators.js';
-import type { Annotation, PokeSettings, WSMessage } from '../types/index.js';
+import type { Annotation, PokeSettings, WSMessage, AgentInfo } from '../types/index.js';
 import { WebSocketClient } from '../services/websocket.js';
 import { generateSelector, generateIdentifier, getElementHtml, getParentContext, getTextContent, getSiblingContext, getParentHtml } from '../services/selector.js';
 import { saveAnnotations, loadAnnotations, clearAnnotations, saveSettings, loadSettings, saveAnnotationActive, loadAnnotationActive } from '../services/storage.js';
@@ -18,6 +18,7 @@ import './settings.js';
 import './response.js';
 import './toast.js';
 import './help.js';
+import './agent-picker.js';
 import type { PokeToast } from './toast.js';
 
 @customElement('poke-ui')
@@ -55,6 +56,10 @@ export class PokeUI extends LitElement {
   @state() private agentModel = '';
   @state() private serverProjectDir = '';  // Server's default project directory
   @state() private annotationActive = loadAnnotationActive();
+  @state() private availableAgents: AgentInfo[] = [];
+  @state() private agentPickerOpen = false;
+  @state() private agentPickerLoading = false;
+  @state() private agentPickerError = '';
 
   @query('poke-toast') private toast!: PokeToast;
 
@@ -153,6 +158,9 @@ export class PokeUI extends LitElement {
       } else {
         this.toast.success('Connected to server');
       }
+
+      // Request available agents from server
+      this.ws?.requestAgents();
     });
 
     this.ws.on('close', () => {
@@ -212,6 +220,11 @@ export class PokeUI extends LitElement {
         if (this.settings.playSoundOnComplete) {
           this.playCompletionSound();
         }
+        // Auto refresh page if enabled
+        if (this.settings.autoRefresh) {
+          this.toast.info('Refreshing page...');
+          setTimeout(() => window.location.reload(), 1000);
+        }
         break;
 
       case 'error':
@@ -230,6 +243,50 @@ export class PokeUI extends LitElement {
         this.responseContent = '';
         this.responseError = '';
         break;
+
+      case 'agents':
+        // Received list of available agents from server
+        this.availableAgents = msg.agents || [];
+        this.agentPickerLoading = false;
+        this.agentPickerError = '';
+
+        // If no agent is currently selected, show the agent picker
+        if (!this.agentName && this.availableAgents.length > 0) {
+          // Check if user has a previously selected agent in settings
+          if (this.settings.selectedAgent) {
+            // Try to use the previously selected agent
+            const previousAgent = this.availableAgents.find(a => a.name === this.settings.selectedAgent);
+            if (previousAgent?.available) {
+              this.ws?.selectAgent(this.settings.selectedAgent);
+            } else {
+              // Previously selected agent not available, show picker
+              this.agentPickerOpen = true;
+            }
+          } else {
+            // No previously selected agent, show picker
+            this.agentPickerOpen = true;
+          }
+        }
+        break;
+
+      case 'agent_selected':
+        // Agent was successfully selected
+        this.agentName = msg.agent || '';
+        this.agentModel = msg.model || '';
+        this.agentPickerOpen = false;
+
+        // Save selection to settings
+        this.settings = { ...this.settings, selectedAgent: this.agentName };
+        saveSettings(this.settings);
+
+        this.toast.success(`Using ${msg.agent || 'agent'}`);
+        break;
+
+      case 'agent_error':
+        // Error selecting agent
+        this.agentPickerError = msg.message || 'Failed to select agent';
+        this.toast.error(msg.message || 'Failed to select agent');
+        break;
     }
   }
 
@@ -246,8 +303,13 @@ export class PokeUI extends LitElement {
       return;
     }
 
+    // Ignore if no agent is selected (agent picker should be showing)
+    if (!this.agentName) {
+      return;
+    }
+
     // Ignore if modal is open
-    if (this.modalOpen || this.settingsOpen) {
+    if (this.modalOpen || this.settingsOpen || this.agentPickerOpen) {
       return;
     }
 
@@ -276,8 +338,14 @@ export class PokeUI extends LitElement {
       return;
     }
 
-    // Ignore if modal or settings open
-    if (this.modalOpen || this.settingsOpen) {
+    // Ignore if no agent is selected
+    if (!this.agentName) {
+      this.highlightVisible = false;
+      return;
+    }
+
+    // Ignore if modal, settings, or agent picker open
+    if (this.modalOpen || this.settingsOpen || this.agentPickerOpen) {
       this.highlightVisible = false;
       return;
     }
@@ -415,6 +483,7 @@ export class PokeUI extends LitElement {
           @close=${this.handleClose}
           @reconnect=${this.handleReconnect}
           @toggle-response=${() => this.responseOpen = !this.responseOpen}
+          @change-agent=${() => this.agentPickerOpen = true}
         ></poke-toolbar>
       </div>
 
@@ -434,9 +503,22 @@ export class PokeUI extends LitElement {
         .open=${this.settingsOpen}
         .settings=${this.settings}
         .serverProjectDir=${this.serverProjectDir}
+        .agents=${this.availableAgents}
         @close=${() => this.settingsOpen = false}
         @save=${this.handleSettingsSave}
+        @agent-change=${this.handleAgentChange}
       ></poke-settings>
+
+      ${this.agentPickerOpen ? html`
+        <poke-agent-picker
+          .agents=${this.availableAgents}
+          .loading=${this.agentPickerLoading}
+          .error=${this.agentPickerError}
+          .currentAgent=${this.agentName}
+          @select=${this.handleAgentPickerSelect}
+          @close=${() => this.agentPickerOpen = false}
+        ></poke-agent-picker>
+      ` : ''}
 
       <poke-response
         .open=${this.responseOpen}
@@ -462,9 +544,9 @@ export class PokeUI extends LitElement {
     const { notes, editMode, annotationId } = e.detail;
 
     if (editMode) {
-      // Update existing annotation
+      // Update existing annotation and reset status to pending so it can be sent again
       this.annotations = this.annotations.map(a =>
-        a.id === annotationId ? { ...a, notes } : a
+        a.id === annotationId ? { ...a, notes, status: 'pending' as const } : a
       );
       saveAnnotations(this.annotations);
       this.modalOpen = false;
@@ -618,6 +700,20 @@ export class PokeUI extends LitElement {
     if (this.ws) {
       this.ws.setUrl(this.settings.wsUrl);
       this.ws.forceReconnect();
+    }
+  }
+
+  private handleAgentPickerSelect(e: CustomEvent<{ agent: string }>) {
+    const agentName = e.detail.agent;
+    if (this.ws && this.wsConnected) {
+      this.ws.selectAgent(agentName);
+    }
+  }
+
+  private handleAgentChange(e: CustomEvent<{ agent: string }>) {
+    const agentName = e.detail.agent;
+    if (this.ws && this.wsConnected && agentName !== this.agentName) {
+      this.ws.selectAgent(agentName);
     }
   }
 

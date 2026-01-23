@@ -14,15 +14,27 @@ interface ContentSegment {
 export class PokeResponse extends LitElement {
   static styles = css`
     :host {
-      display: block;
+      display: none;
+    }
+
+    :host([open]) {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 2147483646;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      pointer-events: auto;
     }
 
     .panel {
-      position: fixed;
-      bottom: 80px;
-      left: 50%;
-      transform: translateX(-50%);
       width: 500px;
       max-height: 60vh;
       background: #1f2937;
@@ -30,8 +42,6 @@ export class PokeResponse extends LitElement {
       box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
       display: flex;
       flex-direction: column;
-      z-index: 2147483646;
-      pointer-events: auto;
     }
 
     .header {
@@ -227,7 +237,7 @@ export class PokeResponse extends LitElement {
     }
   `;
 
-  @property({ type: Boolean }) open = false;
+  @property({ type: Boolean, reflect: true }) open = false;
   @property({ type: Boolean }) processing = false;
   @property({ type: String }) content = '';
   @property({ type: String }) toolStatus = '';

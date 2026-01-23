@@ -59,7 +59,9 @@ const defaultSettings: PokeSettings = {
   completedColor: '#22c55e',    // Completed (green)
   autoConnect: true,
   projectDir: '',               // Empty = use server default
-  playSoundOnComplete: true     // Play ding when agent completes
+  playSoundOnComplete: true,    // Play ding when agent completes
+  selectedAgent: '',            // Empty = show agent picker on first connect
+  autoRefresh: false            // Auto refresh page when agent completes (disabled by default)
 };
 
 export function saveSettings(settings: PokeSettings): void {

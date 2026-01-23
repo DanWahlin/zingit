@@ -4,59 +4,108 @@ import { WebSocketServer, WebSocket } from 'ws';
 import { CopilotAgent } from './agents/copilot.js';
 import { ClaudeCodeAgent } from './agents/claude.js';
 import { CodexAgent } from './agents/codex.js';
+import { detectAgents, type AgentInfo } from './utils/agent-detection.js';
 import type { Agent, AgentSession, WSIncomingMessage, WSOutgoingMessage } from './types.js';
 
 const PORT = parseInt(process.env.PORT || '8765', 10);
-const AGENT_TYPE = process.env.AGENT || 'copilot';
+
+// Legacy support: still allow AGENT env var for backwards compatibility
+const DEFAULT_AGENT = process.env.AGENT || null;
 
 if (!process.env.PROJECT_DIR) {
   console.error('ERROR: PROJECT_DIR environment variable is required');
-  console.error('Example: PROJECT_DIR=/path/to/your/project AGENT=claude npm run dev');
+  console.error('Example: PROJECT_DIR=/path/to/your/project npm run dev');
   process.exit(1);
 }
 
 const PROJECT_DIR: string = process.env.PROJECT_DIR;
 
-// Agent registry - choose agent via AGENT env var
-// AGENT=copilot npm run dev   -> Uses GitHub Copilot SDK
-// AGENT=claude npm run dev    -> Uses Claude Agent SDK
-// AGENT=codex npm run dev     -> Uses OpenAI Codex SDK
-const agents: Record<string, new () => Agent> = {
+// Agent registry
+const agentClasses: Record<string, new () => Agent> = {
   copilot: CopilotAgent,
   claude: ClaudeCodeAgent,
   codex: CodexAgent,
 };
 
-async function main(): Promise<void> {
-  // Initialize agent
-  const AgentClass = agents[AGENT_TYPE];
+// Cache for initialized agents (lazy initialization)
+const initializedAgents: Map<string, Agent> = new Map();
+
+/**
+ * Get or initialize an agent
+ */
+async function getAgent(agentName: string): Promise<Agent> {
+  // Check cache first
+  const cached = initializedAgents.get(agentName);
+  if (cached) {
+    return cached;
+  }
+
+  // Initialize new agent
+  const AgentClass = agentClasses[agentName];
   if (!AgentClass) {
-    console.error(`Unknown agent: ${AGENT_TYPE}`);
-    console.error(`Available agents: ${Object.keys(agents).join(', ')}`);
-    process.exit(1);
+    throw new Error(`Unknown agent: ${agentName}`);
   }
 
   const agent = new AgentClass();
+  await agent.start();
+  initializedAgents.set(agentName, agent);
+  return agent;
+}
 
-  try {
-    await agent.start();
-  } catch (err) {
-    console.error(`Failed to start ${AGENT_TYPE}:`, (err as Error).message);
-    process.exit(1);
+// Connection state
+interface ConnectionState {
+  session: AgentSession | null;
+  agentName: string | null;
+  agent: Agent | null;
+}
+
+async function main(): Promise<void> {
+  // Detect available agents on startup
+  const availableAgents = detectAgents();
+  console.log('✓ Agent availability:');
+  for (const agent of availableAgents) {
+    const status = agent.available ? '✓' : '✗';
+    const version = agent.version ? ` (${agent.version})` : '';
+    const reason = agent.reason ? ` - ${agent.reason}` : '';
+    console.log(`  ${status} ${agent.displayName}${version}${reason}`);
+  }
+
+  // If DEFAULT_AGENT is set, pre-initialize it for backwards compatibility
+  if (DEFAULT_AGENT) {
+    const agentInfo = availableAgents.find(a => a.name === DEFAULT_AGENT);
+    if (agentInfo?.available) {
+      try {
+        await getAgent(DEFAULT_AGENT);
+        console.log(`✓ Pre-initialized agent: ${DEFAULT_AGENT}`);
+      } catch (err) {
+        console.warn(`⚠ Failed to pre-initialize ${DEFAULT_AGENT}:`, (err as Error).message);
+      }
+    }
   }
 
   // WebSocket server
   const wss = new WebSocketServer({ port: PORT });
   console.log(`✓ PokeUI server running on ws://localhost:${PORT}`);
-  console.log(`✓ Agent: ${AGENT_TYPE}`);
   console.log(`✓ Project directory: ${PROJECT_DIR}`);
+  if (DEFAULT_AGENT) {
+    console.log(`✓ Default agent: ${DEFAULT_AGENT}`);
+  } else {
+    console.log('✓ Dynamic agent selection enabled (client chooses agent)');
+  }
 
-  // Track sessions
-  const sessions = new Map<WebSocket, AgentSession>();
+  // Track connection states
+  const connections = new Map<WebSocket, ConnectionState>();
 
   wss.on('connection', (ws: WebSocket) => {
     console.log('Client connected');
-    let session: AgentSession | null = null;
+
+    // Initialize connection state
+    const state: ConnectionState = {
+      session: null,
+      agentName: DEFAULT_AGENT,  // Use default if set
+      agent: DEFAULT_AGENT ? initializedAgents.get(DEFAULT_AGENT) || null : null
+    };
+    connections.set(ws, state);
 
     ws.on('message', async (data: Buffer) => {
       let msg: WSIncomingMessage;
@@ -69,44 +118,121 @@ async function main(): Promise<void> {
 
       try {
         switch (msg.type) {
-          case 'batch':
+          case 'get_agents': {
+            // Return fresh agent availability info
+            const agents = detectAgents();
+            sendMessage(ws, { type: 'agents', agents });
+            break;
+          }
+
+          case 'select_agent': {
+            if (!msg.agent) {
+              sendMessage(ws, { type: 'agent_error', message: 'No agent specified' });
+              break;
+            }
+
+            // Check if agent is available
+            const agentInfo = detectAgents().find(a => a.name === msg.agent);
+            if (!agentInfo) {
+              sendMessage(ws, { type: 'agent_error', message: `Unknown agent: ${msg.agent}` });
+              break;
+            }
+            if (!agentInfo.available) {
+              sendMessage(ws, {
+                type: 'agent_error',
+                message: agentInfo.reason || `Agent ${msg.agent} is not available`,
+                agent: msg.agent
+              });
+              break;
+            }
+
+            // Destroy existing session if switching agents
+            if (state.session && state.agentName !== msg.agent) {
+              await state.session.destroy();
+              state.session = null;
+            }
+
+            // Initialize the agent
+            try {
+              state.agent = await getAgent(msg.agent);
+              state.agentName = msg.agent;
+              sendMessage(ws, {
+                type: 'agent_selected',
+                agent: msg.agent,
+                model: state.agent.model,
+                projectDir: PROJECT_DIR
+              });
+            } catch (err) {
+              sendMessage(ws, {
+                type: 'agent_error',
+                message: `Failed to initialize ${msg.agent}: ${(err as Error).message}`,
+                agent: msg.agent
+              });
+            }
+            break;
+          }
+
+          case 'batch': {
             if (!msg.data) break;
+
+            // Check if agent is selected
+            if (!state.agentName || !state.agent) {
+              // If agent specified in batch message, try to select it
+              if (msg.agent) {
+                const agentInfo = detectAgents().find(a => a.name === msg.agent);
+                if (!agentInfo?.available) {
+                  sendMessage(ws, {
+                    type: 'agent_error',
+                    message: `Agent ${msg.agent} is not available. Please select a different agent.`
+                  });
+                  break;
+                }
+                try {
+                  state.agent = await getAgent(msg.agent);
+                  state.agentName = msg.agent;
+                } catch (err) {
+                  sendMessage(ws, { type: 'error', message: (err as Error).message });
+                  break;
+                }
+              } else {
+                sendMessage(ws, { type: 'error', message: 'No agent selected. Please select an agent first.' });
+                break;
+              }
+            }
 
             // Use client-specified projectDir, or fall back to server default
             const projectDir = msg.data.projectDir || PROJECT_DIR;
 
-            if (!session) {
-              session = await agent.createSession(ws, projectDir);
-              sessions.set(ws, session);
+            if (!state.session) {
+              state.session = await state.agent.createSession(ws, projectDir);
             }
 
-            const prompt = agent.formatPrompt(msg.data, projectDir);
+            const prompt = state.agent.formatPrompt(msg.data, projectDir);
             sendMessage(ws, { type: 'processing' });
-            await session.send({ prompt });
+            await state.session.send({ prompt });
             break;
+          }
 
           case 'message':
-            if (session && msg.content) {
-              await session.send({ prompt: msg.content });
+            if (state.session && msg.content) {
+              await state.session.send({ prompt: msg.content });
             }
             break;
 
           case 'reset':
-            if (session) {
-              await session.destroy();
-              session = null;
-              sessions.delete(ws);
+            if (state.session) {
+              await state.session.destroy();
+              state.session = null;
             }
             sendMessage(ws, { type: 'reset_complete' });
             break;
 
           case 'stop':
             // Stop current agent execution
-            if (session) {
+            if (state.session) {
               console.log('Stopping agent execution...');
-              await session.destroy();
-              session = null;
-              sessions.delete(ws);
+              await state.session.destroy();
+              state.session = null;
             }
             sendMessage(ws, { type: 'idle' });
             break;
@@ -118,20 +244,21 @@ async function main(): Promise<void> {
 
     ws.on('close', async () => {
       console.log('Client disconnected');
-      if (session) {
-        await session.destroy();
-        sessions.delete(ws);
+      if (state.session) {
+        await state.session.destroy();
       }
+      connections.delete(ws);
     });
 
     ws.on('error', (err) => {
       console.error('WebSocket error:', err.message);
     });
 
+    // Send connected message with current state
     sendMessage(ws, {
       type: 'connected',
-      agent: AGENT_TYPE,
-      model: agent.model,
+      agent: state.agentName || undefined,
+      model: state.agent?.model,
       projectDir: PROJECT_DIR
     });
   });
@@ -139,10 +266,14 @@ async function main(): Promise<void> {
   // Graceful shutdown
   process.on('SIGINT', async () => {
     console.log('\nShutting down...');
-    for (const session of sessions.values()) {
-      await session.destroy();
+    for (const state of connections.values()) {
+      if (state.session) {
+        await state.session.destroy();
+      }
     }
-    await agent.stop();
+    for (const agent of initializedAgents.values()) {
+      await agent.stop();
+    }
     wss.close();
     process.exit(0);
   });

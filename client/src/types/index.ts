@@ -25,6 +25,17 @@ export interface PokeSettings {
   autoConnect: boolean;
   projectDir: string;            // Project directory for AI agent to work in
   playSoundOnComplete: boolean;  // Play a ding sound when agent completes
+  selectedAgent: string;         // Selected agent name (claude, copilot, codex)
+  autoRefresh: boolean;          // Auto refresh page when agent completes
+}
+
+export interface AgentInfo {
+  name: string;
+  displayName: string;
+  available: boolean;
+  version?: string;
+  reason?: string;
+  installCommand: string;
 }
 
 export interface BatchData {
@@ -49,7 +60,12 @@ export type WSMessageType =
   | 'batch'
   | 'message'
   | 'reset'
-  | 'reset_complete';
+  | 'reset_complete'
+  | 'get_agents'
+  | 'select_agent'
+  | 'agents'
+  | 'agent_selected'
+  | 'agent_error';
 
 export interface WSMessage {
   type: WSMessageType;
@@ -60,4 +76,5 @@ export interface WSMessage {
   model?: string;
   data?: BatchData;
   projectDir?: string;  // Server's default project directory (sent on connect)
+  agents?: AgentInfo[]; // Available agents (from 'agents' message)
 }

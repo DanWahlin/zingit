@@ -36,12 +36,13 @@ export interface BatchData {
   projectDir?: string;  // Client-specified project directory (overrides server default)
 }
 
-export type WSIncomingType = 'batch' | 'message' | 'reset' | 'stop';
+export type WSIncomingType = 'batch' | 'message' | 'reset' | 'stop' | 'get_agents' | 'select_agent';
 
 export interface WSIncomingMessage {
   type: WSIncomingType;
   data?: BatchData;
   content?: string;
+  agent?: string;  // For select_agent and batch messages
 }
 
 export type WSOutgoingType =
@@ -53,7 +54,19 @@ export type WSOutgoingType =
   | 'tool_end'
   | 'idle'
   | 'error'
-  | 'reset_complete';
+  | 'reset_complete'
+  | 'agents'
+  | 'agent_selected'
+  | 'agent_error';
+
+export interface AgentInfoMessage {
+  name: string;
+  displayName: string;
+  available: boolean;
+  version?: string;
+  reason?: string;
+  installCommand: string;
+}
 
 export interface WSOutgoingMessage {
   type: WSOutgoingType;
@@ -63,4 +76,5 @@ export interface WSOutgoingMessage {
   agent?: string;
   model?: string;
   projectDir?: string;  // Server's default project directory
+  agents?: AgentInfoMessage[];  // For 'agents' message type
 }
