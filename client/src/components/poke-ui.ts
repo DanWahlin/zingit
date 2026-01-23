@@ -204,11 +204,9 @@ export class PokeUI extends LitElement {
         this.processing = false;
         this.responseToolStatus = '';
         // Mark all processing annotations as completed
-        console.log('[PokeUI] Before status update:', this.annotations.map(a => ({ id: a.id, status: a.status })));
         this.annotations = this.annotations.map(a =>
           a.status === 'processing' ? { ...a, status: 'completed' as const } : a
         );
-        console.log('[PokeUI] After status update:', this.annotations.map(a => ({ id: a.id, status: a.status })));
         saveAnnotations(this.annotations);
         // Play completion sound if enabled
         if (this.settings.playSoundOnComplete) {
@@ -300,6 +298,12 @@ export class PokeUI extends LitElement {
     this.highlightVisible = true;
   }
 
+  private isEditableTarget(target: EventTarget | null): boolean {
+    if (!(target instanceof HTMLElement)) return false;
+    const tagName = target.tagName?.toLowerCase();
+    return tagName === 'input' || tagName === 'textarea' || target.isContentEditable;
+  }
+
   private handleDocumentKeydown(e: KeyboardEvent) {
     // Escape to close modals
     if (e.key === 'Escape') {
@@ -314,47 +318,30 @@ export class PokeUI extends LitElement {
       }
     }
 
-    // Cmd/Ctrl+Z for undo (ignore if typing in input)
-    if ((e.metaKey || e.ctrlKey) && e.key === 'z' && !e.shiftKey) {
-      const target = e.target as HTMLElement;
-      const tagName = target.tagName?.toLowerCase();
-      const isEditable = tagName === 'input' || tagName === 'textarea' || target.isContentEditable;
-      if (!isEditable && this.undoStack.length > 0) {
-        e.preventDefault();
-        this.handleUndo();
-      }
+    // Skip keyboard shortcuts if typing in an input field
+    if (this.isEditableTarget(e.target)) return;
+
+    // Cmd/Ctrl+Z for undo
+    if ((e.metaKey || e.ctrlKey) && e.key === 'z' && !e.shiftKey && this.undoStack.length > 0) {
+      e.preventDefault();
+      this.handleUndo();
     }
 
-    // "P" to toggle annotation mode (ignore if typing in input)
+    // "P" to toggle annotation mode
     if (e.key === 'p' || e.key === 'P') {
-      const target = e.target as HTMLElement;
-      const tagName = target.tagName?.toLowerCase();
-      const isEditable = tagName === 'input' || tagName === 'textarea' || target.isContentEditable;
-      if (!isEditable) {
-        this.handleToggle();
-      }
+      this.handleToggle();
     }
 
-    // "?" to show help (ignore if typing in input)
+    // "?" to show help
     if (e.key === '?') {
-      const target = e.target as HTMLElement;
-      const tagName = target.tagName?.toLowerCase();
-      const isEditable = tagName === 'input' || tagName === 'textarea' || target.isContentEditable;
-      if (!isEditable) {
-        this.helpOpen = !this.helpOpen;
-      }
+      this.helpOpen = !this.helpOpen;
     }
 
-    // Backtick (`) to toggle PokeUI visibility (ignore if typing in input)
+    // Backtick (`) to toggle PokeUI visibility
     if (e.key === '`') {
-      const target = e.target as HTMLElement;
-      const tagName = target.tagName?.toLowerCase();
-      const isEditable = tagName === 'input' || tagName === 'textarea' || target.isContentEditable;
-      if (!isEditable) {
-        this.isHidden = !this.isHidden;
-        if (!this.isHidden) {
-          this.toast.info('PokeUI visible');
-        }
+      this.isHidden = !this.isHidden;
+      if (!this.isHidden) {
+        this.toast.info('PokeUI visible');
       }
     }
   }
@@ -551,7 +538,6 @@ export class PokeUI extends LitElement {
     }
 
     // Mark pending annotations as processing
-    console.log('[PokeUI] Sending pending annotations:', pendingAnnotations.map(a => ({ id: a.id, status: a.status })));
     this.annotations = this.annotations.map(a =>
       a.status === 'pending' ? { ...a, status: 'processing' as const } : a
     );
