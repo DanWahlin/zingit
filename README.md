@@ -266,6 +266,30 @@ cd client && npm run typecheck
 cd server && npm run typecheck
 ```
 
+### Testing
+
+The server includes a test suite to validate agent WebSocket communication.
+
+```bash
+cd server
+
+# Run a single test (requires server to be running)
+npm run test                    # Simple scenario
+npm run test -- --scenario=multi    # Multiple annotations
+npm run test -- --scenario=followup # With follow-up message
+
+# Run all agents (starts/stops server automatically)
+npm run test:all               # Test all agents
+npm run test:copilot           # Test only Copilot
+npm run test:claude            # Test only Claude
+npm run test:codex             # Test only Codex
+
+# Dry run to see what would be tested
+./tests/run-all-tests.sh --dry-run
+```
+
+The test suite uses a sample project in `tests/test-project/` with a React file for agents to modify. Test scenarios send annotated UI changes and verify the agent responds correctly.
+
 ### Project Structure
 
 The client uses Lit 3.x web components with Shadow DOM enabled for style isolation. This is critical for the bookmarklet use case where PokeUI must not conflict with the host page's styles.

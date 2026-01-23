@@ -7,7 +7,12 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "typecheck": "tsc --noEmit",
-    "typecheck:watch": "tsc --noEmit --watch"
+    "typecheck:watch": "tsc --noEmit --watch",
+    "test": "tsx tests/test-agent.ts",
+    "test:all": "./tests/run-all-tests.sh",
+    "test:copilot": "./tests/run-all-tests.sh copilot",
+    "test:claude": "./tests/run-all-tests.sh claude",
+    "test:codex": "./tests/run-all-tests.sh codex"
   },
   "dependencies": {
     "@anthropic-ai/claude-agent-sdk": "^0.2.17",
