@@ -159,6 +159,7 @@ export class PokeToolbar extends LitElement {
   @property({ type: Boolean }) canUndo = false;
   @property({ type: String }) agent = '';
   @property({ type: String }) model = '';
+  @property({ type: Boolean }) hasResponse = false;  // Show response button when there's content
 
   render() {
     const statusClass = this.maxAttemptsReached
@@ -225,6 +226,18 @@ export class PokeToolbar extends LitElement {
               </button>
             `
         }
+
+        ${this.hasResponse ? html`
+          <button
+            class="btn-icon"
+            title="View agent response"
+            @click=${this.handleShowResponse}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+          </button>
+        ` : ''}
 
         <button
           class="btn-icon"
@@ -335,6 +348,10 @@ export class PokeToolbar extends LitElement {
 
   private handleUndo() {
     this.dispatchEvent(new CustomEvent('undo', { bubbles: true, composed: true }));
+  }
+
+  private handleShowResponse() {
+    this.dispatchEvent(new CustomEvent('show-response', { bubbles: true, composed: true }));
   }
 }
 

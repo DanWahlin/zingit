@@ -101,6 +101,70 @@ export function getParentContext(element: Element, levels = 2): string {
   return parents.join(' > ');
 }
 
+/**
+ * Get siblings of the element to provide positional context
+ * This helps the agent identify which element among similar ones
+ */
+export function getSiblingContext(element: Element): string {
+  const parent = element.parentElement;
+  if (!parent) return '';
+
+  const siblings = Array.from(parent.children);
+  const index = siblings.indexOf(element);
+  const total = siblings.length;
+
+  if (total === 1) {
+    return 'Only child element';
+  }
+
+  // Get preview of siblings for context
+  const siblingPreviews = siblings.map((sib, i) => {
+    const tag = sib.tagName.toLowerCase();
+    const text = sib.textContent?.trim().slice(0, 30) || '';
+    const marker = i === index ? ' ← THIS ONE' : '';
+    return `  ${i + 1}. <${tag}>${text ? `${text}...` : ''}</${tag}>${marker}`;
+  }).join('\n');
+
+  return `Position ${index + 1} of ${total} in parent:\n${siblingPreviews}`;
+}
+
+/**
+ * Get the parent element's HTML with the target element marked
+ * This provides crucial context for finding the right element in source files
+ */
+export function getParentHtml(element: Element, maxLength = 1000): string {
+  const parent = element.parentElement;
+  if (!parent || parent === document.body) {
+    return '';
+  }
+
+  // Clone parent and mark the target element
+  const clone = parent.cloneNode(true) as Element;
+
+  // Find the corresponding element in the clone by index
+  const siblings = Array.from(parent.children);
+  const index = siblings.indexOf(element);
+  const cloneChildren = Array.from(clone.children);
+
+  if (index >= 0 && index < cloneChildren.length) {
+    // Add a marker comment before the target element
+    const target = cloneChildren[index];
+    target.setAttribute('data-pokeui-target', 'true');
+  }
+
+  // Remove script tags for safety
+  clone.querySelectorAll('script').forEach(s => s.remove());
+
+  let html = clone.outerHTML;
+
+  // Truncate if too long while preserving structure
+  if (html.length > maxLength) {
+    html = html.slice(0, maxLength) + '\n<!-- ... truncated ... -->';
+  }
+
+  return html;
+}
+
 export function getTextContent(element: Element, maxLength = 200): string {
   const text = element.textContent?.trim() || '';
   if (text.length <= maxLength) return text;

@@ -3325,6 +3325,58 @@ Common SVG icons used in toolbar (16x16, stroke-width 2):
 </svg>
 ```
 
+### 9.11 Annotation Status Colors
+
+Annotations now have a status that affects their marker color:
+
+| Status | Color | When |
+|--------|-------|------|
+| `pending` | Blue (#3b82f6) | Default - annotation created but not sent |
+| `processing` | Red (#ef4444) | After sending to agent, waiting for completion |
+| `completed` | Green (#22c55e) | Agent has finished processing |
+
+**Implementation:**
+
+```typescript
+// types/index.ts
+export type AnnotationStatus = 'pending' | 'processing' | 'completed';
+
+export interface Annotation {
+  // ... other fields
+  status?: AnnotationStatus;  // pending = blue (default), processing = red, completed = green
+}
+
+// markers.ts - CSS classes for status colors
+.marker.pending { background: var(--marker-color, #3b82f6); }
+.marker.processing { background: #ef4444; }
+.marker.completed { background: #22c55e; }
+
+// poke-ui.ts - Status transitions
+// On send: pending → processing
+this.annotations = this.annotations.map(a =>
+  a.status !== 'completed' ? { ...a, status: 'processing' as const } : a
+);
+
+// On idle (agent complete): processing → completed
+this.annotations = this.annotations.map(a =>
+  a.status === 'processing' ? { ...a, status: 'completed' as const } : a
+);
+```
+
+### 9.12 Property Naming: Avoiding HTMLElement Conflicts
+
+When using Lit with `@state()` decorators, avoid property names that conflict with built-in HTMLElement properties. For example, `hidden` is a built-in property on HTMLElement.
+
+**Problem:**
+```typescript
+@state() private hidden = false;  // Conflicts with HTMLElement.hidden
+```
+
+**Solution:**
+```typescript
+@state() private isHidden = false;  // Use alternative name
+```
+
 ---
 
 ## License

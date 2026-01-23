@@ -3,7 +3,7 @@
 
 import { LitElement, html, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
-import type { Annotation } from '../types/index.js';
+import type { Annotation, AnnotationStatus } from '../types/index.js';
 import { getElementViewportRect, getViewportRect, getMarkerPosition } from '../utils/geometry.js';
 
 interface MarkerPosition {
@@ -12,6 +12,7 @@ interface MarkerPosition {
   top: number;
   left: number;
   visible: boolean;
+  status: AnnotationStatus;
 }
 
 @customElement('poke-markers')
@@ -42,11 +43,24 @@ export class PokeMarkers extends LitElement {
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
       pointer-events: auto;
       cursor: pointer;
-      transition: transform 0.15s ease;
+      transition: transform 0.15s ease, background 0.3s ease;
     }
 
     .marker:hover {
       transform: scale(1.2);
+    }
+
+    /* Status-based colors */
+    .marker.pending {
+      background: var(--marker-color, #3b82f6);  /* Blue - default */
+    }
+
+    .marker.processing {
+      background: #ef4444;  /* Red - in progress */
+    }
+
+    .marker.completed {
+      background: #22c55e;  /* Green - completed */
     }
 
     .delete-btn {
@@ -119,7 +133,8 @@ export class PokeMarkers extends LitElement {
           number: index + 1,
           top: 0,
           left: 0,
-          visible: false
+          visible: false,
+          status: ann.status || 'pending'
         };
       }
 
@@ -135,7 +150,8 @@ export class PokeMarkers extends LitElement {
         number: index + 1,
         top: pos.top,
         left: pos.left,
-        visible
+        visible,
+        status: ann.status || 'pending'
       };
     });
   }
@@ -146,7 +162,7 @@ export class PokeMarkers extends LitElement {
         .filter(pos => pos.visible)
         .map(pos => html`
           <div
-            class="marker"
+            class="marker ${pos.status}"
             style="top: ${pos.top}px; left: ${pos.left}px;"
             @click=${() => this.handleMarkerClick(pos.id)}
           >

@@ -17,9 +17,6 @@ export abstract class BaseAgent implements Agent {
 Page: ${data.pageTitle}
 URL: ${data.pageUrl}
 
-IMPORTANT: Search for the HTML content shown below within files in the project directory.
-Look for the exact text content to find the right file to edit.
-
 `;
 
     data.annotations.forEach((ann, i) => {
@@ -27,26 +24,41 @@ Look for the exact text content to find the right file to edit.
 
 ## Annotation ${i + 1}: ${ann.identifier}
 
-**Selector:** \`${ann.selector}\`
-${ann.parentContext ? `**Parent Elements:** \`${ann.parentContext}\`` : ''}
-**Notes:** ${ann.notes}
-${ann.selectedText ? `**Selected Text:** "${ann.selectedText}"` : ''}
-${ann.textContent ? `**Text Content:** "${ann.textContent}"` : ''}
+**Requested Change:** ${ann.notes}
 
-**HTML Context (search for this content in the project files):**
+**Target Element HTML:**
 \`\`\`html
 ${ann.html}
 \`\`\`
+
+${ann.siblingContext ? `**Position in DOM:**
+${ann.siblingContext}
+
+` : ''}${ann.parentHtml ? `**Parent Context (target marked with data-pokeui-target="true"):**
+\`\`\`html
+${ann.parentHtml}
+\`\`\`
+
+` : ''}${ann.textContent ? `**Text Content:** "${ann.textContent}"` : ''}
+${ann.selectedText ? `**Selected Text:** "${ann.selectedText}"` : ''}
+${ann.parentContext ? `**Parent Path:** \`${ann.parentContext}\`` : ''}
+**CSS Selector:** \`${ann.selector}\`
 
 `;
     });
 
     prompt += `
-INSTRUCTIONS:
-1. Use the HTML content above to search for the source file containing this code
-2. The HTML shows the actual rendered content - search for the text within it
-3. Once found, make the requested changes from the notes
-4. Only edit the specific elements mentioned, don't change unrelated code`;
+CRITICAL INSTRUCTIONS:
+1. CAREFULLY identify the CORRECT element to modify:
+   - The "Position in DOM" shows which element among siblings is the target (marked with "← THIS ONE")
+   - The "Parent Context" HTML shows the element with data-pokeui-target="true" attribute - THAT is the one to change
+   - Do NOT change other similar elements that happen to have matching text
+
+2. Search for the parent context HTML in source files to find the exact location
+
+3. Make ONLY the requested change to the specific marked element
+
+4. If there are multiple similar elements (e.g., multiple <button> tags), use the positional context to identify the correct one`;
     return prompt;
   }
 }

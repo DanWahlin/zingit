@@ -5,7 +5,7 @@ import { LitElement, html, css } from 'lit';
 import { customElement, state, query } from 'lit/decorators.js';
 import type { Annotation, PokeSettings, WSMessage } from '../types/index.js';
 import { WebSocketClient } from '../services/websocket.js';
-import { generateSelector, generateIdentifier, getElementHtml, getParentContext, getTextContent } from '../services/selector.js';
+import { generateSelector, generateIdentifier, getElementHtml, getParentContext, getTextContent, getSiblingContext, getParentHtml } from '../services/selector.js';
 import { saveAnnotations, loadAnnotations, clearAnnotations, saveSettings, loadSettings, saveAnnotationActive, loadAnnotationActive } from '../services/storage.js';
 import { getElementViewportRect } from '../utils/geometry.js';
 import { formatAnnotationsMarkdown, copyToClipboard } from '../utils/markdown.js';
@@ -80,7 +80,7 @@ export class PokeUI extends LitElement {
   @state() private helpOpen = false;
 
   // Hidden state (toolbar closed but can reopen)
-  @state() private hidden = false;
+  @state() private isHidden = false;
 
   // Response panel state
   @state() private responseOpen = false;
@@ -139,7 +139,20 @@ export class PokeUI extends LitElement {
     this.ws.on('open', () => {
       this.wsConnected = true;
       this.wsMaxAttemptsReached = false;
-      this.toast.success('Connected to server');
+
+      // If we had processing annotations and reconnected (likely due to hot reload after agent made changes),
+      // mark them as completed since the agent probably finished before the reload
+      const hadProcessing = this.annotations.some(a => a.status === 'processing');
+      if (hadProcessing) {
+        console.log('[PokeUI] Reconnected with processing annotations - marking as completed');
+        this.annotations = this.annotations.map(a =>
+          a.status === 'processing' ? { ...a, status: 'completed' as const } : a
+        );
+        saveAnnotations(this.annotations);
+        this.toast.success('Connected - changes completed');
+      } else {
+        this.toast.success('Connected to server');
+      }
     });
 
     this.ws.on('close', () => {
@@ -190,12 +203,24 @@ export class PokeUI extends LitElement {
       case 'idle':
         this.processing = false;
         this.responseToolStatus = '';
+        // Mark all processing annotations as completed
+        console.log('[PokeUI] Before status update:', this.annotations.map(a => ({ id: a.id, status: a.status })));
+        this.annotations = this.annotations.map(a =>
+          a.status === 'processing' ? { ...a, status: 'completed' as const } : a
+        );
+        console.log('[PokeUI] After status update:', this.annotations.map(a => ({ id: a.id, status: a.status })));
+        saveAnnotations(this.annotations);
         break;
 
       case 'error':
         this.responseError = msg.message || 'Unknown error';
         this.processing = false;
         this.responseToolStatus = '';
+        // Revert processing annotations back to pending so user can retry
+        this.annotations = this.annotations.map(a =>
+          a.status === 'processing' ? { ...a, status: 'pending' as const } : a
+        );
+        saveAnnotations(this.annotations);
         this.toast.error(msg.message || 'An error occurred');
         break;
 
@@ -322,8 +347,8 @@ export class PokeUI extends LitElement {
       const tagName = target.tagName?.toLowerCase();
       const isEditable = tagName === 'input' || tagName === 'textarea' || target.isContentEditable;
       if (!isEditable) {
-        this.hidden = !this.hidden;
-        if (!this.hidden) {
+        this.isHidden = !this.isHidden;
+        if (!this.isHidden) {
           this.toast.info('PokeUI visible');
         }
       }
@@ -356,7 +381,7 @@ export class PokeUI extends LitElement {
 
   render() {
     // When hidden, only render toast for notifications
-    if (this.hidden) {
+    if (this.isHidden) {
       return html`<poke-toast></poke-toast>`;
     }
 
@@ -388,6 +413,7 @@ export class PokeUI extends LitElement {
           .canUndo=${this.undoStack.length > 0}
           .agent=${this.agentName}
           .model=${this.agentModel}
+          .hasResponse=${this.responseContent.length > 0 || this.responseError.length > 0}
           @toggle=${this.handleToggle}
           @send=${this.handleSend}
           @undo=${this.handleUndo}
@@ -397,6 +423,7 @@ export class PokeUI extends LitElement {
           @settings=${() => this.settingsOpen = true}
           @close=${this.handleClose}
           @reconnect=${this.handleReconnect}
+          @show-response=${() => this.responseOpen = true}
         ></poke-toolbar>
       </div>
 
@@ -463,6 +490,9 @@ export class PokeUI extends LitElement {
         notes,
         parentContext: getParentContext(this.pendingElement),
         textContent: getTextContent(this.pendingElement),
+        siblingContext: getSiblingContext(this.pendingElement),
+        parentHtml: getParentHtml(this.pendingElement),
+        status: 'pending',
         ...(this.modalSelectedText ? { selectedText: this.modalSelectedText } : {})
       };
 
@@ -507,6 +537,14 @@ export class PokeUI extends LitElement {
 
     // Use client-specified projectDir if set, otherwise server will use its default
     const projectDir = this.settings.projectDir || undefined;
+
+    // Mark all pending annotations as processing
+    console.log('[PokeUI] Before send, statuses:', this.annotations.map(a => ({ id: a.id, status: a.status })));
+    this.annotations = this.annotations.map(a =>
+      a.status !== 'completed' ? { ...a, status: 'processing' as const } : a
+    );
+    console.log('[PokeUI] After marking as processing:', this.annotations.map(a => ({ id: a.id, status: a.status })));
+    saveAnnotations(this.annotations);
 
     this.ws.sendBatch({
       pageUrl: window.location.href,
@@ -554,7 +592,7 @@ export class PokeUI extends LitElement {
 
   private handleClose() {
     // Hide PokeUI (press ` to show again)
-    this.hidden = true;
+    this.isHidden = true;
     this.toast.info('Press ` to show PokeUI');
   }
 

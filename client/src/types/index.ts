@@ -1,5 +1,7 @@
 // client/src/types/index.ts
 
+export type AnnotationStatus = 'pending' | 'processing' | 'completed';
+
 export interface Annotation {
   id: string;
   selector: string;
@@ -9,6 +11,9 @@ export interface Annotation {
   selectedText?: string;
   parentContext?: string;  // Parent elements path like "div.card > section.content"
   textContent?: string;    // Plain text content (easier to search than HTML)
+  siblingContext?: string; // Position among siblings (e.g., "Position 1 of 3 in parent")
+  parentHtml?: string;     // Parent HTML with target element marked
+  status?: AnnotationStatus;  // pending = blue (default), processing = red, completed = green
 }
 
 export interface PokeSettings {

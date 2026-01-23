@@ -25,6 +25,8 @@ export interface Annotation {
   selectedText?: string;
   parentContext?: string;  // Parent elements path like "div.card > section.content"
   textContent?: string;    // Plain text content (easier to search than HTML)
+  siblingContext?: string; // Position among siblings (e.g., "Position 1 of 3 in parent")
+  parentHtml?: string;     // Parent HTML with target element marked (data-pokeui-target="true")
 }
 
 export interface BatchData {
