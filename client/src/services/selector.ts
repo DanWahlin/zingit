@@ -120,9 +120,11 @@ export function getSiblingContext(element: Element): string {
   // Get preview of siblings for context
   const siblingPreviews = siblings.map((sib, i) => {
     const tag = sib.tagName.toLowerCase();
-    const text = sib.textContent?.trim().slice(0, 30) || '';
+    const rawText = sib.textContent?.trim() || '';
+    const text = rawText.slice(0, 30);
+    const ellipsis = rawText.length > 30 ? '...' : '';
     const marker = i === index ? ' ← THIS ONE' : '';
-    return `  ${i + 1}. <${tag}>${text ? `${text}...` : ''}</${tag}>${marker}`;
+    return `  ${i + 1}. <${tag}>${text}${ellipsis}</${tag}>${marker}`;
   }).join('\n');
 
   return `Position ${index + 1} of ${total} in parent:\n${siblingPreviews}`;
