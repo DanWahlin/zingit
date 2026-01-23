@@ -1,10 +1,13 @@
 // server/src/utils/agent-detection.ts
 // Cross-platform agent CLI detection
 
-import { execSync } from 'child_process';
+import { exec } from 'child_process';
+import { promisify } from 'util';
 import { existsSync } from 'fs';
 import { homedir } from 'os';
 import { join } from 'path';
+
+const execAsync = promisify(exec);
 
 export interface AgentInfo {
   name: string;
@@ -22,16 +25,15 @@ interface CLICheckResult {
 
 /**
  * Check if a CLI command is available (cross-platform)
- * Uses child_process which handles PATH resolution on Mac/Linux/Windows
+ * Uses async exec to avoid blocking the event loop
  */
-function checkCLI(command: string): CLICheckResult {
+async function checkCLI(command: string): Promise<CLICheckResult> {
   try {
-    const output = execSync(`${command} --version`, {
+    const { stdout } = await execAsync(`${command} --version`, {
       encoding: 'utf-8',
-      timeout: 5000,
-      stdio: ['pipe', 'pipe', 'pipe']
+      timeout: 5000
     });
-    return { installed: true, version: output.split('\n')[0].trim() };
+    return { installed: true, version: stdout.split('\n')[0].trim() };
   } catch {
     return { installed: false };
   }
@@ -47,12 +49,19 @@ function checkCodexAuth(): boolean {
 
 /**
  * Detect all available agents and their status
+ * Uses async operations to avoid blocking the event loop
  */
-export function detectAgents(): AgentInfo[] {
+export async function detectAgents(): Promise<AgentInfo[]> {
+  // Run all CLI checks in parallel for better performance
+  const [claudeCheck, copilotCheck, codexCheck] = await Promise.all([
+    checkCLI('claude'),
+    checkCLI('copilot'),
+    checkCLI('codex')
+  ]);
+
   const agents: AgentInfo[] = [];
 
   // Claude Code
-  const claudeCheck = checkCLI('claude');
   agents.push({
     name: 'claude',
     displayName: 'Claude Code',
@@ -63,7 +72,6 @@ export function detectAgents(): AgentInfo[] {
   });
 
   // GitHub Copilot
-  const copilotCheck = checkCLI('copilot');
   agents.push({
     name: 'copilot',
     displayName: 'GitHub Copilot CLI',
@@ -74,7 +82,6 @@ export function detectAgents(): AgentInfo[] {
   });
 
   // OpenAI Codex
-  const codexCheck = checkCLI('codex');
   if (codexCheck.installed) {
     const hasAuth = checkCodexAuth();
     agents.push({
@@ -101,7 +108,7 @@ export function detectAgents(): AgentInfo[] {
 /**
  * Check if a specific agent is available
  */
-export function isAgentAvailable(agentName: string): AgentInfo | undefined {
-  const agents = detectAgents();
+export async function isAgentAvailable(agentName: string): Promise<AgentInfo | undefined> {
+  const agents = await detectAgents();
   return agents.find(a => a.name === agentName);
 }

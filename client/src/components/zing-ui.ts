@@ -541,59 +541,72 @@ export class ZingUI extends LitElement {
   }
 
   private handleModalSave(e: CustomEvent<{ notes: string; editMode: boolean; annotationId: string }>) {
-    const { notes, editMode, annotationId } = e.detail;
+    try {
+      const { notes, editMode, annotationId } = e.detail;
 
-    if (editMode) {
-      // Update existing annotation and reset status to pending so it can be sent again
-      this.annotations = this.annotations.map(a =>
-        a.id === annotationId ? { ...a, notes, status: 'pending' as const } : a
-      );
-      saveAnnotations(this.annotations);
-      this.modalOpen = false;
-      this.pendingElement = null;
-      this.toast.success('Annotation updated');
-    } else {
-      // Create new annotation
-      if (!this.pendingElement) return;
+      if (editMode) {
+        // Update existing annotation and reset status to pending so it can be sent again
+        this.annotations = this.annotations.map(a =>
+          a.id === annotationId ? { ...a, notes, status: 'pending' as const } : a
+        );
+        saveAnnotations(this.annotations);
+        this.modalOpen = false;
+        this.pendingElement = null;
+        this.toast.success('Annotation updated');
+      } else {
+        // Create new annotation
+        if (!this.pendingElement) return;
 
-      const annotation: Annotation = {
-        id: crypto.randomUUID(),
-        selector: this.modalSelector,
-        identifier: this.modalIdentifier,
-        html: getElementHtml(this.pendingElement),
-        notes,
-        parentContext: getParentContext(this.pendingElement),
-        textContent: getTextContent(this.pendingElement),
-        siblingContext: getSiblingContext(this.pendingElement),
-        parentHtml: getParentHtml(this.pendingElement),
-        status: 'pending',
-        ...(this.modalSelectedText ? { selectedText: this.modalSelectedText } : {})
-      };
+        const annotation: Annotation = {
+          id: crypto.randomUUID(),
+          selector: this.modalSelector,
+          identifier: this.modalIdentifier,
+          html: getElementHtml(this.pendingElement),
+          notes,
+          parentContext: getParentContext(this.pendingElement),
+          textContent: getTextContent(this.pendingElement),
+          siblingContext: getSiblingContext(this.pendingElement),
+          parentHtml: getParentHtml(this.pendingElement),
+          status: 'pending',
+          ...(this.modalSelectedText ? { selectedText: this.modalSelectedText } : {})
+        };
 
-      this.annotations = [...this.annotations, annotation];
-      saveAnnotations(this.annotations);
+        this.annotations = [...this.annotations, annotation];
+        saveAnnotations(this.annotations);
 
-      // Push to undo stack
-      this.undoStack = [...this.undoStack, annotation];
+        // Push to undo stack
+        this.undoStack = [...this.undoStack, annotation];
 
-      this.modalOpen = false;
-      this.pendingElement = null;
-      this.toast.success('Annotation saved');
+        this.modalOpen = false;
+        this.pendingElement = null;
+        this.toast.success('Annotation saved');
+      }
+    } catch (err) {
+      console.error('ZingIt: Error saving annotation', err);
+      this.toast.error('Failed to save annotation');
     }
   }
 
   private handleMarkerClick(e: CustomEvent<{ id: string }>) {
-    const annotation = this.annotations.find(a => a.id === e.detail.id);
-    if (annotation) {
-      // Open modal in edit mode
-      this.modalEditMode = true;
-      this.modalAnnotationId = annotation.id;
-      this.modalSelector = annotation.selector;
-      this.modalIdentifier = annotation.identifier;
-      this.modalSelectedText = annotation.selectedText || '';
-      this.modalNotes = annotation.notes;
-      this.pendingElement = document.querySelector(annotation.selector);
-      this.modalOpen = true;
+    try {
+      const annotation = this.annotations.find(a => a.id === e.detail.id);
+      if (annotation) {
+        // Open modal in edit mode
+        this.modalEditMode = true;
+        this.modalAnnotationId = annotation.id;
+        this.modalSelector = annotation.selector;
+        this.modalIdentifier = annotation.identifier;
+        this.modalSelectedText = annotation.selectedText || '';
+        this.modalNotes = annotation.notes;
+        this.pendingElement = document.querySelector(annotation.selector);
+        if (!this.pendingElement) {
+          this.toast.info('Element no longer exists on page');
+        }
+        this.modalOpen = true;
+      }
+    } catch (err) {
+      console.error('ZingIt: Error handling marker click', err);
+      this.toast.error('Failed to open annotation');
     }
   }
 

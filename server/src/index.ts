@@ -61,7 +61,7 @@ interface ConnectionState {
 
 async function main(): Promise<void> {
   // Detect available agents on startup
-  const availableAgents = detectAgents();
+  const availableAgents = await detectAgents();
   console.log('✓ Agent availability:');
   for (const agent of availableAgents) {
     const status = agent.available ? '✓' : '✗';
@@ -120,7 +120,7 @@ async function main(): Promise<void> {
         switch (msg.type) {
           case 'get_agents': {
             // Return fresh agent availability info
-            const agents = detectAgents();
+            const agents = await detectAgents();
             sendMessage(ws, { type: 'agents', agents });
             break;
           }
@@ -132,7 +132,7 @@ async function main(): Promise<void> {
             }
 
             // Check if agent is available
-            const agentInfo = detectAgents().find(a => a.name === msg.agent);
+            const agentInfo = (await detectAgents()).find(a => a.name === msg.agent);
             if (!agentInfo) {
               sendMessage(ws, { type: 'agent_error', message: `Unknown agent: ${msg.agent}` });
               break;
@@ -179,7 +179,7 @@ async function main(): Promise<void> {
             if (!state.agentName || !state.agent) {
               // If agent specified in batch message, try to select it
               if (msg.agent) {
-                const agentInfo = detectAgents().find(a => a.name === msg.agent);
+                const agentInfo = (await detectAgents()).find(a => a.name === msg.agent);
                 if (!agentInfo?.available) {
                   sendMessage(ws, {
                     type: 'agent_error',

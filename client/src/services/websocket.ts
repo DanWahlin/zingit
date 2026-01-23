@@ -57,6 +57,12 @@ export class WebSocketClient {
   }
 
   private scheduleReconnect(): void {
+    // Clear any existing timer to prevent multiple concurrent timers
+    if (this.reconnectTimer !== null) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
+    }
+
     if (this.maxAttemptsReached) {
       return;
     }
