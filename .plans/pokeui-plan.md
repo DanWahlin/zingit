@@ -3597,6 +3597,203 @@ async function hotReloadSelector(selector) {
 
 ---
 
+## Phase 11: Agent Dialog Improvements & UX Polish
+
+### 11.1 Centered Agent Dialog
+
+Changed response panel positioning to center over the toolbar:
+
+```css
+/* response.ts - Before */
+.panel {
+  position: fixed;
+  bottom: 80px;
+  right: 20px;
+  width: 400px;
+}
+
+/* response.ts - After */
+.panel {
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 500px;
+}
+```
+
+### 11.2 Stop Button
+
+Added red Stop button that appears during agent processing:
+
+```typescript
+// response.ts - In header
+${this.processing ? html`
+  <button class="stop-btn" @click=${this.handleStop}>
+    <svg><!-- stop icon --></svg>
+    Stop
+  </button>
+` : /* ... */}
+```
+
+**Stop flow:**
+1. Client dispatches `stop` event from response panel
+2. `poke-ui.ts` handles event, calls `ws.sendStop()`
+3. `websocket.ts` sends `{ type: 'stop' }` message
+4. Server receives stop, destroys agent session (kills CLI process)
+5. Client reverts processing annotations back to pending
+
+**Server types update:**
+```typescript
+export type WSIncomingType = 'batch' | 'message' | 'reset' | 'stop';
+```
+
+### 11.3 Refresh Button
+
+Added green Refresh button that appears after agent completes:
+
+```typescript
+// response.ts - Shows when not processing but has content
+${!this.processing && this.content ? html`
+  <button class="refresh-btn" @click=${this.handleRefresh}>
+    <svg><!-- refresh icon --></svg>
+    Refresh
+  </button>
+` : ''}
+
+private handleRefresh() {
+  window.location.reload();
+}
+```
+
+### 11.4 Processing Marker Animation
+
+Added pulse animation to markers with `processing` status:
+
+```css
+/* markers.ts */
+.marker.processing {
+  background: var(--processing-color, #ef4444);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+  50% {
+    transform: scale(1.15);
+    box-shadow: 0 0 12px var(--processing-color, #ef4444);
+  }
+}
+
+/* Pause animation on hover for smooth scale transition */
+.marker.processing:hover {
+  animation-play-state: paused;
+}
+```
+
+### 11.5 Completion Sound
+
+Added optional ding sound when agent completes using Web Audio API:
+
+**New setting:**
+```typescript
+interface PokeSettings {
+  // ... existing
+  playSoundOnComplete: boolean;  // Default: true
+}
+```
+
+**Sound generation (no external audio files):**
+```typescript
+// poke-ui.ts
+private playCompletionSound() {
+  const audioContext = new AudioContext();
+
+  const playTone = (frequency: number, startTime: number, duration: number) => {
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    oscillator.frequency.value = frequency;
+    oscillator.type = 'sine';
+
+    // Envelope: quick attack, gentle decay
+    gainNode.gain.setValueAtTime(0, startTime);
+    gainNode.gain.linearRampToValueAtTime(0.3, startTime + 0.01);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
+
+    oscillator.start(startTime);
+    oscillator.stop(startTime + duration);
+  };
+
+  const now = audioContext.currentTime;
+  // Two-tone ding: C6 followed by E6 (major third interval)
+  playTone(1047, now, 0.15);      // C6
+  playTone(1319, now + 0.1, 0.2); // E6
+
+  setTimeout(() => audioContext.close(), 500);
+}
+```
+
+**Settings UI checkbox:**
+```html
+<input type="checkbox" id="playSoundOnComplete"
+  .checked=${this.localSettings.playSoundOnComplete}
+  @change=${(e) => this.updateSetting('playSoundOnComplete', e.target.checked)}
+/>
+<label for="playSoundOnComplete">Play sound when agent completes</label>
+```
+
+### 11.6 Send Only Pending Annotations
+
+Fixed batch sending to only include pending annotations (not already completed ones):
+
+```typescript
+// poke-ui.ts - handleSend()
+private handleSend() {
+  // Only send pending annotations (not completed ones)
+  const pendingAnnotations = this.annotations.filter(a => a.status !== 'completed');
+  if (pendingAnnotations.length === 0) {
+    this.toast.info('No pending annotations to send');
+    return;
+  }
+
+  // Mark pending as processing
+  this.annotations = this.annotations.map(a =>
+    a.status === 'pending' ? { ...a, status: 'processing' as const } : a
+  );
+  saveAnnotations(this.annotations);
+
+  // Send only processing annotations
+  const annotationsToSend = this.annotations.filter(a => a.status === 'processing');
+  this.ws.sendBatch({
+    pageUrl: window.location.href,
+    pageTitle: document.title,
+    annotations: annotationsToSend
+  }, projectDir);
+}
+```
+
+### 11.7 Files Modified in Phase 11
+
+| File | Changes |
+|------|---------|
+| `client/src/components/response.ts` | Centered panel, Stop button, Refresh button |
+| `client/src/components/markers.ts` | Pulse animation for processing status |
+| `client/src/components/poke-ui.ts` | Stop handler, sound playback, send filtering |
+| `client/src/components/settings.ts` | Sound toggle checkbox |
+| `client/src/services/websocket.ts` | `sendStop()` method |
+| `client/src/services/storage.ts` | `playSoundOnComplete` default |
+| `client/src/types/index.ts` | `playSoundOnComplete` setting |
+| `server/src/types.ts` | Added 'stop' to WSIncomingType |
+| `server/src/index.ts` | Handle 'stop' message, destroy session |
+
+---
+
 ## License
 
 MIT
