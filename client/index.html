@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PokeUI Demo</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <nav>
+    <a href="/">Home</a>
+    <a href="/products.html">Products</a>
+    <a href="/about.html">About</a>
+    <a href="/contact.html">Contact</a>
+  </nav>
+
+  <h1>PokeUI Demo Page</h1>
+
+  <div class="alert">
+    <strong>PokeUI is active!</strong> Click on any element to add an annotation.
+  </div>
+
+  <p>
+    This is a demo page for testing PokeUI. Click on any element to add an annotation
+    describing what should be changed. Your annotations will be sent to an AI agent
+    that can make the fixes automatically. Press <strong>P</strong> to pause/resume annotation mode,
+    or <strong>Escape</strong> to close dialogs.
+  </p>
+
+  <div class="card">
+    <h2>Example Card</h2>
+    <p>This card has some content that you might want to change. Try clicking on different elements!</p>
+    <button>Secondary Action</button>
+    <button class="secondary">Secondary</button>
+  </div>
+
+  <div class="card">
+    <h2>Contact Form</h2>
+    <div class="form-group">
+      <label for="name">Name</label>
+      <input type="text" id="name" placeholder="Enter your name">
+    </div>
+    <div class="form-group">
+      <label for="email">Email</label>
+      <input type="email" id="email" placeholder="you@example.com">
+    </div>
+    <div class="form-group">
+      <label for="message">Message</label>
+      <textarea id="message" rows="4" placeholder="Your message..."></textarea>
+    </div>
+    <button>Primary Action</button>
+  </div>
+
+  <script type="module" src="/src/index.ts"></script>
+</body>
+</html>

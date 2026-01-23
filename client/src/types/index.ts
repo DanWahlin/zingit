@@ -1,0 +1,55 @@
+// client/src/types/index.ts
+
+export interface Annotation {
+  id: string;
+  selector: string;
+  identifier: string;
+  html: string;
+  notes: string;
+  selectedText?: string;
+  parentContext?: string;  // Parent elements path like "div.card > section.content"
+  textContent?: string;    // Plain text content (easier to search than HTML)
+}
+
+export interface PokeSettings {
+  wsUrl: string;
+  highlightColor: string;
+  markerColor: string;
+  autoConnect: boolean;
+  projectDir: string;  // Project directory for AI agent to work in
+}
+
+export interface BatchData {
+  pageUrl: string;
+  pageTitle: string;
+  annotations: Annotation[];
+  projectDir?: string;  // Project directory (overrides server default)
+}
+
+// WebSocket message types
+export type WSMessageType =
+  | 'connected'
+  | 'disconnected'
+  | 'processing'
+  | 'response'
+  | 'delta'
+  | 'tool_start'
+  | 'tool_end'
+  | 'idle'
+  | 'error'
+  | 'max_attempts'
+  | 'batch'
+  | 'message'
+  | 'reset'
+  | 'reset_complete';
+
+export interface WSMessage {
+  type: WSMessageType;
+  content?: string;
+  message?: string;
+  tool?: string;
+  agent?: string;
+  model?: string;
+  data?: BatchData;
+  projectDir?: string;  // Server's default project directory (sent on connect)
+}
