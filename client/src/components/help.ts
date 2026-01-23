@@ -4,8 +4,8 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 
-@customElement('poke-help')
-export class PokeHelp extends LitElement {
+@customElement('zing-help')
+export class ZingHelp extends LitElement {
   static styles = css`
     :host {
       display: block;
@@ -147,7 +147,7 @@ export class PokeHelp extends LitElement {
           <div class="section-title">Panels</div>
           <div class="shortcuts">
             <div class="shortcut">
-              <span class="shortcut-desc">Toggle PokeUI visibility</span>
+              <span class="shortcut-desc">Toggle ZingIt visibility</span>
               <div class="shortcut-keys"><kbd>\`</kbd></div>
             </div>
             <div class="shortcut">
@@ -185,6 +185,6 @@ export class PokeHelp extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'poke-help': PokeHelp;
+    'zing-help': ZingHelp;
   }
 }

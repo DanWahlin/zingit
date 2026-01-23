@@ -11,8 +11,8 @@ interface ToastMessage {
   duration: number;
 }
 
-@customElement('poke-toast')
-export class PokeToast extends LitElement {
+@customElement('zing-toast')
+export class ZingToast extends LitElement {
   static styles = css`
     :host {
       display: block;
@@ -141,6 +141,6 @@ export class PokeToast extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'poke-toast': PokeToast;
+    'zing-toast': ZingToast;
   }
 }

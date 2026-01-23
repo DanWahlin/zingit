@@ -60,7 +60,7 @@ const scenarios: Record<string, TestScenario> = {
         selector: 'h1',
         identifier: 'h1 (header)',
         html: '<h1>Welcome to My App</h1>',
-        notes: 'Change the heading to "Welcome to PokeUI Test"',
+        notes: 'Change the heading to "Welcome to ZingIt Test"',
         status: 'pending'
       },
       {
@@ -183,7 +183,7 @@ async function runTest(scenarioKey: string): Promise<boolean> {
               type: 'batch',
               data: {
                 pageUrl: 'http://localhost:3000/test',
-                pageTitle: 'PokeUI Test Page',
+                pageTitle: 'ZingIt Test Page',
                 annotations: scenario.annotations
               }
             };
@@ -268,7 +268,7 @@ async function runTest(scenarioKey: string): Promise<boolean> {
 
 async function main() {
   log('\n' + '='.repeat(60), colors.bright);
-  log('  PokeUI Agent Test Suite', colors.bright);
+  log('  ZingIt Agent Test Suite', colors.bright);
   log('='.repeat(60) + '\n', colors.bright);
 
   // Parse command line args

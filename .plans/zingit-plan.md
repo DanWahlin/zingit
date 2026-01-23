@@ -1,8 +1,8 @@
-# PokeUI - Implementation Plan
+# ZingIt - Implementation Plan
 
-> **Tired of typing "the submit button on the checkout page"? Just click it. PokeUI handles the rest.**
+> **Tired of typing "the submit button on the checkout page"? Just click it. ZingIt handles the rest.**
 
-PokeUI lets you click on any element in your browser, add feedback, and send it straight to your AI coding agent. It captures the selectors, context, and structure the agent needs to find the exact code and fix it.
+ZingIt lets you click on any element in your browser, add feedback, and send it straight to your AI coding agent. It captures the selectors, context, and structure the agent needs to find the exact code and fix it.
 
 Works with Claude Code, GitHub Copilot, Cursor, or any AI tool that can read your codebase.
 
@@ -29,13 +29,13 @@ A browser-based annotation tool that captures UI feedback and sends it to AI cod
 │  ┌─────────────────────────────────────────────────────┐    │
 │  │              Lit Web Components (TypeScript)        │    │
 │  │                                                      │    │
-│  │  <poke-ui>                  (Main orchestrator)     │    │
-│  │    <poke-toolbar>           (Floating toolbar)      │    │
-│  │    <poke-highlight>         (Element highlight)     │    │
-│  │    <poke-markers>           (Annotation markers)    │    │
-│  │    <poke-modal>             (Annotation dialog)     │    │
-│  │    <poke-settings>          (Settings panel)        │    │
-│  │    <poke-response>          (Agent response)        │    │
+│  │  <zing-ui>                  (Main orchestrator)     │    │
+│  │    <zing-toolbar>           (Floating toolbar)      │    │
+│  │    <zing-highlight>         (Element highlight)     │    │
+│  │    <zing-markers>           (Annotation markers)    │    │
+│  │    <zing-modal>             (Annotation dialog)     │    │
+│  │    <zing-settings>          (Settings panel)        │    │
+│  │    <zing-response>          (Agent response)        │    │
 │  └──────────────────────┬──────────────────────────────┘    │
 │                         │ WebSocket                          │
 └─────────────────────────┼───────────────────────────────────┘
@@ -56,7 +56,7 @@ A browser-based annotation tool that captures UI feedback and sends it to AI cod
 ## Project Structure
 
 ```
-pokeui/
+zingit/
 ├── client/
 │   ├── package.json
 │   ├── tsconfig.json
@@ -65,13 +65,13 @@ pokeui/
 │   └── src/
 │       ├── index.ts            # Main entry, registers components
 │       ├── components/
-│       │   ├── poke-ui.ts      # Main orchestrator
-│       │   ├── toolbar.ts      # <poke-toolbar>
-│       │   ├── highlight.ts    # <poke-highlight>
-│       │   ├── markers.ts      # <poke-markers>
-│       │   ├── modal.ts        # <poke-modal>
-│       │   ├── settings.ts     # <poke-settings>
-│       │   └── response.ts     # <poke-response>
+│       │   ├── zing-ui.ts      # Main orchestrator
+│       │   ├── toolbar.ts      # <zing-toolbar>
+│       │   ├── highlight.ts    # <zing-highlight>
+│       │   ├── markers.ts      # <zing-markers>
+│       │   ├── modal.ts        # <zing-modal>
+│       │   ├── settings.ts     # <zing-settings>
+│       │   └── response.ts     # <zing-response>
 │       ├── services/
 │       │   ├── websocket.ts    # WebSocket client
 │       │   ├── storage.ts      # localStorage persistence
@@ -104,7 +104,7 @@ pokeui/
 **server/package.json**
 ```json
 {
-  "name": "pokeui-server",
+  "name": "zingit-server",
   "version": "1.0.0",
   "type": "module",
   "scripts": {
@@ -157,7 +157,7 @@ pokeui/
 **client/package.json**
 ```json
 {
-  "name": "pokeui-client",
+  "name": "zingit-client",
   "version": "1.0.0",
   "type": "module",
   "scripts": {
@@ -239,8 +239,8 @@ export default defineConfig({
   build: {
     lib: {
       entry: 'src/index.ts',
-      name: 'PokeUI',
-      fileName: (format) => `pokeui.${format}.js`,
+      name: 'ZingIt',
+      fileName: (format) => `zingit.${format}.js`,
       formats: ['es', 'iife']
     },
     rollupOptions: {
@@ -279,7 +279,7 @@ export default defineConfig({
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PokeUI Demo</title>
+  <title>ZingIt Demo</title>
   <style>
     body { font-family: system-ui, sans-serif; padding: 40px; max-width: 800px; margin: 0 auto; }
     .card { background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0; }
@@ -292,14 +292,14 @@ export default defineConfig({
   </style>
 </head>
 <body>
-  <h1>🎯 PokeUI Demo</h1>
+  <h1>🎯 ZingIt Demo</h1>
   <p><em>Tired of typing "the submit button on the checkout page"? Just click it.</em></p>
 
   <div class="card">
     <h2>Quick Start</h2>
     <ol>
       <li>Start server: <code>cd server && npm run dev</code></li>
-      <li>Press <kbd>S</kbd> to activate PokeUI</li>
+      <li>Press <kbd>S</kbd> to activate ZingIt</li>
       <li>Click any element to annotate it</li>
       <li>Press <kbd>Enter</kbd> to send to your AI agent</li>
     </ol>
@@ -323,7 +323,7 @@ export default defineConfig({
   </div>
 
   <script type="module" src="/src/index.ts"></script>
-  <poke-ui></poke-ui>
+  <zing-ui></zing-ui>
 </body>
 </html>
 ```
@@ -497,7 +497,7 @@ export abstract class BaseAgent implements Agent {
   abstract createSession(ws: WebSocket): Promise<AgentSession>;
 
   formatPrompt(batch: BatchData): string {
-    let prompt = `# UI Annotations from PokeUI
+    let prompt = `# UI Annotations from ZingIt
 
 **URL:** ${batch.pageUrl}
 **Title:** ${batch.pageTitle}
@@ -572,7 +572,7 @@ export class CopilotAgent extends BaseAgent {
         streaming: true,
         systemMessage: {
           mode: 'append',  // Required: 'append' or 'replace'
-          content: `You fix UI issues based on annotations from PokeUI.
+          content: `You fix UI issues based on annotations from ZingIt.
 
 When you receive annotations:
 1. Use CSS selectors to grep/search for source files
@@ -895,7 +895,7 @@ async function main(): Promise<void> {
 
   // WebSocket server
   const wss = new WebSocketServer({ port: PORT });
-  console.log(`✓ PokeUI server running on ws://localhost:${PORT}`);
+  console.log(`✓ ZingIt server running on ws://localhost:${PORT}`);
   console.log(`✓ Agent: ${AGENT_TYPE}`);
 
   // Track sessions
@@ -1120,7 +1120,7 @@ export function getHtmlContext(el: Element, maxLength = 500): string {
 import type { Annotation, Settings, ToolbarPosition } from '../types/index.js';
 
 const EXPIRY_DAYS = 7;
-const PREFIX = 'pokeui';
+const PREFIX = 'zingit';
 
 interface StoredAnnotations {
   annotations: Annotation[];
@@ -1384,7 +1384,7 @@ export function generateMarkdown(
   pageInfo: PageInfo,
   detail: OutputDetail = 'standard'
 ): string {
-  let md = `# PokeUI Annotations
+  let md = `# ZingIt Annotations
 
 **URL:** ${pageInfo.url}
 **Title:** ${pageInfo.title}
@@ -1439,10 +1439,10 @@ function formatAnnotation(
 
 ## Phase 5: Lit Components
 
-### 5.1 Main Component (client/src/components/poke-ui.ts)
+### 5.1 Main Component (client/src/components/zing-ui.ts)
 
 ```typescript
-// client/src/components/poke-ui.ts
+// client/src/components/zing-ui.ts
 
 import { LitElement, html } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
@@ -1472,8 +1472,8 @@ const DEFAULT_SETTINGS: Settings = {
   clearAfterCopy: false
 };
 
-@customElement('poke-ui')
-export class PokeUI extends LitElement {
+@customElement('zing-ui')
+export class ZingIt extends LitElement {
   @property({ type: Boolean }) active = false;
   @property({ type: Array }) annotations: Annotation[] = [];
   @property({ type: Object }) settings: Settings = DEFAULT_SETTINGS;
@@ -1517,7 +1517,7 @@ export class PokeUI extends LitElement {
     this.ws.disconnect();
 
     // Remove any injected animation pause styles
-    document.getElementById('pokeui-pause-animations')?.remove();
+    document.getElementById('zingit-pause-animations')?.remove();
 
     super.disconnectedCallback();
   }
@@ -1574,14 +1574,14 @@ export class PokeUI extends LitElement {
   private onMouseMove = (e: MouseEvent): void => {
     if (!this.active || this.showModal) return;
     const target = e.target as Element;
-    if (target.closest('poke-ui')) return;
+    if (target.closest('zing-ui')) return;
     this.hoveredElement = target;
   };
 
   private onClick = (e: MouseEvent): void => {
     if (!this.active || this.showModal) return;
     const target = e.target as Element;
-    if (target.closest('poke-ui')) return;
+    if (target.closest('zing-ui')) return;
 
     e.preventDefault();
     e.stopPropagation();
@@ -1680,7 +1680,7 @@ export class PokeUI extends LitElement {
 
   private toggleAnimations(): void {
     this.animationsPaused = !this.animationsPaused;
-    const styleId = 'pokeui-pause-animations';
+    const styleId = 'zingit-pause-animations';
     let style = document.getElementById(styleId);
 
     if (this.animationsPaused) {
@@ -1711,7 +1711,7 @@ export class PokeUI extends LitElement {
 
   private sendToAgent(): void {
     if (!this.wsConnected) {
-      alert('Not connected to agent. Is the PokeUI server running?');
+      alert('Not connected to agent. Is the ZingIt server running?');
       return;
     }
 
@@ -1728,7 +1728,7 @@ export class PokeUI extends LitElement {
 
   render() {
     return html`
-      <poke-toolbar
+      <zing-toolbar
         .active=${this.active}
         .annotationCount=${this.annotations.length}
         .wsConnected=${this.wsConnected}
@@ -1745,53 +1745,53 @@ export class PokeUI extends LitElement {
         @clear-all=${() => this.clearAnnotations()}
         @open-settings=${() => (this.showSettings = true)}
         @reconnect=${() => this.forceReconnect()}
-      ></poke-toolbar>
+      ></zing-toolbar>
 
       ${this.active && this.hoveredElement
-        ? html`<poke-highlight .element=${this.hoveredElement}></poke-highlight>`
+        ? html`<zing-highlight .element=${this.hoveredElement}></zing-highlight>`
         : ''}
 
       ${this.markersVisible
         ? html`
-            <poke-markers
+            <zing-markers
               .annotations=${this.annotations}
               .markerColor=${this.settings.markerColor}
               @remove-annotation=${(e: CustomEvent<{ id: string }>) =>
                 this.removeAnnotation(e.detail.id)}
-            ></poke-markers>
+            ></zing-markers>
           `
         : ''}
 
       ${this.showModal && this.modalData
         ? html`
-            <poke-modal
+            <zing-modal
               .data=${this.modalData}
               @save=${(e: CustomEvent<ModalData & { notes: string }>) =>
                 this.addAnnotation(e.detail)}
               @close=${() => (this.showModal = false)}
-            ></poke-modal>
+            ></zing-modal>
           `
         : ''}
 
       ${this.showSettings
         ? html`
-            <poke-settings
+            <zing-settings
               .settings=${this.settings}
               @update=${(e: CustomEvent<Partial<Settings>>) =>
                 this.updateSettings(e.detail)}
               @close=${() => (this.showSettings = false)}
-            ></poke-settings>
+            ></zing-settings>
           `
         : ''}
 
       ${this.showResponse
         ? html`
-            <poke-response
+            <zing-response
               .content=${this.responseContent}
               .processing=${this.processing}
               .agent=${this.wsAgent}
               @close=${() => (this.showResponse = false)}
-            ></poke-response>
+            ></zing-response>
           `
         : ''}
     `;
@@ -1800,7 +1800,7 @@ export class PokeUI extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'poke-ui': PokeUI;
+    'zing-ui': ZingIt;
   }
 }
 ```
@@ -1811,14 +1811,14 @@ declare global {
 // client/src/index.ts
 
 // Import main component (which imports all children)
-import './components/poke-ui.js';
+import './components/zing-ui.js';
 
 // Auto-create element if not already in DOM
-if (!document.querySelector('poke-ui')) {
-  document.body.appendChild(document.createElement('poke-ui'));
+if (!document.querySelector('zing-ui')) {
+  document.body.appendChild(document.createElement('zing-ui'));
 }
 
-console.log('🎯 PokeUI loaded. Press S to start annotating.');
+console.log('🎯 ZingIt loaded. Press S to start annotating.');
 ```
 
 ### 5.3 Toolbar Component (client/src/components/toolbar.ts)
@@ -1829,8 +1829,8 @@ console.log('🎯 PokeUI loaded. Press S to start annotating.');
 import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 
-@customElement('poke-toolbar')
-export class PokeToolbar extends LitElement {
+@customElement('zing-toolbar')
+export class ZingToolbar extends LitElement {
   static styles = css`
     :host {
       position: fixed;
@@ -1950,7 +1950,7 @@ export class PokeToolbar extends LitElement {
 
     return html`
       <div class="toolbar">
-        <span class="logo">🎯 PokeUI</span>
+        <span class="logo">🎯 ZingIt</span>
 
         <div class="divider"></div>
 
@@ -2033,7 +2033,7 @@ export class PokeToolbar extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'poke-toolbar': PokeToolbar;
+    'zing-toolbar': ZingToolbar;
   }
 }
 ```
@@ -2048,8 +2048,8 @@ import { customElement, property, state } from 'lit/decorators.js';
 import { getIdentifier } from '../services/selector.js';
 import type { Rect } from '../types/index.js';
 
-@customElement('poke-highlight')
-export class PokeHighlight extends LitElement {
+@customElement('zing-highlight')
+export class ZingHighlight extends LitElement {
   static styles = css`
     :host {
       position: fixed;
@@ -2124,7 +2124,7 @@ export class PokeHighlight extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'poke-highlight': PokeHighlight;
+    'zing-highlight': ZingHighlight;
   }
 }
 ```
@@ -2138,8 +2138,8 @@ import { LitElement, html, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import type { Annotation, Rect } from '../types/index.js';
 
-@customElement('poke-markers')
-export class PokeMarkers extends LitElement {
+@customElement('zing-markers')
+export class ZingMarkers extends LitElement {
   static styles = css`
     :host {
       position: fixed;
@@ -2271,7 +2271,7 @@ export class PokeMarkers extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'poke-markers': PokeMarkers;
+    'zing-markers': ZingMarkers;
   }
 }
 ```
@@ -2285,8 +2285,8 @@ import { LitElement, html, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import type { ModalData } from '../types/index.js';
 
-@customElement('poke-modal')
-export class PokeModal extends LitElement {
+@customElement('zing-modal')
+export class ZingModal extends LitElement {
   static styles = css`
     :host {
       position: fixed;
@@ -2525,7 +2525,7 @@ export class PokeModal extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'poke-modal': PokeModal;
+    'zing-modal': ZingModal;
   }
 }
 ```
@@ -2539,8 +2539,8 @@ import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import type { Settings } from '../types/index.js';
 
-@customElement('poke-settings')
-export class PokeSettings extends LitElement {
+@customElement('zing-settings')
+export class ZingSettings extends LitElement {
   static styles = css`
     :host {
       position: fixed;
@@ -2709,7 +2709,7 @@ export class PokeSettings extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'poke-settings': PokeSettings;
+    'zing-settings': ZingSettings;
   }
 }
 ```
@@ -2728,8 +2728,8 @@ interface ContentSegment {
   content: string;
 }
 
-@customElement('poke-response')
-export class PokeResponse extends LitElement {
+@customElement('zing-response')
+export class ZingResponse extends LitElement {
   static styles = css`
     :host {
       position: fixed;
@@ -2924,7 +2924,7 @@ export class PokeResponse extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'poke-response': PokeResponse;
+    'zing-response': ZingResponse;
   }
 }
 ```
@@ -2958,10 +2958,10 @@ After building the client, the bookmarklet loads the bundled IIFE:
 
 ```javascript
 // Development (Vite dev server)
-javascript:(function(){if(customElements.get('poke-ui')){return}var s=document.createElement('script');s.type='module';s.src='http://localhost:3000/src/index.ts';document.head.appendChild(s)})();
+javascript:(function(){if(customElements.get('zing-ui')){return}var s=document.createElement('script');s.type='module';s.src='http://localhost:3000/src/index.ts';document.head.appendChild(s)})();
 
 // Production (built bundle)
-javascript:(function(){if(customElements.get('poke-ui')){return}var s=document.createElement('script');s.src='https://your-cdn.com/pokeui.iife.js';document.head.appendChild(s)})();
+javascript:(function(){if(customElements.get('zing-ui')){return}var s=document.createElement('script');s.src='https://your-cdn.com/zingit.iife.js';document.head.appendChild(s)})();
 ```
 
 ---
@@ -3016,7 +3016,7 @@ javascript:(function(){if(customElements.get('poke-ui')){return}var s=document.c
 3. **Server** - agents/base.ts, agents/copilot.ts, agents/claude.ts, agents/codex.ts, index.ts
 4. **Services** - selector.ts, storage.ts, websocket.ts
 5. **Utils** - geometry.ts, markdown.ts
-6. **Components** - toolbar → highlight → modal → markers → response → settings → poke-ui
+6. **Components** - toolbar → highlight → modal → markers → response → settings → zing-ui
 7. **Entry** - index.ts
 8. **Testing** - Full flow verification
 
@@ -3042,11 +3042,11 @@ javascript:(function(){if(customElements.get('poke-ui')){return}var s=document.c
 Create `README.md` at the project root:
 
 ```markdown
-# PokeUI
+# ZingIt
 
 > Click on UI elements, describe what needs to change, and let AI fix it.
 
-PokeUI is a browser-based annotation tool that captures UI feedback and sends it to AI coding agents for automated fixes. Stop typing "the submit button on the checkout page" — just click it.
+ZingIt is a browser-based annotation tool that captures UI feedback and sends it to AI coding agents for automated fixes. Stop typing "the submit button on the checkout page" — just click it.
 
 ## Quick Start
 
@@ -3062,8 +3062,8 @@ PokeUI is a browser-based annotation tool that captures UI feedback and sends it
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/pokeui.git
-cd pokeui
+git clone https://github.com/your-username/zingit.git
+cd zingit
 
 # Install server dependencies
 cd server
@@ -3095,7 +3095,7 @@ PROJECT_DIR=/path/to/your/project AGENT=codex npm run dev
 You should see:
 ```
 ✓ Copilot SDK initialized (model: claude-sonnet-4-20250514)
-✓ PokeUI server running on ws://localhost:8765
+✓ ZingIt server running on ws://localhost:8765
 ✓ Agent: copilot
 ✓ Project directory: /path/to/your/project
 ```
@@ -3109,7 +3109,7 @@ cd client
 npm run dev
 ```
 
-Open http://localhost:3000 to test PokeUI on the demo page.
+Open http://localhost:3000 to test ZingIt on the demo page.
 
 ### Using the Bookmarklet
 
@@ -3120,12 +3120,12 @@ For use on any website, create a bookmarklet:
 
 **Development (while Vite is running):**
 ```javascript
-javascript:(function(){if(customElements.get('poke-ui')){return}var s=document.createElement('script');s.type='module';s.src='http://localhost:3000/src/index.ts';document.head.appendChild(s)})();
+javascript:(function(){if(customElements.get('zing-ui')){return}var s=document.createElement('script');s.type='module';s.src='http://localhost:3000/src/index.ts';document.head.appendChild(s)})();
 ```
 
 **Production (after build):**
 ```javascript
-javascript:(function(){if(customElements.get('poke-ui')){return}var s=document.createElement('script');s.src='https://your-cdn.com/pokeui.iife.js';document.head.appendChild(s)})();
+javascript:(function(){if(customElements.get('zing-ui')){return}var s=document.createElement('script');s.src='https://your-cdn.com/zingit.iife.js';document.head.appendChild(s)})();
 ```
 
 3. Navigate to any webpage and click the bookmarklet
@@ -3202,7 +3202,7 @@ AGENT=claude npm run dev
 ## Building for Production
 
 ```bash
-# Build client (creates dist/pokeui.iife.js)
+# Build client (creates dist/zingit.iife.js)
 cd client
 npm run build
 
@@ -3235,7 +3235,7 @@ npm start
 
 ## How Annotations Are Sent to the Agent
 
-When you click "Send", PokeUI formats your annotations like this:
+When you click "Send", ZingIt formats your annotations like this:
 
 ```
 You are fixing UI issues on a webpage.
@@ -3297,21 +3297,21 @@ The toolbar was refined to use compact SVG icons instead of text buttons to save
 
 ### 9.3 Visibility Toggle (Hidden State)
 
-Instead of removing the component when closed, PokeUI now hides and can be toggled back:
+Instead of removing the component when closed, ZingIt now hides and can be toggled back:
 
 ```typescript
-// In poke-ui.ts
+// In zing-ui.ts
 @state() private hidden = false;
 
 // Render returns minimal content when hidden
 if (this.hidden) {
-  return html`<poke-toast></poke-toast>`;
+  return html`<zing-toast></zing-toast>`;
 }
 
 // Close handler hides instead of removing
 private handleClose() {
   this.hidden = true;
-  this.toast.info('Press ` to show PokeUI');
+  this.toast.info('Press ` to show ZingIt');
 }
 
 // Backtick key toggles visibility
@@ -3338,14 +3338,14 @@ Hotkey indicators were removed from all interactive buttons to reduce visual clu
 - Cancel button: Removed `<span class="shortcut">Esc</span>`
 - Save button: Removed `<span class="shortcut">Cmd+Enter</span>`
 
-Hotkeys are still functional - they're documented only in the Help dialog (`poke-help.ts`).
+Hotkeys are still functional - they're documented only in the Help dialog (`zing-help.ts`).
 
 ### 9.5 Highlight Clearing Fix
 
 Fixed issue where highlight remained visible when pressing P to disable annotation mode:
 
 ```typescript
-// In poke-ui.ts - handleToggle method clears highlight when disabling
+// In zing-ui.ts - handleToggle method clears highlight when disabling
 private handleToggle() {
   this.annotationActive = !this.annotationActive;
   saveAnnotationActive(this.annotationActive);
@@ -3366,12 +3366,12 @@ if (e.key === 'p' || e.key === 'P') {
 
 Two components were added that weren't in the original plan:
 
-**poke-toast.ts** - Notification toast component
+**zing-toast.ts** - Notification toast component
 - Shows temporary messages (info, success, error)
 - Auto-dismisses after timeout
-- Used for feedback like "Annotation saved", "Press \` to show PokeUI"
+- Used for feedback like "Annotation saved", "Press \` to show ZingIt"
 
-**poke-help.ts** - Keyboard shortcuts overlay
+**zing-help.ts** - Keyboard shortcuts overlay
 - Shows all available keyboard shortcuts
 - Organized by section: Annotation Mode, Panels, In Modal
 - Opened via `?` key or Help button
@@ -3383,7 +3383,7 @@ Two components were added that weren't in the original plan:
 | `P` | Toggle annotation mode on/off |
 | `Ctrl/Cmd+Z` | Undo last annotation |
 | `?` | Show help overlay |
-| `` ` `` | Toggle PokeUI visibility (new) |
+| `` ` `` | Toggle ZingIt visibility (new) |
 | `Esc` | Close current panel/modal |
 | `Ctrl/Cmd+Enter` | Save annotation (in modal) |
 
@@ -3485,7 +3485,7 @@ export interface Annotation {
 .marker.processing { background: #ef4444; }
 .marker.completed { background: #22c55e; }
 
-// poke-ui.ts - Status transitions
+// zing-ui.ts - Status transitions
 // On send: pending → processing
 this.annotations = this.annotations.map(a =>
   a.status !== 'completed' ? { ...a, status: 'processing' as const } : a
@@ -3539,7 +3539,7 @@ export function getParentHtml(element: Element, maxLength = 1000): string {
   // Returns parent element HTML with target marked:
   // <div class="card">
   //   <h2>Example Card</h2>
-  //   <button data-pokeui-target="true">Primary</button>
+  //   <button data-zingit-target="true">Primary</button>
   //   <button>Secondary</button>
   // </div>
 }
@@ -3573,17 +3573,17 @@ Position 3 of 4 in parent:
   3. <button>Primary</button> ← THIS ONE
   4. <button>Secondary</button>
 
-**Parent Context (target marked with data-pokeui-target="true"):**
+**Parent Context (target marked with data-zingit-target="true"):**
 <div class="card">
   <h2>Example Card</h2>
-  <button data-pokeui-target="true">Primary</button>
+  <button data-zingit-target="true">Primary</button>
   <button class="secondary">Secondary</button>
 </div>
 
 CRITICAL INSTRUCTIONS:
 1. CAREFULLY identify the CORRECT element to modify:
    - The "Position in DOM" shows which element is the target (marked with "← THIS ONE")
-   - The "Parent Context" shows the element with data-pokeui-target="true" - THAT is the one to change
+   - The "Parent Context" shows the element with data-zingit-target="true" - THAT is the one to change
    - Do NOT change other similar elements
 ```
 
@@ -3597,7 +3597,7 @@ Extract magic string to constant with sync comments:
  * Marker attribute used to identify the target element in parent HTML context.
  * IMPORTANT: Keep in sync with server/src/agents/base.ts formatPrompt()
  */
-export const TARGET_MARKER_ATTR = 'data-pokeui-target';
+export const TARGET_MARKER_ATTR = 'data-zingit-target';
 ```
 
 ### 10.4 Error Handling in getParentHtml()
@@ -3659,7 +3659,7 @@ Groups:
 Added settings for annotation status colors:
 
 ```typescript
-interface PokeSettings {
+interface ZingSettings {
   // ... existing
   markerColor: string;       // Pending (blue #3b82f6)
   processingColor: string;   // Processing (red #ef4444)
@@ -3711,7 +3711,7 @@ For different project types:
 | React | Vite/CRA dev server handles it |
 | Vue | Vite dev server handles it |
 
-**For SPA frameworks**: Don't implement custom hot reload. Let the framework's dev server handle file watching and component updates. PokeUI annotations persist in localStorage and survive reloads.
+**For SPA frameworks**: Don't implement custom hot reload. Let the framework's dev server handle file watching and component updates. ZingIt annotations persist in localStorage and survive reloads.
 
 **For static HTML only**:
 ```javascript
@@ -3772,7 +3772,7 @@ ${this.processing ? html`
 
 **Stop flow:**
 1. Client dispatches `stop` event from response panel
-2. `poke-ui.ts` handles event, calls `ws.sendStop()`
+2. `zing-ui.ts` handles event, calls `ws.sendStop()`
 3. `websocket.ts` sends `{ type: 'stop' }` message
 4. Server receives stop, destroys agent session (kills CLI process)
 5. Client reverts processing annotations back to pending
@@ -3834,7 +3834,7 @@ Added optional ding sound when agent completes using Web Audio API:
 
 **New setting:**
 ```typescript
-interface PokeSettings {
+interface ZingSettings {
   // ... existing
   playSoundOnComplete: boolean;  // Default: true
 }
@@ -3842,7 +3842,7 @@ interface PokeSettings {
 
 **Sound generation (no external audio files):**
 ```typescript
-// poke-ui.ts
+// zing-ui.ts
 private playCompletionSound() {
   const audioContext = new AudioContext();
 
@@ -3887,7 +3887,7 @@ private playCompletionSound() {
 Fixed batch sending to only include pending annotations (not already completed ones):
 
 ```typescript
-// poke-ui.ts - handleSend()
+// zing-ui.ts - handleSend()
 private handleSend() {
   // Only send pending annotations (not completed ones)
   const pendingAnnotations = this.annotations.filter(a => a.status !== 'completed');
@@ -3918,7 +3918,7 @@ private handleSend() {
 |------|---------|
 | `client/src/components/response.ts` | Centered panel, Stop button, Refresh button |
 | `client/src/components/markers.ts` | Pulse animation for processing status |
-| `client/src/components/poke-ui.ts` | Stop handler, sound playback, send filtering |
+| `client/src/components/zing-ui.ts` | Stop handler, sound playback, send filtering |
 | `client/src/components/settings.ts` | Sound toggle checkbox |
 | `client/src/services/websocket.ts` | `sendStop()` method |
 | `client/src/services/storage.ts` | `playSoundOnComplete` default |

@@ -15,8 +15,8 @@ interface MarkerPosition {
   status: AnnotationStatus;
 }
 
-@customElement('poke-markers')
-export class PokeMarkers extends LitElement {
+@customElement('zing-markers')
+export class ZingMarkers extends LitElement {
   static styles = css`
     :host {
       display: block;
@@ -155,7 +155,7 @@ export class PokeMarkers extends LitElement {
         };
       }
 
-      // Use viewport coordinates since poke-ui is position: fixed
+      // Use viewport coordinates since zing-ui is position: fixed
       const rect = getElementViewportRect(element);
       const pos = getMarkerPosition(rect);
       // Check if element is in viewport (rect is already in viewport coords)
@@ -214,6 +214,6 @@ export class PokeMarkers extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'poke-markers': PokeMarkers;
+    'zing-markers': ZingMarkers;
   }
 }

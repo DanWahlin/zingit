@@ -1,11 +1,11 @@
 // client/src/services/storage.ts
 // Persist annotations in localStorage
 
-import type { Annotation, PokeSettings } from '../types/index.js';
+import type { Annotation, ZingSettings } from '../types/index.js';
 
-const STORAGE_KEY = 'pokeui_annotations';
-const SETTINGS_KEY = 'pokeui_settings';
-const ACTIVE_KEY = 'pokeui_active';
+const STORAGE_KEY = 'zingit_annotations';
+const SETTINGS_KEY = 'zingit_settings';
+const ACTIVE_KEY = 'zingit_active';
 
 export function saveAnnotations(annotations: Annotation[]): void {
   try {
@@ -16,7 +16,7 @@ export function saveAnnotations(annotations: Annotation[]): void {
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   } catch (err) {
-    console.warn('PokeUI: Failed to save annotations', err);
+    console.warn('ZingIt: Failed to save annotations', err);
   }
 }
 
@@ -47,11 +47,11 @@ export function clearAnnotations(): void {
   try {
     localStorage.removeItem(STORAGE_KEY);
   } catch (err) {
-    console.warn('PokeUI: Failed to clear annotations', err);
+    console.warn('ZingIt: Failed to clear annotations', err);
   }
 }
 
-const defaultSettings: PokeSettings = {
+const defaultSettings: ZingSettings = {
   wsUrl: 'ws://localhost:8765',
   highlightColor: '#fbbf24',
   markerColor: '#3b82f6',       // Pending (blue)
@@ -64,15 +64,15 @@ const defaultSettings: PokeSettings = {
   autoRefresh: false            // Auto refresh page when agent completes (disabled by default)
 };
 
-export function saveSettings(settings: PokeSettings): void {
+export function saveSettings(settings: ZingSettings): void {
   try {
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
   } catch (err) {
-    console.warn('PokeUI: Failed to save settings', err);
+    console.warn('ZingIt: Failed to save settings', err);
   }
 }
 
-export function loadSettings(): PokeSettings {
+export function loadSettings(): ZingSettings {
   try {
     const raw = localStorage.getItem(SETTINGS_KEY);
     if (!raw) return defaultSettings;
@@ -88,7 +88,7 @@ export function saveAnnotationActive(active: boolean): void {
   try {
     localStorage.setItem(ACTIVE_KEY, JSON.stringify(active));
   } catch (err) {
-    console.warn('PokeUI: Failed to save active state', err);
+    console.warn('ZingIt: Failed to save active state', err);
   }
 }
 

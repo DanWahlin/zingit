@@ -3,61 +3,471 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PokeUI Demo</title>
+  <title>ZingIt - AI-Powered UI Annotation Tool</title>
   <link rel="stylesheet" href="/styles.css">
+  <style>
+    /* ZAP-inspired layout styles */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      line-height: 1.6;
+      color: #1f2937;
+      background: #ffffff;
+    }
+
+    /* Navigation */
+    .site-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 24px;
+      background: #1f2937;
+      color: white;
+    }
+
+    .site-nav .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 20px;
+      font-weight: 700;
+      text-decoration: none;
+      color: white;
+    }
+
+    .site-nav .brand svg {
+      width: 28px;
+      height: 28px;
+    }
+
+    .site-nav .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .site-nav .nav-links a {
+      color: #d1d5db;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: color 0.15s ease;
+    }
+
+    .site-nav .nav-links a:hover {
+      color: white;
+    }
+
+    .site-nav .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .site-nav .nav-actions a {
+      color: #9ca3af;
+      transition: color 0.15s ease;
+    }
+
+    .site-nav .nav-actions a:hover {
+      color: white;
+    }
+
+    .btn-download {
+      padding: 8px 16px;
+      background: #3b82f6;
+      color: white;
+      text-decoration: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      transition: background 0.15s ease;
+    }
+
+    .btn-download:hover {
+      background: #2563eb;
+    }
+
+    /* Hero Section */
+    .hero {
+      text-align: center;
+      padding: 80px 24px;
+      background: linear-gradient(135deg, #1e3a5f 0%, #1f2937 100%);
+      color: white;
+    }
+
+    .hero h1 {
+      font-size: 48px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      line-height: 1.2;
+    }
+
+    .hero h1 .highlight {
+      color: #fbbf24;
+    }
+
+    .hero p {
+      font-size: 20px;
+      color: #d1d5db;
+      max-width: 600px;
+      margin: 0 auto 32px;
+    }
+
+    .hero-actions {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .hero-actions a {
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 500;
+      text-decoration: none;
+      transition: all 0.15s ease;
+    }
+
+    .hero-actions .btn-primary {
+      background: #3b82f6;
+      color: white;
+    }
+
+    .hero-actions .btn-primary:hover {
+      background: #2563eb;
+    }
+
+    .hero-actions .btn-secondary {
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .hero-actions .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    /* Feature Cards */
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+      padding: 64px 24px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .feature-card {
+      background: #f9fafb;
+      border-radius: 12px;
+      padding: 32px;
+      border: 1px solid #e5e7eb;
+    }
+
+    .feature-card h3 {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: #1f2937;
+    }
+
+    .feature-card p {
+      color: #6b7280;
+      margin-bottom: 16px;
+    }
+
+    .feature-card a {
+      color: #3b82f6;
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .feature-card a:hover {
+      text-decoration: underline;
+    }
+
+    /* Demo Section */
+    .demo-section {
+      padding: 64px 24px;
+      background: #f9fafb;
+    }
+
+    .demo-section h2 {
+      text-align: center;
+      font-size: 32px;
+      margin-bottom: 16px;
+    }
+
+    .demo-section > p {
+      text-align: center;
+      color: #6b7280;
+      max-width: 600px;
+      margin: 0 auto 40px;
+    }
+
+    .demo-content {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .demo-card {
+      background: white;
+      border-radius: 12px;
+      padding: 32px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      margin-bottom: 24px;
+    }
+
+    .demo-card h3 {
+      font-size: 18px;
+      margin-bottom: 16px;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 6px;
+      color: #374151;
+    }
+
+    .form-group input,
+    .form-group textarea {
+      width: 100%;
+      padding: 10px 12px;
+      font-size: 14px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-family: inherit;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .demo-buttons {
+      display: flex;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    .demo-buttons button {
+      padding: 10px 20px;
+      font-size: 14px;
+      font-weight: 500;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .demo-buttons .btn-primary {
+      background: #3b82f6;
+      color: white;
+    }
+
+    .demo-buttons .btn-primary:hover {
+      background: #2563eb;
+    }
+
+    .demo-buttons .btn-secondary {
+      background: #e5e7eb;
+      color: #374151;
+    }
+
+    .demo-buttons .btn-secondary:hover {
+      background: #d1d5db;
+    }
+
+    /* Footer */
+    .site-footer {
+      background: #1f2937;
+      color: #9ca3af;
+      padding: 32px 24px;
+    }
+
+    .footer-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 24px;
+    }
+
+    .footer-links a {
+      color: #9ca3af;
+      text-decoration: none;
+      font-size: 14px;
+    }
+
+    .footer-links a:hover {
+      color: white;
+    }
+
+    .footer-social {
+      display: flex;
+      gap: 16px;
+    }
+
+    .footer-social a {
+      color: #9ca3af;
+      transition: color 0.15s ease;
+    }
+
+    .footer-social a:hover {
+      color: white;
+    }
+  </style>
 </head>
 <body>
-  <nav>
-    <a href="/">Home</a>
-    <a href="/products.html">Products</a>
-    <a href="/about.html">About</a>
-    <a href="/contact.html">Contact</a>
+  <!-- Navigation -->
+  <nav class="site-nav">
+    <a href="/" class="brand">
+      <!-- Lightning bolt icon -->
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill="currentColor" stroke="none"/>
+      </svg>
+      ZingIt
+    </a>
+    <div class="nav-links">
+      <a href="#features">Features</a>
+      <a href="#demo">Demo</a>
+      <a href="https://github.com/danwahlin/zingit" target="_blank">Documentation</a>
+      <a href="https://github.com/danwahlin/zingit" target="_blank">GitHub</a>
+    </div>
+    <div class="nav-actions">
+      <a href="https://github.com/danwahlin/zingit" target="_blank" title="GitHub">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+        </svg>
+      </a>
+      <a href="#demo" class="btn-download">Try Demo</a>
+    </div>
   </nav>
 
-  <h1>Hi Danny</h1>
+  <!-- Hero Section -->
+  <section class="hero">
+    <h1>Point. Annotate. <span class="highlight">Let AI Fix It.</span></h1>
+    <p>
+      The open source UI annotation tool that lets you highlight elements,
+      describe changes, and send them to AI agents for automated fixes.
+    </p>
+    <div class="hero-actions">
+      <a href="#demo" class="btn-primary">Try the Demo</a>
+      <a href="https://github.com/danwahlin/zingit" class="btn-secondary">View on GitHub</a>
+      <a href="https://github.com/danwahlin/zingit#quick-start" class="btn-secondary">Quick Start Guide</a>
+    </div>
+  </section>
 
-  <div class="alert">
-    <strong>PokeUI is active!</strong> Click on any element to add an annotation.
-  </div>
+  <!-- Features -->
+  <section id="features" class="features">
+    <div class="feature-card">
+      <h3>Visual Annotations</h3>
+      <p>
+        Click any element on your page to add notes about changes you want.
+        Smart CSS selectors are automatically generated to target the exact element.
+      </p>
+      <a href="#demo">Try it now →</a>
+    </div>
+    <div class="feature-card">
+      <h3>Multi-Agent Support</h3>
+      <p>
+        Works with Claude Code, GitHub Copilot CLI, and OpenAI Codex.
+        Choose your preferred AI assistant and watch it work in real-time.
+      </p>
+      <a href="https://github.com/danwahlin/zingit#agents">Learn more →</a>
+    </div>
+    <div class="feature-card">
+      <h3>Bookmarklet Ready</h3>
+      <p>
+        Inject ZingIt into any webpage with a single click.
+        The isolated Shadow DOM ensures no style conflicts with the host page.
+      </p>
+      <a href="https://github.com/danwahlin/zingit#bookmarklet">Get bookmarklet →</a>
+    </div>
+  </section>
 
-  <p>
-    This is a demo page for testing PokeUI. Click on any element to add an annotation
-    describing what should be changed. Your annotations will be sent to an AI agent
-    that can make the fixes automatically. Press <strong>P</strong> to pause/resume annotation mode,
-    or <strong>Escape</strong> to close dialogs.
-  </p>
+  <!-- Demo Section -->
+  <section id="demo" class="demo-section">
+    <h2>Interactive Demo</h2>
+    <p>
+      ZingIt is now active! Click on any element below to add an annotation.
+      Press <strong>P</strong> to toggle annotation mode, or <strong>Escape</strong> to close dialogs.
+    </p>
 
-  <div class="card">
-    <h2>Example Card</h2>
-    <p>This card has some content that you might want to change. Try clicking on different elements!</p>
-    <button>Primary</button>
-    <button class="secondary">Secondary</button>
-  </div>
+    <div class="demo-content">
+      <div class="demo-card">
+        <h3>Sample Form</h3>
+        <p>Try clicking on form elements to annotate them. Describe changes like "make this field required" or "add email validation".</p>
+        <div class="form-group">
+          <label for="name">Full Name</label>
+          <input type="text" id="name" placeholder="Enter your name">
+        </div>
+        <div class="form-group">
+          <label for="email">Email Address</label>
+          <input type="email" id="email" placeholder="you@example.com">
+        </div>
+        <div class="form-group">
+          <label for="message">Message</label>
+          <textarea id="message" rows="4" placeholder="Your message..."></textarea>
+        </div>
+        <div class="demo-buttons">
+          <button class="btn-primary">Submit</button>
+          <button class="btn-secondary">Cancel</button>
+        </div>
+      </div>
 
-  <div class="card">
-    <h2>Form</h2>
-    <div class="form-group">
-      <label for="name">Name</label>
-      <input type="text" id="name" placeholder="Enter your name">
+      <div class="demo-card">
+        <h3>Sample Card</h3>
+        <p>This card demonstrates various UI elements you can annotate. Try clicking on the heading, text, or buttons.</p>
+        <div class="demo-buttons">
+          <button class="btn-primary">Primary Action</button>
+          <button class="btn-secondary">Secondary Action</button>
+        </div>
+      </div>
     </div>
-    <div class="form-group">
-      <label for="email">Email</label>
-      <input type="email" id="email" placeholder="you@example.com">
+  </section>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="footer-content">
+      <div class="footer-links">
+        <a href="#features">Features</a>
+        <a href="#demo">Demo</a>
+        <a href="https://github.com/danwahlin/zingit">Documentation</a>
+        <a href="https://github.com/danwahlin/zingit/issues">Report Issue</a>
+      </div>
+      <div>© 2026 ZingIt. MIT License.</div>
+      <div class="footer-social">
+        <a href="https://github.com/danwahlin/zingit" target="_blank" title="GitHub">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+          </svg>
+        </a>
+      </div>
     </div>
-    <div class="form-group">
-      <label for="address">Address</label>
-      <input type="text" id="address" placeholder="Enter your address">
-    </div>
-    <div class="form-group">
-      <label for="zipcode">Zipcode</label>
-      <input type="text" id="zipcode" placeholder="Enter your zipcode">
-    </div>
-    <div class="form-group">
-      <label for="message">Message</label>
-      <textarea id="message" rows="4" placeholder="Your message..."></textarea>
-    </div>
-    <button>Submit</button>
-  </div>
+  </footer>
 
   <script type="module" src="/src/index.ts"></script>
 </body>

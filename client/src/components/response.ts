@@ -10,8 +10,8 @@ interface ContentSegment {
   language?: string;
 }
 
-@customElement('poke-response')
-export class PokeResponse extends LitElement {
+@customElement('zing-response')
+export class ZingResponse extends LitElement {
   static styles = css`
     :host {
       display: none;
@@ -415,6 +415,6 @@ export class PokeResponse extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'poke-response': PokeResponse;
+    'zing-response': ZingResponse;
   }
 }

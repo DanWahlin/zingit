@@ -43,9 +43,9 @@ export default defineConfig({
   build: {
     lib: {
       entry: 'src/index.ts',
-      name: 'PokeUI',
+      name: 'ZingIt',
       formats: ['es', 'iife'],
-      fileName: (format) => `pokeui.${format}.js`
+      fileName: (format) => `zingit.${format}.js`
     },
     minify: 'terser',
     cssMinify: 'lightningcss',

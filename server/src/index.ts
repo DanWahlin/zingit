@@ -85,7 +85,7 @@ async function main(): Promise<void> {
 
   // WebSocket server
   const wss = new WebSocketServer({ port: PORT });
-  console.log(`✓ PokeUI server running on ws://localhost:${PORT}`);
+  console.log(`✓ ZingIt server running on ws://localhost:${PORT}`);
   console.log(`✓ Project directory: ${PROJECT_DIR}`);
   if (DEFAULT_AGENT) {
     console.log(`✓ Default agent: ${DEFAULT_AGENT}`);

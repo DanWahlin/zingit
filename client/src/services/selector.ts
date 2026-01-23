@@ -17,7 +17,7 @@ export function generateSelector(element: Element): string {
     // Add classes for specificity
     if (current.classList.length > 0) {
       const classes = Array.from(current.classList)
-        .filter(c => !c.startsWith('poke-')) // Exclude our own classes
+        .filter(c => !c.startsWith('zing-')) // Exclude our own classes
         .slice(0, 2) // Limit to 2 classes
         .map(c => `.${CSS.escape(c)}`)
         .join('');
@@ -66,7 +66,7 @@ export function generateIdentifier(element: Element): string {
 
   // Use first meaningful class
   const meaningfulClass = Array.from(element.classList)
-    .filter(c => !c.startsWith('poke-'))
+    .filter(c => !c.startsWith('zing-'))
     .find(c => c.length > 2 && !c.match(/^[a-z]{1,2}$/));
 
   if (meaningfulClass) {
@@ -90,7 +90,7 @@ export function getParentContext(element: Element, levels = 2): string {
     const tag = current.tagName.toLowerCase();
     const id = current.id ? `#${current.id}` : '';
     const classes = Array.from(current.classList)
-      .filter(c => !c.startsWith('poke-'))
+      .filter(c => !c.startsWith('zing-'))
       .slice(0, 2)
       .map(c => `.${c}`)
       .join('');
@@ -134,7 +134,7 @@ export function getSiblingContext(element: Element): string {
  * Marker attribute used to identify the target element in parent HTML context.
  * IMPORTANT: Keep in sync with server/src/agents/base.ts formatPrompt()
  */
-export const TARGET_MARKER_ATTR = 'data-pokeui-target';
+export const TARGET_MARKER_ATTR = 'data-zingit-target';
 
 /**
  * Get the parent element's HTML with the target element marked

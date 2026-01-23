@@ -1,4 +1,4 @@
-# PokeUI
+# ZingIt
 
 A browser-based annotation tool that lets you highlight and comment on UI elements, then send those annotations to an AI agent for automated fixes.
 
@@ -82,10 +82,10 @@ cd client
 npm run build
 ```
 
-The `dist/pokeui.iife.js` file contains everything needed. Create a bookmarklet:
+The `dist/zingit.iife.js` file contains everything needed. Create a bookmarklet:
 
 ```javascript
-javascript:(function(){var s=document.createElement('script');s.src='http://localhost:5200/pokeui.iife.js';document.body.appendChild(s);})()
+javascript:(function(){var s=document.createElement('script');s.src='http://localhost:5200/zingit.iife.js';document.body.appendChild(s);})()
 ```
 
 ### ES Module
@@ -97,7 +97,7 @@ cd client
 npm run build
 ```
 
-Use `dist/pokeui.es.js` as an ES module.
+Use `dist/zingit.es.js` as an ES module.
 
 ## Configuration
 
@@ -120,11 +120,11 @@ Settings are saved to localStorage.
 ## Architecture
 
 ```
-pokeui/
+zingit/
 ├── client/                 # Browser-side Lit components
 │   ├── src/
 │   │   ├── components/    # Lit web components
-│   │   │   ├── poke-ui.ts    # Main orchestrator
+│   │   │   ├── zing-ui.ts    # Main orchestrator
 │   │   │   ├── toolbar.ts    # Status and actions
 │   │   │   ├── highlight.ts  # Hover overlay
 │   │   │   ├── markers.ts    # Numbered badges
@@ -251,7 +251,7 @@ npm install -g @anthropic-ai/claude-code
 
 ### Elements not highlighting
 
-- PokeUI ignores its own elements (anything starting with `poke-`)
+- ZingIt ignores its own elements (anything starting with `zing-`)
 - Some elements may have pointer-events disabled
 
 ## Development
@@ -292,7 +292,7 @@ The test suite uses a sample project in `tests/test-project/` with a React file 
 
 ### Project Structure
 
-The client uses Lit 3.x web components with Shadow DOM enabled for style isolation. This is critical for the bookmarklet use case where PokeUI must not conflict with the host page's styles.
+The client uses Lit 3.x web components with Shadow DOM enabled for style isolation. This is critical for the bookmarklet use case where ZingIt must not conflict with the host page's styles.
 
 The server is a simple WebSocket relay that forwards annotation data to the configured AI agent and streams responses back.
 

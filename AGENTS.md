@@ -1,8 +1,8 @@
-# PokeUI - AI Agent Guide
+# ZingIt - AI Agent Guide
 
 ## Project Overview
 
-PokeUI is a browser-based annotation tool that allows users to click on webpage elements and add notes/instructions. These annotations are then sent to an AI agent (Claude Code or GitHub Copilot) which can automatically implement the requested changes.
+ZingIt is a browser-based annotation tool that allows users to click on webpage elements and add notes/instructions. These annotations are then sent to an AI agent (Claude Code or GitHub Copilot) which can automatically implement the requested changes.
 
 **Use case**: Point-and-click UI feedback that gets automatically implemented by AI.
 
@@ -12,14 +12,14 @@ PokeUI is a browser-based annotation tool that allows users to click on webpage 
 ┌─────────────────────────────────────────────────────────────┐
 │                        Browser                               │
 │  ┌─────────────────────────────────────────────────────┐    │
-│  │                   PokeUI Client                      │    │
+│  │                   ZingIt Client                      │    │
 │  │  (Lit Web Components injected via bookmarklet)       │    │
 │  └──────────────────────┬──────────────────────────────┘    │
 └─────────────────────────┼───────────────────────────────────┘
                           │ WebSocket
                           ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                    PokeUI Server                             │
+│                    ZingIt Server                             │
 │  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐     │
 │  │ WebSocket   │───▶│   Agent     │───▶│ Claude Code │     │
 │  │ Handler     │    │  Registry   │    │ or Copilot  │     │
@@ -30,11 +30,11 @@ PokeUI is a browser-based annotation tool that allows users to click on webpage 
 ## Directory Structure
 
 ```
-pokeui/
+zingit/
 ├── client/                    # Browser-side UI (Lit + Vite)
 │   ├── src/
 │   │   ├── components/        # Lit Web Components
-│   │   │   ├── poke-ui.ts     # Main orchestrator component
+│   │   │   ├── zing-ui.ts     # Main orchestrator component
 │   │   │   ├── toolbar.ts     # Action buttons and status
 │   │   │   ├── highlight.ts   # Element hover highlight
 │   │   │   ├── markers.ts     # Numbered annotation badges
@@ -115,7 +115,7 @@ The server uses a pluggable agent architecture:
 ```bash
 cd client
 npm install
-npm run dev          # Start Vite dev server (http://localhost:5173)
+npm run dev          # Start Vite dev server (http://localhost:5200)
 npm run build        # Build for production (outputs IIFE bundle)
 npm run typecheck    # Type check without emitting
 npm run typecheck:watch  # Watch mode type checking
@@ -138,24 +138,24 @@ npm run typecheck:watch    # Watch mode type checking
 | `P` | Toggle annotation mode on/off |
 | `Ctrl/Cmd+Z` | Undo last annotation |
 | `?` | Show help overlay |
-| `` ` `` | Toggle PokeUI visibility |
+| `` ` `` | Toggle ZingIt visibility |
 | `Esc` | Close current panel/modal |
 | `Ctrl/Cmd+Enter` | Save annotation (in modal) |
 
 ## State Persistence
 
 The client persists state to `localStorage`:
-- `pokeui_annotations` - Current page annotations (URL-scoped)
-- `pokeui_settings` - User preferences (wsUrl, colors, projectDir)
-- `pokeui_active` - Annotation mode on/off (persists across pages)
+- `zingit_annotations` - Current page annotations (URL-scoped)
+- `zingit_settings` - User preferences (wsUrl, colors, projectDir)
+- `zingit_active` - Annotation mode on/off (persists across pages)
 
 ## Important Implementation Details
 
 ### Shadow DOM
-All components use Shadow DOM for style isolation. This is critical because PokeUI is injected as a bookmarklet into arbitrary pages - styles must not leak in or out.
+All components use Shadow DOM for style isolation. This is critical because ZingIt is injected as a bookmarklet into arbitrary pages - styles must not leak in or out.
 
 ### Viewport Coordinates
-The highlight and marker positioning uses viewport coordinates (not page coordinates) because the main `poke-ui` component is `position: fixed`. Use `getElementViewportRect()` from `geometry.ts`.
+The highlight and marker positioning uses viewport coordinates (not page coordinates) because the main `zing-ui` component is `position: fixed`. Use `getElementViewportRect()` from `geometry.ts`.
 
 ### WebSocket Reconnection
 The WebSocket client implements exponential backoff reconnection:
@@ -177,8 +177,8 @@ this.dispatchEvent(new CustomEvent('save', {
 
 ### Adding a New Component
 1. Create `client/src/components/my-component.ts`
-2. Use `@customElement('poke-my-component')` decorator
-3. Import in `poke-ui.ts`
+2. Use `@customElement('zing-my-component')` decorator
+3. Import in `zing-ui.ts`
 4. Add to render method with event handlers
 
 ### Adding a New Agent
@@ -192,23 +192,23 @@ Edit `client/src/components/toolbar.ts`:
 - Add new `@property()` for state
 - Add button in `render()` method
 - Create handler method that dispatches event
-- Wire up event in `poke-ui.ts`
+- Wire up event in `zing-ui.ts`
 
 ## Testing
 
 Test pages are available at:
-- `http://localhost:5173/` - Main demo page
-- `http://localhost:5173/products.html` - Product cards
-- `http://localhost:5173/about.html` - About page with stats/timeline
-- `http://localhost:5173/contact.html` - Contact form and FAQ
+- `http://localhost:5200/` - Main demo page
+- `http://localhost:5200/products.html` - Product cards
+- `http://localhost:5200/about.html` - About page with stats/timeline
+- `http://localhost:5200/contact.html` - Contact form and FAQ
 
 ## Build Output
 
 The Vite build produces:
-- `dist/pokeui.es.js` - ES module version
-- `dist/pokeui.iife.js` - IIFE for bookmarklet injection
+- `dist/zingit.es.js` - ES module version
+- `dist/zingit.iife.js` - IIFE for bookmarklet injection
 
 The IIFE can be used as a bookmarklet:
 ```javascript
-javascript:(function(){var s=document.createElement('script');s.src='http://localhost:5173/dist/pokeui.iife.js';document.body.appendChild(s);})()
+javascript:(function(){var s=document.createElement('script');s.src='http://localhost:5200/dist/zingit.iife.js';document.body.appendChild(s);})()
 ```

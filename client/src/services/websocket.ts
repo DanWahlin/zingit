@@ -47,11 +47,11 @@ export class WebSocketClient {
           const data = JSON.parse(event.data) as WSMessage;
           this.emit('message', data);
         } catch {
-          console.warn('PokeUI: Invalid WebSocket message');
+          console.warn('ZingIt: Invalid WebSocket message');
         }
       };
     } catch (err) {
-      console.error('PokeUI: WebSocket connection failed', err);
+      console.error('ZingIt: WebSocket connection failed', err);
       this.scheduleReconnect();
     }
   }
@@ -71,7 +71,7 @@ export class WebSocketClient {
     const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000);
     this.reconnectAttempts++;
 
-    console.log(`PokeUI: Reconnecting in ${delay / 1000}s (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
+    console.log(`ZingIt: Reconnecting in ${delay / 1000}s (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
 
     this.reconnectTimer = window.setTimeout(() => {
       this.connect();
@@ -104,7 +104,7 @@ export class WebSocketClient {
     if (this.ws?.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify(message));
     } else {
-      console.warn('PokeUI: WebSocket not connected');
+      console.warn('ZingIt: WebSocket not connected');
     }
   }
 

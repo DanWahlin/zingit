@@ -1,19 +1,19 @@
 // client/src/index.ts
-// Entry point for PokeUI
+// Entry point for ZingIt
 
-import './components/poke-ui.js';
+import './components/zing-ui.js';
 
-// Inject PokeUI into the page
+// Inject ZingIt into the page
 function inject() {
   // Remove existing instance if present
-  const existing = document.querySelector('poke-ui');
+  const existing = document.querySelector('zing-ui');
   if (existing) {
     existing.remove();
   }
 
-  // Create and append PokeUI
-  const pokeUI = document.createElement('poke-ui');
-  document.body.appendChild(pokeUI);
+  // Create and append ZingIt
+  const zingUI = document.createElement('zing-ui');
+  document.body.appendChild(zingUI);
 }
 
 // Auto-inject when script loads

@@ -4,8 +4,8 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 
-@customElement('poke-toolbar')
-export class PokeToolbar extends LitElement {
+@customElement('zing-toolbar')
+export class ZingToolbar extends LitElement {
   static styles = css`
     :host {
       display: block;
@@ -327,7 +327,7 @@ export class PokeToolbar extends LitElement {
 
         <button
           class="btn-icon"
-          title="Close PokeUI"
+          title="Close ZingIt"
           @click=${this.handleClose}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -388,6 +388,6 @@ export class PokeToolbar extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'poke-toolbar': PokeToolbar;
+    'zing-toolbar': ZingToolbar;
   }
 }

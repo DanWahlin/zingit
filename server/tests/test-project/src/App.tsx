@@ -1,4 +1,4 @@
-// Test file for PokeUI agent validation
+// Test file for ZingIt agent validation
 // This file contains intentional issues for the agent to fix
 
 import React from 'react';
@@ -14,7 +14,7 @@ export function App() {
       <main>
         <section className="hero">
           <h2>Get Started Today</h2>
-          <p>This is a sample application for testing PokeUI annotations.</p>
+          <p>This is a sample application for testing ZingIt annotations.</p>
           <button className="cta-btn">Sign Up Now</button>
         </section>
 

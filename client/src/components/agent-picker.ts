@@ -5,8 +5,8 @@ import { LitElement, html, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import type { AgentInfo } from '../types/index.js';
 
-@customElement('poke-agent-picker')
-export class PokeAgentPicker extends LitElement {
+@customElement('zing-agent-picker')
+export class ZingAgentPicker extends LitElement {
   static override styles = css`
     :host {
       position: fixed;
@@ -303,6 +303,6 @@ export class PokeAgentPicker extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'poke-agent-picker': PokeAgentPicker;
+    'zing-agent-picker': ZingAgentPicker;
   }
 }

@@ -16,7 +16,7 @@ export interface Annotation {
   status?: AnnotationStatus;  // pending = blue (default), processing = red, completed = green
 }
 
-export interface PokeSettings {
+export interface ZingSettings {
   wsUrl: string;
   highlightColor: string;
   markerColor: string;           // Pending status color (blue default)

@@ -3,10 +3,10 @@
 
 import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import type { PokeSettings, AgentInfo } from '../types/index.js';
+import type { ZingSettings, AgentInfo } from '../types/index.js';
 
-@customElement('poke-settings')
-export class PokeSettingsPanel extends LitElement {
+@customElement('zing-settings')
+export class ZingSettingsPanel extends LitElement {
   static styles = css`
     :host {
       display: block;
@@ -213,7 +213,7 @@ export class PokeSettingsPanel extends LitElement {
   @property({ type: Boolean }) open = false;
   @property({ type: String }) serverProjectDir = '';  // Server's default
   @property({ type: Array }) agents: AgentInfo[] = [];  // Available agents from server
-  @property({ type: Object }) settings: PokeSettings = {
+  @property({ type: Object }) settings: ZingSettings = {
     wsUrl: 'ws://localhost:8765',
     highlightColor: '#fbbf24',
     markerColor: '#3b82f6',
@@ -226,7 +226,7 @@ export class PokeSettingsPanel extends LitElement {
     autoRefresh: false
   };
 
-  private localSettings: PokeSettings = { ...this.settings };
+  private localSettings: ZingSettings = { ...this.settings };
 
   updated(changedProperties: Map<string, unknown>) {
     if (changedProperties.has('settings')) {
@@ -395,7 +395,7 @@ export class PokeSettingsPanel extends LitElement {
     `;
   }
 
-  private updateSetting<K extends keyof PokeSettings>(key: K, value: PokeSettings[K]) {
+  private updateSetting<K extends keyof ZingSettings>(key: K, value: ZingSettings[K]) {
     this.localSettings = { ...this.localSettings, [key]: value };
     this.requestUpdate();
   }
@@ -425,6 +425,6 @@ export class PokeSettingsPanel extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'poke-settings': PokeSettingsPanel;
+    'zing-settings': ZingSettingsPanel;
   }
 }

@@ -1,9 +1,9 @@
-// client/src/components/poke-ui.ts
+// client/src/components/zing-ui.ts
 // Main orchestrator component
 
 import { LitElement, html, css } from 'lit';
 import { customElement, state, query } from 'lit/decorators.js';
-import type { Annotation, PokeSettings, WSMessage, AgentInfo } from '../types/index.js';
+import type { Annotation, ZingSettings, WSMessage, AgentInfo } from '../types/index.js';
 import { WebSocketClient } from '../services/websocket.js';
 import { generateSelector, generateIdentifier, getElementHtml, getParentContext, getTextContent, getSiblingContext, getParentHtml } from '../services/selector.js';
 import { saveAnnotations, loadAnnotations, clearAnnotations, saveSettings, loadSettings, saveAnnotationActive, loadAnnotationActive } from '../services/storage.js';
@@ -19,10 +19,10 @@ import './response.js';
 import './toast.js';
 import './help.js';
 import './agent-picker.js';
-import type { PokeToast } from './toast.js';
+import type { ZingToast } from './toast.js';
 
-@customElement('poke-ui')
-export class PokeUI extends LitElement {
+@customElement('zing-ui')
+export class ZingUI extends LitElement {
   // Shadow DOM enabled for style isolation (critical for bookmarklet)
   static styles = css`
     :host {
@@ -48,7 +48,7 @@ export class PokeUI extends LitElement {
   `;
 
   @state() private annotations: Annotation[] = [];
-  @state() private settings: PokeSettings = loadSettings();
+  @state() private settings: ZingSettings = loadSettings();
   @state() private wsConnected = false;
   @state() private wsMaxAttemptsReached = false;
   @state() private processing = false;
@@ -61,7 +61,7 @@ export class PokeUI extends LitElement {
   @state() private agentPickerLoading = false;
   @state() private agentPickerError = '';
 
-  @query('poke-toast') private toast!: PokeToast;
+  @query('zing-toast') private toast!: ZingToast;
 
   // Highlight state
   @state() private highlightVisible = false;
@@ -149,7 +149,7 @@ export class PokeUI extends LitElement {
       // mark them as completed since the agent probably finished before the reload
       const hadProcessing = this.annotations.some(a => a.status === 'processing');
       if (hadProcessing) {
-        console.log('[PokeUI] Reconnected with processing annotations - marking as completed');
+        console.log('[ZingIt] Reconnected with processing annotations - marking as completed');
         this.annotations = this.annotations.map(a =>
           a.status === 'processing' ? { ...a, status: 'completed' as const } : a
         );
@@ -359,7 +359,7 @@ export class PokeUI extends LitElement {
     }
 
     // Show highlight
-    // Use viewport coordinates since poke-ui is position: fixed
+    // Use viewport coordinates since zing-ui is position: fixed
     const rect = getElementViewportRect(target);
     this.highlightRect = rect;
     this.highlightLabel = generateIdentifier(target);
@@ -405,21 +405,21 @@ export class PokeUI extends LitElement {
       this.helpOpen = !this.helpOpen;
     }
 
-    // Backtick (`) to toggle PokeUI visibility
+    // Backtick (`) to toggle ZingIt visibility
     if (e.key === '`') {
       this.isHidden = !this.isHidden;
       if (!this.isHidden) {
-        this.toast.info('PokeUI visible');
+        this.toast.info('ZingIt visible');
       }
     }
   }
 
   private isOwnElement(el: Element): boolean {
-    // Check if element is part of PokeUI
+    // Check if element is part of ZingIt
     // Must handle Shadow DOM boundaries
     let current: Element | Node | null = el;
     while (current) {
-      if (current instanceof Element && current.tagName?.toLowerCase().startsWith('poke-')) {
+      if (current instanceof Element && current.tagName?.toLowerCase().startsWith('zing-')) {
         return true;
       }
       // Try parentElement first, then check for shadow root host
@@ -441,11 +441,11 @@ export class PokeUI extends LitElement {
   render() {
     // When hidden, only render toast for notifications
     if (this.isHidden) {
-      return html`<poke-toast></poke-toast>`;
+      return html`<zing-toast></zing-toast>`;
     }
 
     return html`
-      <poke-highlight
+      <zing-highlight
         .top=${this.highlightRect.top}
         .left=${this.highlightRect.left}
         .width=${this.highlightRect.width}
@@ -453,17 +453,17 @@ export class PokeUI extends LitElement {
         .label=${this.highlightLabel}
         .visible=${this.highlightVisible}
         style="--highlight-color: ${this.settings.highlightColor}"
-      ></poke-highlight>
+      ></zing-highlight>
 
-      <poke-markers
+      <zing-markers
         .annotations=${this.annotations}
         style="--marker-color: ${this.settings.markerColor}; --processing-color: ${this.settings.processingColor}; --completed-color: ${this.settings.completedColor}"
         @marker-click=${this.handleMarkerClick}
         @marker-delete=${this.handleMarkerDelete}
-      ></poke-markers>
+      ></zing-markers>
 
       <div class="toolbar-container">
-        <poke-toolbar
+        <zing-toolbar
           .active=${this.annotationActive}
           .connected=${this.wsConnected}
           .processing=${this.processing}
@@ -484,10 +484,10 @@ export class PokeUI extends LitElement {
           @reconnect=${this.handleReconnect}
           @toggle-response=${() => this.responseOpen = !this.responseOpen}
           @change-agent=${() => this.agentPickerOpen = true}
-        ></poke-toolbar>
+        ></zing-toolbar>
       </div>
 
-      <poke-modal
+      <zing-modal
         .open=${this.modalOpen}
         .editMode=${this.modalEditMode}
         .annotationId=${this.modalAnnotationId}
@@ -497,9 +497,9 @@ export class PokeUI extends LitElement {
         .notes=${this.modalNotes}
         @cancel=${() => this.modalOpen = false}
         @save=${this.handleModalSave}
-      ></poke-modal>
+      ></zing-modal>
 
-      <poke-settings
+      <zing-settings
         .open=${this.settingsOpen}
         .settings=${this.settings}
         .serverProjectDir=${this.serverProjectDir}
@@ -507,20 +507,20 @@ export class PokeUI extends LitElement {
         @close=${() => this.settingsOpen = false}
         @save=${this.handleSettingsSave}
         @agent-change=${this.handleAgentChange}
-      ></poke-settings>
+      ></zing-settings>
 
       ${this.agentPickerOpen ? html`
-        <poke-agent-picker
+        <zing-agent-picker
           .agents=${this.availableAgents}
           .loading=${this.agentPickerLoading}
           .error=${this.agentPickerError}
           .currentAgent=${this.agentName}
           @select=${this.handleAgentPickerSelect}
           @close=${() => this.agentPickerOpen = false}
-        ></poke-agent-picker>
+        ></zing-agent-picker>
       ` : ''}
 
-      <poke-response
+      <zing-response
         .open=${this.responseOpen}
         .processing=${this.processing}
         .content=${this.responseContent}
@@ -529,14 +529,14 @@ export class PokeUI extends LitElement {
         @close=${() => this.responseOpen = false}
         @stop=${this.handleStop}
         @followup=${this.handleFollowUp}
-      ></poke-response>
+      ></zing-response>
 
-      <poke-help
+      <zing-help
         .open=${this.helpOpen}
         @close=${() => this.helpOpen = false}
-      ></poke-help>
+      ></zing-help>
 
-      <poke-toast></poke-toast>
+      <zing-toast></zing-toast>
     `;
   }
 
@@ -672,9 +672,9 @@ export class PokeUI extends LitElement {
   }
 
   private handleClose() {
-    // Hide PokeUI (press ` to show again)
+    // Hide ZingIt (press ` to show again)
     this.isHidden = true;
-    this.toast.info('Press ` to show PokeUI');
+    this.toast.info('Press ` to show ZingIt');
   }
 
   private handleReconnect() {
@@ -691,7 +691,7 @@ export class PokeUI extends LitElement {
     }
   }
 
-  private handleSettingsSave(e: CustomEvent<{ settings: PokeSettings }>) {
+  private handleSettingsSave(e: CustomEvent<{ settings: ZingSettings }>) {
     this.settings = e.detail.settings;
     saveSettings(this.settings);
     this.settingsOpen = false;
@@ -767,13 +767,13 @@ export class PokeUI extends LitElement {
       // Clean up audio context after sound finishes
       setTimeout(() => audioContext.close(), 500);
     } catch (err) {
-      console.warn('PokeUI: Could not play completion sound', err);
+      console.warn('ZingIt: Could not play completion sound', err);
     }
   }
 }
 
 declare global {
   interface HTMLElementTagNameMap {
-    'poke-ui': PokeUI;
+    'zing-ui': ZingUI;
   }
 }

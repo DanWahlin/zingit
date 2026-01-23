@@ -66,7 +66,7 @@ if [ -n "$SPECIFIC_AGENT" ]; then
 fi
 
 echo -e "${BLUE}========================================${NC}"
-echo -e "${BLUE}  PokeUI Agent Test Runner${NC}"
+echo -e "${BLUE}  ZingIt Agent Test Runner${NC}"
 echo -e "${BLUE}========================================${NC}"
 echo ""
 echo -e "Test project: ${YELLOW}$TEST_PROJECT${NC}"
@@ -93,7 +93,7 @@ reset_test_project() {
 
   # Recreate the original App.tsx content
   cat > "$TEST_PROJECT/src/App.tsx" << 'ORIGINAL_CONTENT'
-// Test file for PokeUI agent validation
+// Test file for ZingIt agent validation
 // This file contains intentional issues for the agent to fix
 
 import React from 'react';
@@ -109,7 +109,7 @@ export function App() {
       <main>
         <section className="hero">
           <h2>Get Started Today</h2>
-          <p>This is a sample application for testing PokeUI annotations.</p>
+          <p>This is a sample application for testing ZingIt annotations.</p>
           <button className="cta-btn">Sign Up Now</button>
         </section>
 
@@ -140,7 +140,7 @@ ORIGINAL_CONTENT
 test_agent() {
   local agent=$1
   local port=8765
-  local pid_file="/tmp/pokeui-test-server-$$.pid"
+  local pid_file="/tmp/zingit-test-server-$$.pid"
 
   echo ""
   echo -e "${BLUE}----------------------------------------${NC}"

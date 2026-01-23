@@ -4,8 +4,8 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property, query } from 'lit/decorators.js';
 
-@customElement('poke-modal')
-export class PokeModal extends LitElement {
+@customElement('zing-modal')
+export class ZingModal extends LitElement {
   static styles = css`
     :host {
       display: block;
@@ -282,6 +282,6 @@ export class PokeModal extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'poke-modal': PokeModal;
+    'zing-modal': ZingModal;
   }
 }
