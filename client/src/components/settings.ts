@@ -195,13 +195,16 @@ export class PokeSettingsPanel extends LitElement {
   `;
 
   @property({ type: Boolean }) open = false;
-  @property({ type: String }) serverProjectDir = '';  // Server's default (shown as placeholder)
+  @property({ type: String }) serverProjectDir = '';  // Server's default
   @property({ type: Object }) settings: PokeSettings = {
     wsUrl: 'ws://localhost:8765',
     highlightColor: '#fbbf24',
     markerColor: '#3b82f6',
+    processingColor: '#ef4444',
+    completedColor: '#22c55e',
     autoConnect: true,
-    projectDir: ''  // Empty = use server default
+    projectDir: '',
+    playSoundOnComplete: true
   };
 
   private localSettings: PokeSettings = { ...this.settings };
@@ -247,9 +250,9 @@ export class PokeSettingsPanel extends LitElement {
               <input
                 type="text"
                 id="projectDir"
-                .value=${this.localSettings.projectDir}
+                .value=${this.localSettings.projectDir || this.serverProjectDir}
                 @input=${(e: Event) => this.updateSetting('projectDir', (e.target as HTMLInputElement).value)}
-                placeholder=${this.serverProjectDir || 'Server default (leave empty to use)'}
+                placeholder="Enter project directory path"
               />
             </div>
 
@@ -266,7 +269,7 @@ export class PokeSettingsPanel extends LitElement {
             </div>
 
             <div class="field">
-              <label>Marker Color</label>
+              <label>Pending Color</label>
               <div class="color-field">
                 <input
                   type="color"
@@ -274,6 +277,30 @@ export class PokeSettingsPanel extends LitElement {
                   @input=${(e: Event) => this.updateSetting('markerColor', (e.target as HTMLInputElement).value)}
                 />
                 <span class="color-value">${this.localSettings.markerColor}</span>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Processing Color</label>
+              <div class="color-field">
+                <input
+                  type="color"
+                  .value=${this.localSettings.processingColor}
+                  @input=${(e: Event) => this.updateSetting('processingColor', (e.target as HTMLInputElement).value)}
+                />
+                <span class="color-value">${this.localSettings.processingColor}</span>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Completed Color</label>
+              <div class="color-field">
+                <input
+                  type="color"
+                  .value=${this.localSettings.completedColor}
+                  @input=${(e: Event) => this.updateSetting('completedColor', (e.target as HTMLInputElement).value)}
+                />
+                <span class="color-value">${this.localSettings.completedColor}</span>
               </div>
             </div>
 
@@ -286,6 +313,18 @@ export class PokeSettingsPanel extends LitElement {
                   @change=${(e: Event) => this.updateSetting('autoConnect', (e.target as HTMLInputElement).checked)}
                 />
                 <label class="checkbox-label" for="autoConnect">Auto-connect on startup</label>
+              </div>
+            </div>
+
+            <div class="field">
+              <div class="checkbox-field">
+                <input
+                  type="checkbox"
+                  id="playSoundOnComplete"
+                  .checked=${this.localSettings.playSoundOnComplete}
+                  @change=${(e: Event) => this.updateSetting('playSoundOnComplete', (e.target as HTMLInputElement).checked)}
+                />
+                <label class="checkbox-label" for="playSoundOnComplete">Play sound when agent completes</label>
               </div>
             </div>
           </div>

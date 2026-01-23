@@ -54,9 +54,12 @@ export function clearAnnotations(): void {
 const defaultSettings: PokeSettings = {
   wsUrl: 'ws://localhost:8765',
   highlightColor: '#fbbf24',
-  markerColor: '#3b82f6',
+  markerColor: '#3b82f6',       // Pending (blue)
+  processingColor: '#ef4444',   // Processing (red)
+  completedColor: '#22c55e',    // Completed (green)
   autoConnect: true,
-  projectDir: ''  // Empty = use server default
+  projectDir: '',               // Empty = use server default
+  playSoundOnComplete: true     // Play ding when agent completes
 };
 
 export function saveSettings(settings: PokeSettings): void {

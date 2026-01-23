@@ -96,6 +96,17 @@ async function main(): Promise<void> {
             }
             sendMessage(ws, { type: 'reset_complete' });
             break;
+
+          case 'stop':
+            // Stop current agent execution
+            if (session) {
+              console.log('Stopping agent execution...');
+              await session.destroy();
+              session = null;
+              sessions.delete(ws);
+            }
+            sendMessage(ws, { type: 'idle' });
+            break;
         }
       } catch (err) {
         sendMessage(ws, { type: 'error', message: (err as Error).message });

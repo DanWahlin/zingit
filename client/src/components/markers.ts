@@ -50,17 +50,34 @@ export class PokeMarkers extends LitElement {
       transform: scale(1.2);
     }
 
-    /* Status-based colors */
+    /* Pause animation on hover for processing markers */
+    .marker.processing:hover {
+      animation-play-state: paused;
+    }
+
+    /* Status-based colors - use CSS variables for customization */
     .marker.pending {
-      background: var(--marker-color, #3b82f6);  /* Blue - default */
+      background: var(--marker-color, #3b82f6);
     }
 
     .marker.processing {
-      background: #ef4444;  /* Red - in progress */
+      background: var(--processing-color, #ef4444);
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      }
+      50% {
+        transform: scale(1.15);
+        box-shadow: 0 0 12px var(--processing-color, #ef4444);
+      }
     }
 
     .marker.completed {
-      background: #22c55e;  /* Green - completed */
+      background: var(--completed-color, #22c55e);
     }
 
     .delete-btn {

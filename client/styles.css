@@ -44,6 +44,12 @@ button.secondary {
 }
 button.secondary:hover { background: #f9fafb; }
 
+/* Primary button in Example Card - 50% wider */
+div.card:nth-of-type(2) > button:nth-of-type(1) {
+  width: 150%;
+  max-width: 200px;
+}
+
 /* Form Elements */
 .form-group {
   margin-bottom: 16px;

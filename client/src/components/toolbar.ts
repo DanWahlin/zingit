@@ -129,6 +129,11 @@ export class PokeToolbar extends LitElement {
       background: #374151;
     }
 
+    .btn-icon.active {
+      color: #3b82f6;
+      background: #1e3a5f;
+    }
+
     .btn-toggle {
       padding: 6px 10px;
       background: #22c55e;
@@ -159,7 +164,7 @@ export class PokeToolbar extends LitElement {
   @property({ type: Boolean }) canUndo = false;
   @property({ type: String }) agent = '';
   @property({ type: String }) model = '';
-  @property({ type: Boolean }) hasResponse = false;  // Show response button when there's content
+  @property({ type: Boolean }) responseOpen = false;  // Whether the response panel is open
 
   render() {
     const statusClass = this.maxAttemptsReached
@@ -227,17 +232,18 @@ export class PokeToolbar extends LitElement {
             `
         }
 
-        ${this.hasResponse ? html`
-          <button
-            class="btn-icon"
-            title="View agent response"
-            @click=${this.handleShowResponse}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-            </svg>
-          </button>
-        ` : ''}
+        <button
+          class="btn-icon ${this.responseOpen ? 'active' : ''}"
+          title="${this.responseOpen ? 'Hide agent console' : 'Show agent console'}"
+          @click=${this.handleToggleResponse}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="4 17 10 11 4 5"/>
+            <line x1="12" y1="19" x2="20" y2="19"/>
+          </svg>
+        </button>
+
+        <div class="divider"></div>
 
         <button
           class="btn-icon"
@@ -276,6 +282,8 @@ export class PokeToolbar extends LitElement {
             <path d="M6 21c0-5 2-9 6-9s6 4 6 9"/>
           </svg>
         </button>
+
+        <div class="divider"></div>
 
         <button
           class="btn-icon"
@@ -350,8 +358,8 @@ export class PokeToolbar extends LitElement {
     this.dispatchEvent(new CustomEvent('undo', { bubbles: true, composed: true }));
   }
 
-  private handleShowResponse() {
-    this.dispatchEvent(new CustomEvent('show-response', { bubbles: true, composed: true }));
+  private handleToggleResponse() {
+    this.dispatchEvent(new CustomEvent('toggle-response', { bubbles: true, composed: true }));
   }
 }
 

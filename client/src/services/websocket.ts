@@ -122,6 +122,10 @@ export class WebSocketClient {
     this.send({ type: 'reset' });
   }
 
+  sendStop(): void {
+    this.send({ type: 'stop' });
+  }
+
   on(event: WSEventType, handler: WSEventHandler): void {
     if (!this.handlers.has(event)) {
       this.handlers.set(event, new Set());

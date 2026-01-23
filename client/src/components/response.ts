@@ -21,8 +21,9 @@ export class PokeResponse extends LitElement {
     .panel {
       position: fixed;
       bottom: 80px;
-      right: 20px;
-      width: 400px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 500px;
       max-height: 60vh;
       background: #1f2937;
       border-radius: 12px;
@@ -63,6 +64,42 @@ export class PokeResponse extends LitElement {
     .close-btn:hover {
       background: #374151;
       color: white;
+    }
+
+    .stop-btn {
+      background: #ef4444;
+      border: none;
+      padding: 4px 10px;
+      cursor: pointer;
+      color: white;
+      font-size: 12px;
+      font-weight: 500;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .stop-btn:hover {
+      background: #dc2626;
+    }
+
+    .refresh-btn {
+      background: #22c55e;
+      border: none;
+      padding: 4px 10px;
+      cursor: pointer;
+      color: white;
+      font-size: 12px;
+      font-weight: 500;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .refresh-btn:hover {
+      background: #16a34a;
     }
 
     .content {
@@ -215,12 +252,31 @@ export class PokeResponse extends LitElement {
       <div class="panel">
         <div class="header">
           <h3 class="title">Agent Response</h3>
-          <button class="close-btn" @click=${this.handleClose}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="18" y1="6" x2="6" y2="18"/>
-              <line x1="6" y1="6" x2="18" y2="18"/>
-            </svg>
-          </button>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            ${this.processing ? html`
+              <button class="stop-btn" @click=${this.handleStop}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                  <rect x="4" y="4" width="16" height="16" rx="2"/>
+                </svg>
+                Stop
+              </button>
+            ` : this.content ? html`
+              <button class="refresh-btn" @click=${this.handleRefresh}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <path d="M23 4v6h-6"/>
+                  <path d="M1 20v-6h6"/>
+                  <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                </svg>
+                Refresh
+              </button>
+            ` : ''}
+            <button class="close-btn" @click=${this.handleClose}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </div>
         </div>
 
         <div class="content">
@@ -314,6 +370,14 @@ export class PokeResponse extends LitElement {
 
   private handleClose() {
     this.dispatchEvent(new CustomEvent('close', { bubbles: true, composed: true }));
+  }
+
+  private handleStop() {
+    this.dispatchEvent(new CustomEvent('stop', { bubbles: true, composed: true }));
+  }
+
+  private handleRefresh() {
+    window.location.reload();
   }
 
   private handleInputChange(e: Event) {

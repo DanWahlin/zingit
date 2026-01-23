@@ -36,7 +36,7 @@ export interface BatchData {
   projectDir?: string;  // Client-specified project directory (overrides server default)
 }
 
-export type WSIncomingType = 'batch' | 'message' | 'reset';
+export type WSIncomingType = 'batch' | 'message' | 'reset' | 'stop';
 
 export interface WSIncomingMessage {
   type: WSIncomingType;

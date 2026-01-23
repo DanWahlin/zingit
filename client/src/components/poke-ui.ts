@@ -210,6 +210,10 @@ export class PokeUI extends LitElement {
         );
         console.log('[PokeUI] After status update:', this.annotations.map(a => ({ id: a.id, status: a.status })));
         saveAnnotations(this.annotations);
+        // Play completion sound if enabled
+        if (this.settings.playSoundOnComplete) {
+          this.playCompletionSound();
+        }
         break;
 
       case 'error':
@@ -398,7 +402,7 @@ export class PokeUI extends LitElement {
 
       <poke-markers
         .annotations=${this.annotations}
-        style="--marker-color: ${this.settings.markerColor}"
+        style="--marker-color: ${this.settings.markerColor}; --processing-color: ${this.settings.processingColor}; --completed-color: ${this.settings.completedColor}"
         @marker-click=${this.handleMarkerClick}
         @marker-delete=${this.handleMarkerDelete}
       ></poke-markers>
@@ -413,7 +417,7 @@ export class PokeUI extends LitElement {
           .canUndo=${this.undoStack.length > 0}
           .agent=${this.agentName}
           .model=${this.agentModel}
-          .hasResponse=${this.responseContent.length > 0 || this.responseError.length > 0}
+          .responseOpen=${this.responseOpen}
           @toggle=${this.handleToggle}
           @send=${this.handleSend}
           @undo=${this.handleUndo}
@@ -423,7 +427,7 @@ export class PokeUI extends LitElement {
           @settings=${() => this.settingsOpen = true}
           @close=${this.handleClose}
           @reconnect=${this.handleReconnect}
-          @show-response=${() => this.responseOpen = true}
+          @toggle-response=${() => this.responseOpen = !this.responseOpen}
         ></poke-toolbar>
       </div>
 
@@ -454,6 +458,7 @@ export class PokeUI extends LitElement {
         .toolStatus=${this.responseToolStatus}
         .error=${this.responseError}
         @close=${() => this.responseOpen = false}
+        @stop=${this.handleStop}
         @followup=${this.handleFollowUp}
       ></poke-response>
 
@@ -538,21 +543,29 @@ export class PokeUI extends LitElement {
     // Use client-specified projectDir if set, otherwise server will use its default
     const projectDir = this.settings.projectDir || undefined;
 
-    // Mark all pending annotations as processing
-    console.log('[PokeUI] Before send, statuses:', this.annotations.map(a => ({ id: a.id, status: a.status })));
+    // Only send pending annotations (not completed ones)
+    const pendingAnnotations = this.annotations.filter(a => a.status !== 'completed');
+    if (pendingAnnotations.length === 0) {
+      this.toast.info('No pending annotations to send');
+      return;
+    }
+
+    // Mark pending annotations as processing
+    console.log('[PokeUI] Sending pending annotations:', pendingAnnotations.map(a => ({ id: a.id, status: a.status })));
     this.annotations = this.annotations.map(a =>
-      a.status !== 'completed' ? { ...a, status: 'processing' as const } : a
+      a.status === 'pending' ? { ...a, status: 'processing' as const } : a
     );
-    console.log('[PokeUI] After marking as processing:', this.annotations.map(a => ({ id: a.id, status: a.status })));
     saveAnnotations(this.annotations);
 
+    // Send only the annotations being processed
+    const annotationsToSend = this.annotations.filter(a => a.status === 'processing');
     this.ws.sendBatch({
       pageUrl: window.location.href,
       pageTitle: document.title,
-      annotations: this.annotations
+      annotations: annotationsToSend
     }, projectDir);
 
-    this.toast.info(`Sent ${this.annotations.length} annotation${this.annotations.length > 1 ? 's' : ''} to agent`);
+    this.toast.info(`Sent ${annotationsToSend.length} annotation${annotationsToSend.length > 1 ? 's' : ''} to agent`);
   }
 
   private handleExport() {
@@ -625,6 +638,55 @@ export class PokeUI extends LitElement {
   private handleFollowUp(e: CustomEvent<{ message: string }>) {
     if (!this.ws || !this.wsConnected) return;
     this.ws.sendMessage(e.detail.message);
+  }
+
+  private handleStop() {
+    if (!this.ws || !this.wsConnected) return;
+    this.ws.sendStop();
+    this.processing = false;
+    this.responseToolStatus = '';
+    // Revert processing annotations back to pending
+    this.annotations = this.annotations.map(a =>
+      a.status === 'processing' ? { ...a, status: 'pending' as const } : a
+    );
+    saveAnnotations(this.annotations);
+    this.toast.info('Agent stopped');
+  }
+
+  private playCompletionSound() {
+    try {
+      const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+
+      // Create a pleasant two-tone ding
+      const playTone = (frequency: number, startTime: number, duration: number) => {
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+
+        oscillator.frequency.value = frequency;
+        oscillator.type = 'sine';
+
+        // Envelope: quick attack, gentle decay
+        gainNode.gain.setValueAtTime(0, startTime);
+        gainNode.gain.linearRampToValueAtTime(0.3, startTime + 0.01);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
+
+        oscillator.start(startTime);
+        oscillator.stop(startTime + duration);
+      };
+
+      const now = audioContext.currentTime;
+      // Two-tone ding: C6 followed by E6 (major third interval)
+      playTone(1047, now, 0.15);        // C6
+      playTone(1319, now + 0.1, 0.2);   // E6
+
+      // Clean up audio context after sound finishes
+      setTimeout(() => audioContext.close(), 500);
+    } catch (err) {
+      console.warn('PokeUI: Could not play completion sound', err);
+    }
   }
 }
 

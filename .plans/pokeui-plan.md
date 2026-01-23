@@ -3379,7 +3379,224 @@ When using Lit with `@state()` decorators, avoid property names that conflict wi
 
 ---
 
+## Phase 10: Selector Disambiguation & Settings Enhancements
+
+### 10.1 The Selector Problem
+
+CSS selectors work for the **rendered DOM** but don't help AI agents find elements in **source files**. When multiple similar elements exist (e.g., multiple `<button>` tags), the agent can't distinguish which one to modify.
+
+**Solution: Add positional context**
+
+Two new functions in `selector.ts`:
+
+```typescript
+// Get position among siblings with marker
+export function getSiblingContext(element: Element): string {
+  // Returns:
+  // Position 1 of 4 in parent:
+  //   1. <h2>Example Card</h2>
+  //   2. <p>This card has...</p>
+  //   3. <button>Primary</button> ← THIS ONE
+  //   4. <button>Secondary</button>
+}
+
+// Get parent HTML with target marked
+export function getParentHtml(element: Element, maxLength = 1000): string {
+  // Returns parent element HTML with target marked:
+  // <div class="card">
+  //   <h2>Example Card</h2>
+  //   <button data-pokeui-target="true">Primary</button>
+  //   <button>Secondary</button>
+  // </div>
+}
+```
+
+**New Annotation fields:**
+```typescript
+interface Annotation {
+  // ... existing fields
+  siblingContext?: string;  // Position among siblings
+  parentHtml?: string;      // Parent HTML with target marked
+}
+```
+
+### 10.2 Improved Agent Prompt
+
+The `formatPrompt()` in `base.ts` now includes:
+
+```
+## Annotation 1: button: "Primary"
+
+**Requested Change:** Change text to "Submit"
+
+**Target Element HTML:**
+<button>Primary</button>
+
+**Position in DOM:**
+Position 3 of 4 in parent:
+  1. <h2>Example Card</h2>
+  2. <p>This card has...</p>
+  3. <button>Primary</button> ← THIS ONE
+  4. <button>Secondary</button>
+
+**Parent Context (target marked with data-pokeui-target="true"):**
+<div class="card">
+  <h2>Example Card</h2>
+  <button data-pokeui-target="true">Primary</button>
+  <button class="secondary">Secondary</button>
+</div>
+
+CRITICAL INSTRUCTIONS:
+1. CAREFULLY identify the CORRECT element to modify:
+   - The "Position in DOM" shows which element is the target (marked with "← THIS ONE")
+   - The "Parent Context" shows the element with data-pokeui-target="true" - THAT is the one to change
+   - Do NOT change other similar elements
+```
+
+### 10.3 Marker Attribute Constant
+
+Extract magic string to constant with sync comments:
+
+```typescript
+// selector.ts
+/**
+ * Marker attribute used to identify the target element in parent HTML context.
+ * IMPORTANT: Keep in sync with server/src/agents/base.ts formatPrompt()
+ */
+export const TARGET_MARKER_ATTR = 'data-pokeui-target';
+```
+
+### 10.4 Error Handling in getParentHtml()
+
+Added try-catch for edge cases like detached elements:
+
+```typescript
+export function getParentHtml(element: Element, maxLength = 1000): string {
+  try {
+    // ... implementation
+  } catch {
+    // Handle edge cases like detached elements or exotic DOM nodes
+    return '';
+  }
+}
+```
+
+### 10.5 Terminal Console Icon
+
+Added always-visible terminal icon to toolbar that toggles the response panel:
+
+```html
+<!-- Terminal/console icon -->
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+  <polyline points="4 17 10 11 4 5"/>
+  <line x1="12" y1="19" x2="20" y2="19"/>
+</svg>
+```
+
+**Implementation:**
+- `responseOpen` property tracks panel state
+- Button has `.active` class when panel is open
+- Emits `toggle-response` event (not just `show-response`)
+
+```css
+.btn-icon.active {
+  color: #3b82f6;
+  background: #1e3a5f;
+}
+```
+
+### 10.6 Toolbar Divider Organization
+
+Added dividers to group related actions:
+
+```
+[ON] | Status | Count | [Send] [Terminal] | [Undo] [Copy] [Clear] | [Help] [Settings] [Close]
+      ↑         ↑                          ↑                        ↑
+   divider   divider                    divider                  divider
+```
+
+Groups:
+- **Agent actions**: Send, Terminal console
+- **Annotation actions**: Undo, Copy, Clear
+- **App actions**: Help, Settings, Close
+
+### 10.7 Customizable Status Colors
+
+Added settings for annotation status colors:
+
+```typescript
+interface PokeSettings {
+  // ... existing
+  markerColor: string;       // Pending (blue #3b82f6)
+  processingColor: string;   // Processing (red #ef4444)
+  completedColor: string;    // Completed (green #22c55e)
+}
+```
+
+**Settings UI additions:**
+- Pending Color picker
+- Processing Color picker
+- Completed Color picker
+
+**Markers use CSS variables:**
+```css
+.marker.pending { background: var(--marker-color, #3b82f6); }
+.marker.processing { background: var(--processing-color, #ef4444); }
+.marker.completed { background: var(--completed-color, #22c55e); }
+```
+
+### 10.8 Project Directory Default Value
+
+Fixed Settings panel to show server's default directory as actual text (not placeholder):
+
+```typescript
+// settings.ts - Use server default when local setting is empty
+.value=${this.localSettings.projectDir || this.serverProjectDir}
+```
+
+### 10.9 Client/Server Type Separation
+
+Keep types separate between client and server - they serve different purposes:
+
+- **Client `Annotation`**: Includes `status` for UI state (blue/red/green markers)
+- **Server `Annotation`**: Wire format only, no UI state needed
+
+This is intentional separation of concerns. Add comments noting the relationship:
+```typescript
+// Wire format fields - keep in sync with server/src/types.ts (excluding UI-only fields like status)
+```
+
+### 10.10 Hot Reload Strategies
+
+For different project types:
+
+| Project Type | Hot Reload Strategy |
+|--------------|---------------------|
+| Static HTML | Custom DOM swap via fetch + replace |
+| Angular | Angular CLI's `ng serve` handles it |
+| React | Vite/CRA dev server handles it |
+| Vue | Vite dev server handles it |
+
+**For SPA frameworks**: Don't implement custom hot reload. Let the framework's dev server handle file watching and component updates. PokeUI annotations persist in localStorage and survive reloads.
+
+**For static HTML only**:
+```javascript
+async function hotReloadSelector(selector) {
+  const response = await fetch(window.location.href, { cache: 'no-store' });
+  const html = await response.text();
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+
+  const newEl = doc.querySelector(selector);
+  const oldEl = document.querySelector(selector);
+
+  if (newEl && oldEl) {
+    oldEl.replaceWith(newEl.cloneNode(true));
+  }
+}
+```
+
+---
+
 ## License
 
 MIT
-```

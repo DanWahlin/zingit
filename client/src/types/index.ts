@@ -19,9 +19,12 @@ export interface Annotation {
 export interface PokeSettings {
   wsUrl: string;
   highlightColor: string;
-  markerColor: string;
+  markerColor: string;           // Pending status color (blue default)
+  processingColor: string;       // Processing status color (red default)
+  completedColor: string;        // Completed status color (green default)
   autoConnect: boolean;
-  projectDir: string;  // Project directory for AI agent to work in
+  projectDir: string;            // Project directory for AI agent to work in
+  playSoundOnComplete: boolean;  // Play a ding sound when agent completes
 }
 
 export interface BatchData {
