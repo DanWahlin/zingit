@@ -6,7 +6,7 @@ A browser-based annotation tool that lets you highlight and comment on UI elemen
 
 - **Visual Annotations**: Click any element to add notes about changes you want
 - **Smart Selectors**: Automatically generates CSS selectors for targeted elements
-- **AI Integration**: Supports Claude Code CLI and GitHub Copilot SDK
+- **AI Integration**: Supports Claude Agent SDK, GitHub Copilot SDK, and OpenAI Codex SDK
 - **Streaming Responses**: Watch the AI work in real-time
 - **Persistent Storage**: Annotations survive page refreshes
 - **Bookmarklet Ready**: Single-file build for easy injection
@@ -29,7 +29,7 @@ npm install
 
 The server requires two environment variables:
 - `PROJECT_DIR` - Path to the project the AI agent should work in
-- `AGENT` - Which AI agent to use (`claude` or `copilot`)
+- `AGENT` - Which AI agent to use (`claude`, `copilot`, or `codex`)
 
 ```bash
 cd server
@@ -39,6 +39,9 @@ PROJECT_DIR=/path/to/your/project AGENT=claude npm run dev
 
 # Using GitHub Copilot SDK
 PROJECT_DIR=/path/to/your/project AGENT=copilot npm run dev
+
+# Using OpenAI Codex SDK
+PROJECT_DIR=/path/to/your/project AGENT=codex npm run dev
 ```
 
 The agent will read and edit files within the specified `PROJECT_DIR`.
@@ -138,7 +141,8 @@ pokeui/
         ├── agents/
         │   ├── base.ts       # Abstract agent interface
         │   ├── claude.ts     # Claude Agent SDK integration
-        │   └── copilot.ts    # GitHub Copilot SDK integration
+        │   ├── copilot.ts    # GitHub Copilot SDK integration
+        │   └── codex.ts      # OpenAI Codex SDK integration
         ├── types.ts
         └── index.ts          # WebSocket server
 ```
@@ -172,6 +176,24 @@ The SDK provides streaming responses with tool execution status, allowing the ag
 ```bash
 PROJECT_DIR=/path/to/your/project AGENT=claude npm run dev
 ```
+
+### OpenAI Codex SDK
+
+Uses the official `@openai/codex-sdk` package. Requires:
+- Codex CLI installed and logged in (run `codex` once to authenticate)
+- Active ChatGPT Plus, Pro, Business, Edu, or Enterprise subscription
+
+The SDK uses your cached Codex CLI credentials (`~/.codex/auth.json`) - no API key needed. Just login once via the browser flow.
+
+```bash
+# First time: login to Codex (opens browser)
+npx codex
+
+# Then run the server
+PROJECT_DIR=/path/to/your/project AGENT=codex npm run dev
+```
+
+You can optionally set `CODEX_MODEL` to override the default model (gpt-5.2-codex).
 
 ## API
 

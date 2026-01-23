@@ -46,9 +46,8 @@ A browser-based annotation tool that captures UI feedback and sends it to AI cod
 │                                                              │
 │  Supported agents:                                           │
 │  • GitHub Copilot (@github/copilot-sdk)                     │
-│  • Claude Code (coming)                                      │
-│  • Cursor (coming)                                           │
-│  • Any MCP-compatible agent                                  │
+│  • Claude Agent SDK (@anthropic-ai/claude-agent-sdk)        │
+│  • OpenAI Codex SDK (@openai/codex-sdk)                     │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -90,7 +89,9 @@ pokeui/
 │       ├── server.ts           # WebSocket server
 │       └── agents/
 │           ├── base.ts         # Base agent interface
-│           └── copilot.ts      # Copilot adapter
+│           ├── copilot.ts      # GitHub Copilot SDK adapter
+│           ├── claude.ts       # Claude Agent SDK adapter
+│           └── codex.ts        # OpenAI Codex SDK adapter
 └── README.md
 ```
 
@@ -112,8 +113,11 @@ pokeui/
     "start": "node dist/index.js"
   },
   "dependencies": {
-    "@github/copilot-sdk": "^0.1.10",
-    "ws": "^8.18.0"
+    "@anthropic-ai/claude-agent-sdk": "^0.2.17",
+    "@github/copilot-sdk": "^0.1.16",
+    "@openai/codex-sdk": "^0.89.0",
+    "ws": "^8.19.0",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/node": "^20.11.0",
@@ -725,6 +729,128 @@ export class ClaudeCodeAgent extends BaseAgent {
 }
 ```
 
+### 3.2c OpenAI Codex Agent (server/src/agents/codex.ts)
+
+```typescript
+// server/src/agents/codex.ts
+// Agent that uses OpenAI Codex SDK
+
+import type { WebSocket } from 'ws';
+import { Codex } from '@openai/codex-sdk';
+import { BaseAgent } from './base.js';
+import type { AgentSession, WSOutgoingMessage } from '../types.js';
+
+export class CodexAgent extends BaseAgent {
+  name = 'codex';
+  model: string;
+  private codex: Codex | null = null;
+
+  constructor() {
+    super();
+    this.model = process.env.CODEX_MODEL || 'gpt-5.2-codex';
+  }
+
+  async start(): Promise<void> {
+    // Initialize the Codex client
+    // Uses cached credentials from ~/.codex/auth.json (login via `codex` CLI)
+    this.codex = new Codex();
+    console.log(`✓ Codex SDK initialized (model: ${this.model})`);
+  }
+
+  async stop(): Promise<void> {
+    this.codex = null;
+  }
+
+  async createSession(ws: WebSocket, projectDir: string): Promise<AgentSession> {
+    if (!this.codex) {
+      throw new Error('Codex client not initialized');
+    }
+
+    const send = (data: WSOutgoingMessage): void => {
+      if (ws.readyState === ws.OPEN) {
+        ws.send(JSON.stringify(data));
+      }
+    };
+
+    // Start a Codex thread with the project directory
+    const thread = this.codex.startThread({
+      workingDirectory: projectDir,
+    });
+
+    let abortController: AbortController | null = null;
+
+    return {
+      send: async (msg: { prompt: string }) => {
+        try {
+          abortController = new AbortController();
+          const { events } = await thread.runStreamed(msg.prompt);
+
+          for await (const event of events) {
+            if (abortController?.signal.aborted) break;
+
+            switch (event.type) {
+              case 'item.started':
+                if (event.item?.type) {
+                  send({ type: 'tool_start', tool: event.item.type });
+                }
+                break;
+
+              case 'item.completed':
+                if (event.item) {
+                  switch (event.item.type) {
+                    case 'agent_message':
+                      send({ type: 'delta', content: event.item.text + '\n' });
+                      break;
+                    case 'reasoning':
+                      send({ type: 'delta', content: `\n*[Reasoning]* ${event.item.text}\n` });
+                      break;
+                    case 'command_execution':
+                      send({ type: 'delta', content: `\n$ ${event.item.command}\n${event.item.aggregated_output}\n` });
+                      break;
+                    case 'file_change':
+                      const files = event.item.changes.map(c => `${c.kind}: ${c.path}`).join(', ');
+                      send({ type: 'delta', content: `\n*[Files changed]* ${files}\n` });
+                      break;
+                  }
+                  send({ type: 'tool_end', tool: event.item.type });
+                }
+                break;
+
+              case 'turn.completed':
+                send({ type: 'idle' });
+                break;
+
+              case 'turn.failed':
+                send({ type: 'error', message: event.error?.message || 'Codex turn failed' });
+                break;
+
+              case 'error':
+                send({ type: 'error', message: event.message || 'Unknown Codex error' });
+                break;
+            }
+          }
+        } catch (err) {
+          send({ type: 'error', message: (err as Error).message });
+        }
+      },
+      destroy: async () => {
+        if (abortController) {
+          abortController.abort();
+          abortController = null;
+        }
+      }
+    };
+  }
+}
+```
+
+**Codex SDK Features:**
+- Uses cached credentials from `~/.codex/auth.json` (no API key needed)
+- Requires ChatGPT Plus, Pro, Business, Edu, or Enterprise subscription
+- Streaming events via `runStreamed()` for real-time progress
+- Event types: `agent_message`, `reasoning`, `command_execution`, `file_change`
+- Default model: `gpt-5.2-codex` (override with `CODEX_MODEL` env var)
+
 ### 3.3 Server Entry (server/src/index.ts)
 
 ```typescript
@@ -733,6 +859,7 @@ export class ClaudeCodeAgent extends BaseAgent {
 import { WebSocketServer, WebSocket } from 'ws';
 import { CopilotAgent } from './agents/copilot.js';
 import { ClaudeCodeAgent } from './agents/claude.js';
+import { CodexAgent } from './agents/codex.js';
 import type { Agent, AgentSession, WSIncomingMessage, WSOutgoingMessage } from './types.js';
 
 const PORT = parseInt(process.env.PORT || '8765', 10);
@@ -740,11 +867,12 @@ const AGENT_TYPE = process.env.AGENT || 'copilot';
 
 // Agent registry - choose agent via AGENT env var
 // AGENT=copilot npm run dev   -> Uses GitHub Copilot SDK
-// AGENT=claude npm run dev    -> Uses Claude Code CLI
+// AGENT=claude npm run dev    -> Uses Claude Agent SDK
+// AGENT=codex npm run dev     -> Uses OpenAI Codex SDK
 const agents: Record<string, new () => Agent> = {
   copilot: CopilotAgent,
   claude: ClaudeCodeAgent,
-  // cursor: CursorAgent,  // Future: Cursor integration
+  codex: CodexAgent,
 };
 
 async function main(): Promise<void> {
@@ -2885,7 +3013,7 @@ javascript:(function(){if(customElements.get('poke-ui')){return}var s=document.c
 
 1. **Setup** - package.json, tsconfig.json, vite.config.ts
 2. **Types** - client/src/types/index.ts, server/src/types.ts
-3. **Server** - agents/base.ts, agents/copilot.ts, index.ts
+3. **Server** - agents/base.ts, agents/copilot.ts, agents/claude.ts, agents/codex.ts, index.ts
 4. **Services** - selector.ts, storage.ts, websocket.ts
 5. **Utils** - geometry.ts, markdown.ts
 6. **Components** - toolbar → highlight → modal → markers → response → settings → poke-ui
@@ -2928,6 +3056,7 @@ PokeUI is a browser-based annotation tool that captures UI feedback and sends it
 - One of the following AI agents:
   - **GitHub Copilot** with the CLI SDK (`npm install -g @github/copilot-sdk`)
   - **Claude Code** CLI (`npm install -g @anthropic-ai/claude-code`)
+  - **OpenAI Codex** CLI (run `npx codex` to login with ChatGPT subscription)
 
 ### Installation
 
@@ -2952,18 +3081,23 @@ The server bridges your browser to the AI agent. Choose your agent:
 ```bash
 # Option 1: Use GitHub Copilot (default)
 cd server
-npm run dev
+PROJECT_DIR=/path/to/your/project npm run dev
 
-# Option 2: Use Claude Code
+# Option 2: Use Claude Agent SDK
 cd server
-AGENT=claude npm run dev
+PROJECT_DIR=/path/to/your/project AGENT=claude npm run dev
+
+# Option 3: Use OpenAI Codex SDK
+cd server
+PROJECT_DIR=/path/to/your/project AGENT=codex npm run dev
 ```
 
 You should see:
 ```
-✓ Copilot CLI connected (model: claude-opus-4.5)
+✓ Copilot SDK initialized (model: claude-sonnet-4-20250514)
 ✓ PokeUI server running on ws://localhost:8765
 ✓ Agent: copilot
+✓ Project directory: /path/to/your/project
 ```
 
 ### Starting the Client (Development)

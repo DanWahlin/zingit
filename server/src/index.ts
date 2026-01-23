@@ -3,6 +3,7 @@
 import { WebSocketServer, WebSocket } from 'ws';
 import { CopilotAgent } from './agents/copilot.js';
 import { ClaudeCodeAgent } from './agents/claude.js';
+import { CodexAgent } from './agents/codex.js';
 import type { Agent, AgentSession, WSIncomingMessage, WSOutgoingMessage } from './types.js';
 
 const PORT = parseInt(process.env.PORT || '8765', 10);
@@ -17,11 +18,13 @@ if (!process.env.PROJECT_DIR) {
 const PROJECT_DIR: string = process.env.PROJECT_DIR;
 
 // Agent registry - choose agent via AGENT env var
-// AGENT=copilot npm run dev   -> Uses GitHub Copilot SDK (simulated)
-// AGENT=claude npm run dev    -> Uses Claude Code CLI
+// AGENT=copilot npm run dev   -> Uses GitHub Copilot SDK
+// AGENT=claude npm run dev    -> Uses Claude Agent SDK
+// AGENT=codex npm run dev     -> Uses OpenAI Codex SDK
 const agents: Record<string, new () => Agent> = {
   copilot: CopilotAgent,
   claude: ClaudeCodeAgent,
+  codex: CodexAgent,
 };
 
 async function main(): Promise<void> {
