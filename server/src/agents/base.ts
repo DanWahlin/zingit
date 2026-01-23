@@ -52,6 +52,7 @@ CRITICAL INSTRUCTIONS:
 1. CAREFULLY identify the CORRECT element to modify:
    - The "Position in DOM" shows which element among siblings is the target (marked with "← THIS ONE")
    - The "Parent Context" HTML shows the element with data-pokeui-target="true" attribute - THAT is the one to change
+     (Note: data-pokeui-target is the marker attribute - keep in sync with client/src/services/selector.ts)
    - Do NOT change other similar elements that happen to have matching text
 
 2. Search for the parent context HTML in source files to find the exact location
