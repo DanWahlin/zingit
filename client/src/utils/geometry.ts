@@ -60,12 +60,32 @@ export function isInViewport(rect: Rect, viewport: Rect): boolean {
   );
 }
 
-export function getMarkerPosition(elementRect: Rect): { top: number; left: number } {
+export function getMarkerPosition(elementRect: Rect, viewport?: { width: number; height: number }): { top: number; left: number } {
+  const markerSize = 24;
+  const padding = 4; // Minimum distance from viewport edge
+
   // Position marker at top-left corner of element
-  return {
-    top: elementRect.top - 12,
-    left: elementRect.left - 12
-  };
+  let top = elementRect.top - 12;
+  let left = elementRect.left - 12;
+
+  // Clamp to viewport bounds if viewport is provided
+  if (viewport) {
+    // Keep marker within horizontal bounds
+    if (left < padding) {
+      left = padding;
+    } else if (left + markerSize > viewport.width - padding) {
+      left = viewport.width - markerSize - padding;
+    }
+
+    // Keep marker within vertical bounds
+    if (top < padding) {
+      top = padding;
+    } else if (top + markerSize > viewport.height - padding) {
+      top = viewport.height - markerSize - padding;
+    }
+  }
+
+  return { top, left };
 }
 
 export function getHighlightStyles(rect: Rect): Record<string, string> {

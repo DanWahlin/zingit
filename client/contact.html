@@ -7,89 +7,92 @@
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-  <nav>
-    <a href="/">Home</a>
-    <a href="/products.html">Products</a>
-    <a href="/about.html">About</a>
-    <a href="/contact.html">Contact</a>
-  </nav>
+  <!-- Navigation -->
+  <site-header active-page="contact"></site-header>
 
-  <h1>Get in Touch</h1>
-  <p class="subtitle">Have a question or feedback? We'd love to hear from you.</p>
+  <!-- Hero Section -->
+  <section class="hero">
+    <h1>Get in Touch</h1>
+    <p>Have a question or feedback? We'd love to hear from you.</p>
+  </section>
 
-  <div class="contact-grid">
-    <div class="contact-form">
-      <h2>Send us a Message</h2>
-      <form>
-        <div class="form-group">
-          <label for="name">Full Name</label>
-          <input type="text" id="name" placeholder="John Doe">
+  <!-- Contact Content -->
+  <section class="content-section">
+    <div class="contact-grid">
+      <div class="contact-form">
+        <h2>Send us a Message</h2>
+        <form>
+          <div class="form-group">
+            <label for="name">Full Name</label>
+            <input type="text" id="name" placeholder="John Doe">
+          </div>
+          <div class="form-group">
+            <label for="email">Email Address</label>
+            <input type="email" id="email" placeholder="john@example.com">
+          </div>
+          <div class="form-group">
+            <label for="subject">Subject</label>
+            <select id="subject">
+              <option value="">Select a topic...</option>
+              <option value="sales">Sales Inquiry</option>
+              <option value="support">Technical Support</option>
+              <option value="billing">Billing Question</option>
+              <option value="partnership">Partnership</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="message">Message</label>
+            <textarea id="message" placeholder="Tell us how we can help..."></textarea>
+          </div>
+          <button type="submit">Send Message</button>
+        </form>
+      </div>
+
+      <div class="contact-info">
+        <div class="info-card">
+          <div class="info-icon">&#x1F4E7;</div>
+          <div class="info-content">
+            <h3>Email Us</h3>
+            <p><a href="mailto:hello@example.com">hello@example.com</a></p>
+            <p><a href="mailto:support@example.com">support@example.com</a></p>
+          </div>
         </div>
-        <div class="form-group">
-          <label for="email">Email Address</label>
-          <input type="email" id="email" placeholder="john@example.com">
+
+        <div class="info-card">
+          <div class="info-icon">&#x1F4DE;</div>
+          <div class="info-content">
+            <h3>Call Us</h3>
+            <p>+1 (555) 123-4567</p>
+            <p>Mon-Fri, 9am-6pm EST</p>
+          </div>
         </div>
-        <div class="form-group">
-          <label for="subject">Subject</label>
-          <select id="subject">
-            <option value="">Select a topic...</option>
-            <option value="sales">Sales Inquiry</option>
-            <option value="support">Technical Support</option>
-            <option value="billing">Billing Question</option>
-            <option value="partnership">Partnership</option>
-            <option value="other">Other</option>
-          </select>
+
+        <div class="info-card">
+          <div class="info-icon">&#x1F4CD;</div>
+          <div class="info-content">
+            <h3>Visit Us</h3>
+            <p>123 Innovation Drive</p>
+            <p>San Francisco, CA 94107</p>
+          </div>
         </div>
-        <div class="form-group">
-          <label for="message">Message</label>
-          <textarea id="message" placeholder="Tell us how we can help..."></textarea>
+
+        <div class="social-links">
+          <a href="#" class="social-link" title="Twitter">&#x1F426;</a>
+          <a href="#" class="social-link" title="LinkedIn">&#x1F4BC;</a>
+          <a href="#" class="social-link" title="GitHub">&#x1F419;</a>
+          <a href="#" class="social-link" title="Discord">&#x1F4AC;</a>
         </div>
-        <button type="submit">Send Message</button>
-      </form>
+
+        <div class="map-placeholder">
+          &#x1F5FA;&#xFE0F; Map would go here
+        </div>
+      </div>
     </div>
+  </section>
 
-    <div class="contact-info">
-      <div class="info-card">
-        <div class="info-icon">📧</div>
-        <div class="info-content">
-          <h3>Email Us</h3>
-          <p><a href="mailto:hello@example.com">hello@example.com</a></p>
-          <p><a href="mailto:support@example.com">support@example.com</a></p>
-        </div>
-      </div>
-
-      <div class="info-card">
-        <div class="info-icon">📞</div>
-        <div class="info-content">
-          <h3>Call Us</h3>
-          <p>+1 (555) 123-4567</p>
-          <p>Mon-Fri, 9am-6pm EST</p>
-        </div>
-      </div>
-
-      <div class="info-card">
-        <div class="info-icon">📍</div>
-        <div class="info-content">
-          <h3>Visit Us</h3>
-          <p>123 Innovation Drive</p>
-          <p>San Francisco, CA 94107</p>
-        </div>
-      </div>
-
-      <div class="social-links">
-        <a href="#" class="social-link" title="Twitter">🐦</a>
-        <a href="#" class="social-link" title="LinkedIn">💼</a>
-        <a href="#" class="social-link" title="GitHub">🐙</a>
-        <a href="#" class="social-link" title="Discord">💬</a>
-      </div>
-
-      <div class="map-placeholder">
-        🗺️ Map would go here
-      </div>
-    </div>
-  </div>
-
-  <div class="faq">
+  <!-- FAQ -->
+  <section class="faq">
     <h2>Frequently Asked Questions</h2>
 
     <div class="faq-item">
@@ -131,7 +134,10 @@
         Our comprehensive documentation is available at docs.example.com. It includes tutorials, API references, and troubleshooting guides.
       </div>
     </div>
-  </div>
+  </section>
+
+  <!-- Footer -->
+  <site-footer></site-footer>
 
   <script type="module" src="/src/index.ts"></script>
 </body>

@@ -366,10 +366,18 @@ export class ZingUI extends LitElement {
     this.highlightVisible = true;
   }
 
-  private isEditableTarget(target: EventTarget | null): boolean {
-    if (!(target instanceof HTMLElement)) return false;
-    const tagName = target.tagName?.toLowerCase();
-    return tagName === 'input' || tagName === 'textarea' || target.isContentEditable;
+  private isEditableTarget(e: KeyboardEvent): boolean {
+    // Use composedPath to handle Shadow DOM - the actual target might be inside a shadow root
+    const path = e.composedPath();
+    for (const el of path) {
+      if (el instanceof HTMLElement) {
+        const tagName = el.tagName?.toLowerCase();
+        if (tagName === 'input' || tagName === 'textarea' || el.isContentEditable) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   private handleDocumentKeydown(e: KeyboardEvent) {
@@ -386,8 +394,8 @@ export class ZingUI extends LitElement {
       }
     }
 
-    // Skip keyboard shortcuts if typing in an input field
-    if (this.isEditableTarget(e.target)) return;
+    // Skip keyboard shortcuts if typing in an input field (including inside Shadow DOM)
+    if (this.isEditableTarget(e)) return;
 
     // Cmd/Ctrl+Z for undo
     if ((e.metaKey || e.ctrlKey) && e.key === 'z' && !e.shiftKey && this.undoStack.length > 0) {

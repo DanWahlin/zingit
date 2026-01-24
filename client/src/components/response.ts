@@ -178,6 +178,31 @@ export class ZingResponse extends LitElement {
       word-break: break-word;
     }
 
+    .action-step {
+      padding: 10px 12px;
+      background: rgba(59, 130, 246, 0.1);
+      border-left: 3px solid #3b82f6;
+      border-radius: 0 6px 6px 0;
+      margin: 8px 0;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .action-step.check {
+      background: rgba(251, 191, 36, 0.1);
+      border-left-color: #fbbf24;
+    }
+
+    .action-step.result {
+      background: rgba(34, 197, 94, 0.1);
+      border-left-color: #22c55e;
+    }
+
+    .action-step.observation {
+      background: rgba(156, 163, 175, 0.1);
+      border-left-color: #9ca3af;
+    }
+
     .error {
       color: #f87171;
       background: rgba(248, 113, 113, 0.1);
@@ -374,8 +399,67 @@ export class ZingResponse extends LitElement {
       if (segment.type === 'code') {
         return html`<div class="code-block">${segment.content}</div>`;
       }
-      return html`<div class="text-block">${segment.content}</div>`;
+      // Parse text into action steps for better readability
+      return this.renderTextAsSteps(segment.content);
     });
+  }
+
+  private renderTextAsSteps(text: string) {
+    // Split on sentence boundaries that typically indicate new actions
+    // Look for: period/colon followed by capital letter (with optional space)
+    const steps = text
+      .split(/(?<=[.:])\s*(?=[A-Z][a-z])/)
+      .map(s => s.trim())
+      .filter(s => s.length > 0);
+
+    if (steps.length <= 1) {
+      // If we can't split meaningfully, render as plain text
+      return html`<div class="text-block">${text}</div>`;
+    }
+
+    return steps.map(step => {
+      const stepClass = this.classifyStep(step);
+      return html`<div class="action-step ${stepClass}">${step}</div>`;
+    });
+  }
+
+  private classifyStep(step: string): string {
+    const lower = step.toLowerCase();
+
+    // Check/investigation actions (yellow)
+    if (lower.startsWith('let me check') ||
+        lower.startsWith('let me look') ||
+        lower.startsWith('let me run') ||
+        lower.startsWith('let me also') ||
+        lower.startsWith('looking at') ||
+        lower.startsWith('checking')) {
+      return 'check';
+    }
+
+    // Results/conclusions (green)
+    if (lower.startsWith('added') ||
+        lower.startsWith('updated') ||
+        lower.startsWith('created') ||
+        lower.startsWith('removed') ||
+        lower.startsWith('fixed') ||
+        lower.startsWith('changed')) {
+      return 'result';
+    }
+
+    // Observations/notes (gray)
+    if (lower.startsWith('i don\'t see') ||
+        lower.startsWith('i can see') ||
+        lower.startsWith('there\'s no') ||
+        lower.startsWith('there is no') ||
+        lower.startsWith('the ') ||
+        lower.startsWith('it\'s possible') ||
+        lower.startsWith('perhaps') ||
+        lower.startsWith('however')) {
+      return 'observation';
+    }
+
+    // Default action (blue)
+    return '';
   }
 
   private handleClose() {

@@ -7,19 +7,17 @@
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-  <nav>
-    <a href="/">Home</a>
-    <a href="/products.html">Products</a>
-    <a href="/about.html">About</a>
-    <a href="/contact.html">Contact</a>
-  </nav>
+  <!-- Navigation -->
+  <site-header active-page="about"></site-header>
 
-  <div class="hero">
+  <!-- Hero Section -->
+  <section class="hero">
     <h1>About Our Company</h1>
     <p>We're on a mission to make software development faster, easier, and more enjoyable for everyone.</p>
-  </div>
+  </section>
 
-  <div class="stats">
+  <!-- Stats -->
+  <section class="stats">
     <div class="stat">
       <div class="stat-number">50K+</div>
       <div class="stat-label">Happy Customers</div>
@@ -32,70 +30,82 @@
       <div class="stat-number">24/7</div>
       <div class="stat-label">Support</div>
     </div>
-  </div>
+  </section>
 
-  <h2>Our Story</h2>
-  <p>Founded in 2020, we started with a simple idea: development tools should help you, not get in your way. What began as a side project has grown into a platform trusted by thousands of developers worldwide.</p>
-  <p>Today, we continue to push the boundaries of what's possible, always keeping our users at the center of everything we do.</p>
+  <!-- Our Story -->
+  <section class="content-section">
+    <h2>Our Story</h2>
+    <p>Founded in 2020, we started with a simple idea: development tools should help you, not get in your way. What began as a side project has grown into a platform trusted by thousands of developers worldwide.</p>
+    <p>Today, we continue to push the boundaries of what's possible, always keeping our users at the center of everything we do.</p>
 
-  <div class="timeline">
-    <div class="timeline-item">
-      <div class="timeline-year">2020</div>
-      <p>Company founded with 3 people in a garage</p>
+    <div class="timeline">
+      <div class="timeline-item">
+        <div class="timeline-year">2020</div>
+        <p>Company founded with 3 people in a garage</p>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-year">2021</div>
+        <p>Launched our first product, reached 1,000 users</p>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-year">2022</div>
+        <p>Series A funding, expanded to 25 team members</p>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-year">2023</div>
+        <p>50,000 customers, opened European office</p>
+      </div>
     </div>
-    <div class="timeline-item">
-      <div class="timeline-year">2021</div>
-      <p>Launched our first product, reached 1,000 users</p>
-    </div>
-    <div class="timeline-item">
-      <div class="timeline-year">2022</div>
-      <p>Series A funding, expanded to 25 team members</p>
-    </div>
-    <div class="timeline-item">
-      <div class="timeline-year">2023</div>
-      <p>50,000 customers, opened European office</p>
-    </div>
-  </div>
+  </section>
 
-  <h2>Our Values</h2>
-  <div class="values">
-    <div class="value">
-      <h3>User First</h3>
-      <p>Every decision we make starts with one question: how does this help our users?</p>
+  <!-- Our Values -->
+  <section class="content-section">
+    <h2>Our Values</h2>
+    <div class="values">
+      <div class="value">
+        <h3>User First</h3>
+        <p>Every decision we make starts with one question: how does this help our users?</p>
+      </div>
+      <div class="value">
+        <h3>Simplicity</h3>
+        <p>We believe the best tools are the ones that get out of your way and let you focus on what matters.</p>
+      </div>
+      <div class="value">
+        <h3>Transparency</h3>
+        <p>We communicate openly with our users, sharing our roadmap, challenges, and victories.</p>
+      </div>
     </div>
-    <div class="value">
-      <h3>Simplicity</h3>
-      <p>We believe the best tools are the ones that get out of your way and let you focus on what matters.</p>
-    </div>
-    <div class="value">
-      <h3>Transparency</h3>
-      <p>We communicate openly with our users, sharing our roadmap, challenges, and victories.</p>
-    </div>
-  </div>
+  </section>
 
-  <h2>Meet the Team</h2>
-  <div class="team">
-    <div class="team-member">
-      <div class="avatar">👩‍💼</div>
-      <div class="member-name">Sarah Chen</div>
-      <div class="member-role">CEO & Co-founder</div>
+  <!-- Meet the Team -->
+  <section class="content-section">
+    <h2>Meet the Team</h2>
+    <div class="team">
+      <div class="team-member">
+        <div class="avatar">&#x1F469;&#x200D;&#x1F4BC;</div>
+        <div class="member-name">Sarah Chen</div>
+        <div class="member-role">CEO & Co-founder</div>
+      </div>
+      <div class="team-member">
+        <div class="avatar">&#x1F468;&#x200D;&#x1F4BB;</div>
+        <div class="member-name">Marcus Johnson</div>
+        <div class="member-role">CTO & Co-founder</div>
+      </div>
+      <div class="team-member">
+        <div class="avatar">&#x1F469;&#x200D;&#x1F3A8;</div>
+        <div class="member-name">Emily Rodriguez</div>
+        <div class="member-role">Head of Design</div>
+      </div>
+      <div class="team-member">
+        <div class="avatar">&#x1F468;&#x200D;&#x1F52C;</div>
+        <div class="member-name">David Kim</div>
+        <div class="member-role">Head of Engineering</div>
+      </div>
     </div>
-    <div class="team-member">
-      <div class="avatar">👨‍💻</div>
-      <div class="member-name">Marcus Johnson</div>
-      <div class="member-role">CTO & Co-founder</div>
-    </div>
-    <div class="team-member">
-      <div class="avatar">👩‍🎨</div>
-      <div class="member-name">Emily Rodriguez</div>
-      <div class="member-role">Head of Design</div>
-    </div>
-    <div class="team-member">
-      <div class="avatar">👨‍🔬</div>
-      <div class="member-name">David Kim</div>
-      <div class="member-role">Head of Engineering</div>
-    </div>
-  </div>
+  </section>
+
+  <!-- Footer -->
+  <site-footer></site-footer>
 
   <script type="module" src="/src/index.ts"></script>
 </body>

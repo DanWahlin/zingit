@@ -2,6 +2,8 @@
 // Entry point for ZingIt
 
 import './components/zing-ui.js';
+import './components/site-header.js';
+import './components/site-footer.js';
 
 // Inject ZingIt into the page
 function inject() {
