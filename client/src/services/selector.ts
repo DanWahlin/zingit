@@ -1,7 +1,61 @@
 // client/src/services/selector.ts
 // Generate unique CSS selectors for DOM elements
 
+/**
+ * Get the parent element, crossing Shadow DOM boundaries if needed
+ */
+function getParentElementCrossShadow(element: Element): Element | null {
+  // First try normal parentElement
+  if (element.parentElement) {
+    return element.parentElement;
+  }
+
+  // If no parentElement, check if we're at a shadow root boundary
+  const root = element.getRootNode();
+  if (root instanceof ShadowRoot) {
+    // Return the shadow host (the custom element)
+    return root.host;
+  }
+
+  return null;
+}
+
+/**
+ * Get the shadow host element if the element is inside Shadow DOM
+ */
+function getShadowHost(element: Element): Element | null {
+  const root = element.getRootNode();
+  if (root instanceof ShadowRoot) {
+    return root.host;
+  }
+  return null;
+}
+
 export function generateSelector(element: Element): string {
+  // Check if element is inside Shadow DOM
+  const shadowHost = getShadowHost(element);
+
+  // For elements inside Shadow DOM, we need a different approach:
+  // Generate a selector relative to the shadow host, prefixed with the host selector
+  if (shadowHost) {
+    const hostSelector = generateSelector(shadowHost);
+    const internalSelector = generateSelectorWithinRoot(element, shadowHost.shadowRoot!);
+    // Use a special notation to indicate shadow DOM piercing
+    return `${hostSelector} >>> ${internalSelector}`;
+  }
+
+  // Try ID first (most specific)
+  if (element.id) {
+    return `#${CSS.escape(element.id)}`;
+  }
+
+  return generateSelectorWithinRoot(element, document);
+}
+
+/**
+ * Generate a selector for an element within a specific root (document or shadow root)
+ */
+function generateSelectorWithinRoot(element: Element, root: Document | ShadowRoot): string {
   // Try ID first (most specific)
   if (element.id) {
     return `#${CSS.escape(element.id)}`;
@@ -10,8 +64,9 @@ export function generateSelector(element: Element): string {
   // Build path from element to root
   const path: string[] = [];
   let current: Element | null = element;
+  const rootNode = root instanceof Document ? document.documentElement : root.host;
 
-  while (current && current !== document.documentElement) {
+  while (current && current !== rootNode) {
     let selector = current.tagName.toLowerCase();
 
     // Add classes for specificity
@@ -39,10 +94,10 @@ export function generateSelector(element: Element): string {
 
     path.unshift(selector);
 
-    // Check if current path is unique
+    // Check if current path is unique within this root
     const fullSelector = path.join(' > ');
     try {
-      const matches = document.querySelectorAll(fullSelector);
+      const matches = root.querySelectorAll(fullSelector);
       if (matches.length === 1 && matches[0] === element) {
         return fullSelector;
       }
@@ -50,7 +105,8 @@ export function generateSelector(element: Element): string {
       // Invalid selector, continue building path
     }
 
-    current = parent;
+    // Move to parent, but stop at shadow root boundary
+    current = current.parentElement;
   }
 
   return path.join(' > ');
@@ -59,9 +115,13 @@ export function generateSelector(element: Element): string {
 export function generateIdentifier(element: Element): string {
   const tag = element.tagName.toLowerCase();
 
+  // Check if inside Shadow DOM and get host info
+  const shadowHost = getShadowHost(element);
+  const hostPrefix = shadowHost ? `${shadowHost.tagName.toLowerCase()} > ` : '';
+
   // Use ID if available
   if (element.id) {
-    return `#${element.id}`;
+    return `${hostPrefix}#${element.id}`;
   }
 
   // Use first meaningful class
@@ -70,21 +130,21 @@ export function generateIdentifier(element: Element): string {
     .find(c => c.length > 2 && !c.match(/^[a-z]{1,2}$/));
 
   if (meaningfulClass) {
-    return `.${meaningfulClass}`;
+    return `${hostPrefix}.${meaningfulClass}`;
   }
 
   // Use text content preview
   const text = element.textContent?.trim().slice(0, 20);
   if (text) {
-    return `${tag}: "${text}${text.length >= 20 ? '...' : ''}"`;
+    return `${hostPrefix}${tag}: "${text}${text.length >= 20 ? '...' : ''}"`;
   }
 
-  return tag;
+  return `${hostPrefix}${tag}`;
 }
 
 export function getParentContext(element: Element, levels = 2): string {
   const parents: string[] = [];
-  let current = element.parentElement;
+  let current = getParentElementCrossShadow(element);
 
   for (let i = 0; i < levels && current && current !== document.body; i++) {
     const tag = current.tagName.toLowerCase();
@@ -94,8 +154,13 @@ export function getParentContext(element: Element, levels = 2): string {
       .slice(0, 2)
       .map(c => `.${c}`)
       .join('');
-    parents.push(`${tag}${id}${classes}`);
-    current = current.parentElement;
+
+    // Mark if this is a shadow host boundary
+    const isShadowHost = current.shadowRoot !== null;
+    const marker = isShadowHost ? ' (shadow-host)' : '';
+
+    parents.push(`${tag}${id}${classes}${marker}`);
+    current = getParentElementCrossShadow(current);
   }
 
   return parents.join(' > ');

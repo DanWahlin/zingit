@@ -316,13 +316,6 @@ export class ZingUI extends LitElement {
   }
 
   private handleDocumentClick(e: MouseEvent) {
-    const target = e.target as Element;
-
-    // Ignore clicks on our own UI
-    if (this.isOwnElement(target)) {
-      return;
-    }
-
     // Ignore if annotation mode is paused
     if (!this.annotationActive) {
       return;
@@ -335,6 +328,14 @@ export class ZingUI extends LitElement {
 
     // Ignore if modal is open
     if (this.modalOpen || this.settingsOpen || this.agentPickerOpen) {
+      return;
+    }
+
+    // Get the deepest element from the event, piercing through Shadow DOM
+    const target = this.getTargetElement(e);
+
+    // Ignore if no valid target found (only ZingIt elements at this point)
+    if (!target) {
       return;
     }
 
@@ -377,10 +378,12 @@ export class ZingUI extends LitElement {
       return;
     }
 
-    const target = e.target as Element;
+    // Get the deepest element from the event, piercing through Shadow DOM
+    // This allows highlighting elements inside Lit components (headers, footers, etc.)
+    const target = this.getTargetElement(e);
 
-    // Ignore our own elements
-    if (this.isOwnElement(target)) {
+    // Hide highlight if no valid target found
+    if (!target) {
       this.highlightVisible = false;
       return;
     }
@@ -471,6 +474,34 @@ export class ZingUI extends LitElement {
       }
     }
     return false;
+  }
+
+  /**
+   * Get the deepest target element from a mouse event, excluding ZingIt's own elements.
+   * Uses composedPath() which traverses through shadow DOM boundaries and gives
+   * the actual event propagation path from deepest element to window.
+   */
+  private getTargetElement(e: MouseEvent): Element | null {
+    // composedPath() returns the event path from deepest target to window,
+    // including elements inside shadow DOMs
+    const path = e.composedPath();
+
+    for (const node of path) {
+      if (node instanceof Element && !this.isOwnElement(node)) {
+        return node;
+      }
+    }
+
+    // Fallback to elementsFromPoint if composedPath doesn't help
+    // (e.g., when event target is document itself)
+    const elements = document.elementsFromPoint(e.clientX, e.clientY);
+    for (const el of elements) {
+      if (!this.isOwnElement(el)) {
+        return el;
+      }
+    }
+
+    return null;
   }
 
   render() {
