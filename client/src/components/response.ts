@@ -260,6 +260,23 @@ export class ZingResponse extends LitElement {
       opacity: 0.5;
       cursor: not-allowed;
     }
+
+    .screenshot-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      background: rgba(59, 130, 246, 0.15);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      border-radius: 6px;
+      font-size: 12px;
+      color: #60a5fa;
+      margin-bottom: 12px;
+    }
+
+    .screenshot-badge svg {
+      flex-shrink: 0;
+    }
   `;
 
   @property({ type: Boolean, reflect: true }) open = false;
@@ -267,6 +284,7 @@ export class ZingResponse extends LitElement {
   @property({ type: String }) content = '';
   @property({ type: String }) toolStatus = '';
   @property({ type: String }) error = '';
+  @property({ type: Number }) screenshotCount = 0;
 
   @state() private followUpMessage = '';
   @query('.content') private contentEl!: HTMLElement;
@@ -315,6 +333,17 @@ export class ZingResponse extends LitElement {
         </div>
 
         <div class="content">
+          ${this.screenshotCount > 0 ? html`
+            <div class="screenshot-badge">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                <circle cx="8.5" cy="8.5" r="1.5"/>
+                <polyline points="21 15 16 10 5 21"/>
+              </svg>
+              <span>${this.screenshotCount} screenshot${this.screenshotCount > 1 ? 's' : ''} included</span>
+            </div>
+          ` : ''}
+
           ${this.toolStatus ? html`
             <div class="tool-status">
               <div class="spinner"></div>

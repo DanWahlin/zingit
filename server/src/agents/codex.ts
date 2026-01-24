@@ -4,7 +4,11 @@
 import type { WebSocket } from 'ws';
 import { Codex } from '@openai/codex-sdk';
 import { BaseAgent } from './base.js';
-import type { AgentSession, WSOutgoingMessage } from '../types.js';
+import type { AgentSession, WSOutgoingMessage, ImageContent } from '../types.js';
+import { promises as fs } from 'fs';
+import * as path from 'path';
+import * as os from 'os';
+import { randomUUID } from 'crypto';
 
 export class CodexAgent extends BaseAgent {
   name = 'codex';
@@ -46,13 +50,56 @@ export class CodexAgent extends BaseAgent {
 
     let abortController: AbortController | null = null;
 
+    // Track temp files for cleanup on session destroy (prevents race condition)
+    const sessionTempFiles: string[] = [];
+
     return {
-      send: async (msg: { prompt: string }) => {
+      send: async (msg: { prompt: string; images?: ImageContent[] }) => {
         try {
           abortController = new AbortController();
 
-          // Use runStreamed for real-time progress
-          const { events } = await thread.runStreamed(msg.prompt);
+          // Build structured input for Codex SDK
+          // Codex supports: string | Array<{ type: "text", text } | { type: "local_image", path }>
+          type UserInput = { type: 'text'; text: string } | { type: 'local_image'; path: string };
+          const input: UserInput[] = [];
+
+          // If images are provided, save them as temp files and add to structured input
+          if (msg.images && msg.images.length > 0) {
+            const tempDir = os.tmpdir();
+
+            for (let i = 0; i < msg.images.length; i++) {
+              const img = msg.images[i];
+              // Use UUID to avoid filename collisions
+              const ext = img.mediaType.split('/')[1] || 'png';
+              const tempPath = path.join(tempDir, `zingit-screenshot-${randomUUID()}.${ext}`);
+
+              // Decode base64 to buffer with error handling
+              let buffer: Buffer;
+              try {
+                buffer = Buffer.from(img.base64, 'base64');
+              } catch (decodeErr) {
+                console.warn(`ZingIt: Failed to decode base64 for image ${i + 1}:`, decodeErr);
+                continue; // Skip this image
+              }
+
+              // Save with restrictive permissions (owner read/write only)
+              await fs.writeFile(tempPath, buffer, { mode: 0o600 });
+              sessionTempFiles.push(tempPath);
+
+              // Add label text before image
+              if (img.label) {
+                input.push({ type: 'text', text: `[${img.label}]` });
+              }
+              // Add image as local_image input
+              input.push({ type: 'local_image', path: tempPath });
+            }
+          }
+
+          // Add the main prompt text
+          input.push({ type: 'text', text: msg.prompt });
+
+          // Use runStreamed with structured input for real-time progress
+          const { events } = await thread.runStreamed(input);
 
           for await (const event of events) {
             // Check if aborted
@@ -113,6 +160,7 @@ export class CodexAgent extends BaseAgent {
         } catch (err) {
           send({ type: 'error', message: (err as Error).message });
         }
+        // Note: Temp files cleaned up on session destroy to avoid race condition
       },
       destroy: async () => {
         // Abort any ongoing operation
@@ -121,6 +169,14 @@ export class CodexAgent extends BaseAgent {
           abortController = null;
         }
         // Thread cleanup happens automatically
+
+        // Clean up all temp files after session is fully destroyed
+        for (const tempPath of sessionTempFiles) {
+          fs.unlink(tempPath).catch((cleanupErr) => {
+            console.debug(`ZingIt: Failed to clean up temp file ${tempPath}:`, cleanupErr);
+          });
+        }
+        sessionTempFiles.length = 0; // Clear the array
       }
     };
   }

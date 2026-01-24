@@ -9,10 +9,17 @@ export interface Agent {
   stop(): Promise<void>;
   createSession(ws: WebSocket, projectDir: string): Promise<AgentSession>;
   formatPrompt(data: BatchData, projectDir: string): string;
+  extractImages(data: BatchData): ImageContent[];
+}
+
+export interface ImageContent {
+  base64: string;      // Base64 encoded image data (without prefix)
+  mediaType: string;   // e.g., 'image/png'
+  label?: string;      // Optional label for the image (e.g., "Screenshot of element: button.submit")
 }
 
 export interface AgentSession {
-  send(msg: { prompt: string }): Promise<void>;
+  send(msg: { prompt: string; images?: ImageContent[] }): Promise<void>;
   destroy(): Promise<void>;
 }
 
@@ -27,6 +34,7 @@ export interface Annotation {
   textContent?: string;    // Plain text content (easier to search than HTML)
   siblingContext?: string; // Position among siblings (e.g., "Position 1 of 3 in parent")
   parentHtml?: string;     // Parent HTML with target element marked (data-zingit-target="true")
+  screenshot?: string;     // Base64 encoded screenshot of the element (without data:image/png;base64, prefix)
 }
 
 export interface BatchData {

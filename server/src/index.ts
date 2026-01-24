@@ -208,8 +208,9 @@ async function main(): Promise<void> {
             }
 
             const prompt = state.agent.formatPrompt(msg.data, projectDir);
+            const images = state.agent.extractImages(msg.data);
             sendMessage(ws, { type: 'processing' });
-            await state.session.send({ prompt });
+            await state.session.send({ prompt, images: images.length > 0 ? images : undefined });
             break;
           }
 

@@ -3,6 +3,7 @@
 
 import { LitElement, html, css } from 'lit';
 import { customElement, state, query } from 'lit/decorators.js';
+import html2canvas from 'html2canvas';
 import type { Annotation, ZingSettings, WSMessage, AgentInfo } from '../types/index.js';
 import { WebSocketClient } from '../services/websocket.js';
 import { generateSelector, generateIdentifier, getElementHtml, getParentContext, getTextContent, getSiblingContext, getParentHtml } from '../services/selector.js';
@@ -88,6 +89,9 @@ export class ZingUI extends LitElement {
   @state() private modalSelectedText = '';
   @state() private modalNotes = '';
   @state() private pendingElement: Element | null = null;
+  @state() private modalCaptureScreenshot = false;
+  @state() private modalScreenshotPreview = '';
+  @state() private modalScreenshotLoading = false;
 
   // Settings panel state
   @state() private settingsOpen = false;
@@ -103,6 +107,7 @@ export class ZingUI extends LitElement {
   @state() private responseContent = '';
   @state() private responseToolStatus = '';
   @state() private responseError = '';
+  @state() private responseScreenshotCount = 0;
 
   // Undo stack for annotations
   private undoStack: Annotation[] = [];
@@ -343,6 +348,8 @@ export class ZingUI extends LitElement {
     this.modalSelector = generateSelector(target);
     this.modalIdentifier = generateIdentifier(target);
     this.modalNotes = '';
+    this.modalCaptureScreenshot = false;
+    this.modalScreenshotPreview = '';
 
     // Get selected text if any
     const selection = window.getSelection();
@@ -528,8 +535,12 @@ export class ZingUI extends LitElement {
         .identifier=${this.modalIdentifier}
         .selectedText=${this.modalSelectedText}
         .notes=${this.modalNotes}
-        @cancel=${() => this.modalOpen = false}
+        .captureScreenshot=${this.modalCaptureScreenshot}
+        .screenshotPreview=${this.modalScreenshotPreview}
+        .screenshotLoading=${this.modalScreenshotLoading}
+        @cancel=${this.handleModalCancel}
         @save=${this.handleModalSave}
+        @screenshot-toggle=${this.handleScreenshotToggle}
       ></zing-modal>
 
       <zing-settings
@@ -559,6 +570,7 @@ export class ZingUI extends LitElement {
         .content=${this.responseContent}
         .toolStatus=${this.responseToolStatus}
         .error=${this.responseError}
+        .screenshotCount=${this.responseScreenshotCount}
         @close=${() => this.responseOpen = false}
         @stop=${this.handleStop}
         @followup=${this.handleFollowUp}
@@ -573,22 +585,72 @@ export class ZingUI extends LitElement {
     `;
   }
 
-  private handleModalSave(e: CustomEvent<{ notes: string; editMode: boolean; annotationId: string }>) {
+  private handleModalCancel() {
+    this.modalOpen = false;
+    this.pendingElement = null;
+    this.modalCaptureScreenshot = false;
+    this.modalScreenshotPreview = '';
+    this.modalScreenshotLoading = false;
+  }
+
+  private async handleScreenshotToggle(e: CustomEvent<{ enabled: boolean }>) {
+    // Sync parent state with checkbox
+    this.modalCaptureScreenshot = e.detail.enabled;
+
+    if (e.detail.enabled && this.pendingElement) {
+      // Capture new screenshot preview (even if editing, recapture for current element state)
+      this.modalScreenshotLoading = true;
+      try {
+        const canvas = await html2canvas(this.pendingElement as HTMLElement, {
+          logging: false,
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: null,
+          scale: 1
+        });
+        this.modalScreenshotPreview = canvas.toDataURL('image/png');
+      } catch (err) {
+        console.warn('ZingIt: Failed to capture screenshot preview', err);
+        this.modalScreenshotPreview = '';
+      }
+      this.modalScreenshotLoading = false;
+    } else if (!e.detail.enabled) {
+      // Clear preview when unchecked
+      this.modalScreenshotPreview = '';
+    }
+  }
+
+  private handleModalSave(e: CustomEvent<{ notes: string; editMode: boolean; annotationId: string; captureScreenshot: boolean }>) {
     try {
-      const { notes, editMode, annotationId } = e.detail;
+      const { notes, editMode, annotationId, captureScreenshot } = e.detail;
 
       if (editMode) {
         // Update existing annotation and reset status to pending so it can be sent again
-        this.annotations = this.annotations.map(a =>
-          a.id === annotationId ? { ...a, notes, status: 'pending' as const } : a
-        );
+        // Also update the screenshot: use current preview if capturing, or remove if unchecked
+        const screenshot = captureScreenshot && this.modalScreenshotPreview ? this.modalScreenshotPreview : undefined;
+
+        this.annotations = this.annotations.map(a => {
+          if (a.id === annotationId) {
+            // Create updated annotation, removing screenshot property if not capturing
+            const updated = { ...a, notes, status: 'pending' as const };
+            if (screenshot) {
+              updated.screenshot = screenshot;
+            } else {
+              delete updated.screenshot;
+            }
+            return updated;
+          }
+          return a;
+        });
         saveAnnotations(this.annotations);
-        this.modalOpen = false;
-        this.pendingElement = null;
+        this.handleModalCancel();
         this.toast.success('Annotation updated');
       } else {
         // Create new annotation
         if (!this.pendingElement) return;
+
+        // Use pre-captured screenshot if available
+        const screenshot = captureScreenshot && this.modalScreenshotPreview ? this.modalScreenshotPreview : undefined;
 
         const annotation: Annotation = {
           id: crypto.randomUUID(),
@@ -601,7 +663,8 @@ export class ZingUI extends LitElement {
           siblingContext: getSiblingContext(this.pendingElement),
           parentHtml: getParentHtml(this.pendingElement),
           status: 'pending',
-          ...(this.modalSelectedText ? { selectedText: this.modalSelectedText } : {})
+          ...(this.modalSelectedText ? { selectedText: this.modalSelectedText } : {}),
+          ...(screenshot ? { screenshot } : {})
         };
 
         this.annotations = [...this.annotations, annotation];
@@ -610,9 +673,8 @@ export class ZingUI extends LitElement {
         // Push to undo stack
         this.undoStack = [...this.undoStack, annotation];
 
-        this.modalOpen = false;
-        this.pendingElement = null;
-        this.toast.success('Annotation saved');
+        this.handleModalCancel();
+        this.toast.success(screenshot ? 'Annotation saved with screenshot' : 'Annotation saved');
       }
     } catch (err) {
       console.error('ZingIt: Error saving annotation', err);
@@ -631,6 +693,11 @@ export class ZingUI extends LitElement {
         this.modalIdentifier = annotation.identifier;
         this.modalSelectedText = annotation.selectedText || '';
         this.modalNotes = annotation.notes;
+
+        // Restore screenshot state if annotation has a screenshot
+        this.modalCaptureScreenshot = !!annotation.screenshot;
+        this.modalScreenshotPreview = annotation.screenshot || '';
+
         this.pendingElement = document.querySelector(annotation.selector);
         if (!this.pendingElement) {
           this.toast.info('Element no longer exists on page');
@@ -673,13 +740,24 @@ export class ZingUI extends LitElement {
 
     // Send only the annotations being processed
     const annotationsToSend = this.annotations.filter(a => a.status === 'processing');
+    const screenshotCount = annotationsToSend.filter(a => a.screenshot).length;
+
+    // Store screenshot count for response panel
+    this.responseScreenshotCount = screenshotCount;
+
     this.ws.sendBatch({
       pageUrl: window.location.href,
       pageTitle: document.title,
       annotations: annotationsToSend
     }, projectDir);
 
-    this.toast.info(`Sent ${annotationsToSend.length} annotation${annotationsToSend.length > 1 ? 's' : ''} to agent`);
+    // Build toast message with screenshot info
+    let message = `Sent ${annotationsToSend.length} annotation${annotationsToSend.length > 1 ? 's' : ''}`;
+    if (screenshotCount > 0) {
+      message += ` (${screenshotCount} with screenshot${screenshotCount > 1 ? 's' : ''})`;
+    }
+    message += ' to agent';
+    this.toast.info(message);
   }
 
   private handleExport() {

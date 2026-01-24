@@ -122,6 +122,70 @@ export class ZingModal extends LitElement {
       color: #6b7280;
     }
 
+    .checkbox-field {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .checkbox-field input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      accent-color: #3b82f6;
+      cursor: pointer;
+    }
+
+    .checkbox-field label {
+      display: inline;
+      margin-bottom: 0;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .screenshot-preview {
+      margin-top: 12px;
+      padding: 12px;
+      background: #111827;
+      border-radius: 6px;
+      border: 1px solid #374151;
+    }
+
+    .screenshot-preview label {
+      display: block;
+      font-size: 12px;
+      color: #9ca3af;
+      margin-bottom: 8px;
+    }
+
+    .screenshot-preview img {
+      max-width: 100%;
+      max-height: 200px;
+      border-radius: 4px;
+      display: block;
+    }
+
+    .screenshot-loading {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #9ca3af;
+      font-size: 12px;
+    }
+
+    .screenshot-loading .spinner {
+      width: 14px;
+      height: 14px;
+      border: 2px solid #374151;
+      border-top-color: #3b82f6;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
     .footer {
       display: flex;
       justify-content: flex-end;
@@ -166,6 +230,9 @@ export class ZingModal extends LitElement {
   @property({ type: String }) identifier = '';
   @property({ type: String }) selectedText = '';
   @property({ type: String }) notes = '';
+  @property({ type: Boolean }) captureScreenshot = false;
+  @property({ type: String }) screenshotPreview = '';  // Base64 preview image
+  @property({ type: Boolean }) screenshotLoading = false;
 
   @query('textarea') private textarea!: HTMLTextAreaElement;
 
@@ -189,10 +256,8 @@ export class ZingModal extends LitElement {
 
   updated(changedProperties: Map<string, unknown>) {
     if (changedProperties.has('open') && this.open) {
-      // Only clear notes for new annotations, not edits
-      if (!this.editMode) {
-        this.notes = '';
-      }
+      // Note: Parent component now controls captureScreenshot and notes state
+      // via property bindings, so no need to reset them here
       requestAnimationFrame(() => {
         this.textarea?.focus();
       });
@@ -239,6 +304,34 @@ export class ZingModal extends LitElement {
                 placeholder="Describe the issue or change you want to make..."
               ></textarea>
             </div>
+
+            <div class="checkbox-field">
+              <input
+                type="checkbox"
+                id="captureScreenshot"
+                .checked=${this.captureScreenshot}
+                @change=${this.handleScreenshotChange}
+              />
+              <label for="captureScreenshot">Capture screenshot of element</label>
+            </div>
+
+            ${this.captureScreenshot ? html`
+              <div class="screenshot-preview">
+                <label>Screenshot Preview</label>
+                ${this.screenshotLoading ? html`
+                  <div class="screenshot-loading">
+                    <div class="spinner"></div>
+                    <span>Capturing...</span>
+                  </div>
+                ` : this.screenshotPreview ? html`
+                  <img src="${this.screenshotPreview}" alt="Element screenshot" />
+                ` : html`
+                  <div class="screenshot-loading">
+                    <span>No preview available</span>
+                  </div>
+                `}
+              </div>
+            ` : ''}
           </div>
 
           <div class="footer">
@@ -263,6 +356,18 @@ export class ZingModal extends LitElement {
     this.notes = textarea.value;
   }
 
+  private handleScreenshotChange(e: Event) {
+    const checkbox = e.target as HTMLInputElement;
+    this.captureScreenshot = checkbox.checked;
+
+    // Emit event so parent can capture/clear the screenshot preview
+    this.dispatchEvent(new CustomEvent('screenshot-toggle', {
+      bubbles: true,
+      composed: true,
+      detail: { enabled: this.captureScreenshot }
+    }));
+  }
+
   private handleCancel() {
     this.dispatchEvent(new CustomEvent('cancel', { bubbles: true, composed: true }));
   }
@@ -274,7 +379,8 @@ export class ZingModal extends LitElement {
       detail: {
         notes: this.notes,
         editMode: this.editMode,
-        annotationId: this.annotationId
+        annotationId: this.annotationId,
+        captureScreenshot: this.captureScreenshot
       }
     }));
   }
