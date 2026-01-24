@@ -915,11 +915,10 @@ export class ZingUI extends LitElement {
     if (rejectedIds.length === 0 && this.previewSummary) {
       this.ws.send({ type: 'approve_all' });
     } else {
-      // Send selective approval
+      // Send selective approval - server expects 'changeIds'
       this.ws.send({
         type: 'approve_changes',
-        approvedIds,
-        rejectedIds
+        changeIds: approvedIds
       });
     }
   }

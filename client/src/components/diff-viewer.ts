@@ -726,10 +726,15 @@ export class ZingDiffViewer extends LitElement {
     if (this.approvedIds.size === 0) return;
 
     this.isApplying = true;
-    this.dispatchEvent(new CustomEvent('apply-changes', {
+
+    // Build arrays of approved and rejected IDs
+    const approvedIds = Array.from(this.approvedIds);
+    const rejectedIds = Array.from(this.rejectedIds);
+
+    this.dispatchEvent(new CustomEvent('apply', {
       detail: {
-        previewId: this.summary?.previewId,
-        changeIds: Array.from(this.approvedIds)
+        approvedIds,
+        rejectedIds
       },
       bubbles: true,
       composed: true
