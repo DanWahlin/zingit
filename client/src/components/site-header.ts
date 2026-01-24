@@ -15,7 +15,7 @@ export class SiteHeader extends LitElement {
       align-items: center;
       justify-content: space-between;
       padding: 16px 24px;
-      background: #0f172a;
+      background: #fff;
       color: white;
     }
 
@@ -26,7 +26,7 @@ export class SiteHeader extends LitElement {
       font-size: 20px;
       font-weight: 700;
       text-decoration: none;
-      color: white;
+      color: black;
     }
 
     .brand svg {
@@ -41,7 +41,7 @@ export class SiteHeader extends LitElement {
     }
 
     .nav-links a {
-      color: #d1d5db;
+      color: black;
       text-decoration: none;
       font-size: 14px;
       font-weight: 500;
@@ -50,7 +50,7 @@ export class SiteHeader extends LitElement {
 
     .nav-links a:hover,
     .nav-links a.active {
-      color: white;
+      color: black;
     }
 
     .nav-actions {
@@ -60,12 +60,12 @@ export class SiteHeader extends LitElement {
     }
 
     .nav-actions a {
-      color: #9ca3af;
+      color: black;
       transition: color 0.15s ease;
     }
 
     .nav-actions a:hover {
-      color: white;
+      color: black;
     }
   `;
 
