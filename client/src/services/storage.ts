@@ -7,6 +7,14 @@ const STORAGE_KEY = 'zingit_annotations';
 const SETTINGS_KEY = 'zingit_settings';
 const ACTIVE_KEY = 'zingit_active';
 const TOOLBAR_POS_KEY = 'zingit_toolbar_position';
+const RESPONSE_STATE_KEY = 'zingit_response_state';
+
+export interface ResponseState {
+  open: boolean;
+  content: string;
+  error: string;
+  screenshotCount: number;
+}
 
 export interface ToolbarPosition {
   x: number;
@@ -136,5 +144,40 @@ export function clearToolbarPosition(): void {
     localStorage.removeItem(TOOLBAR_POS_KEY);
   } catch (err) {
     console.warn('ZingIt: Failed to clear toolbar position', err);
+  }
+}
+
+/**
+ * Save response dialog state to sessionStorage (persists across auto-refresh)
+ */
+export function saveResponseState(state: ResponseState): void {
+  try {
+    sessionStorage.setItem(RESPONSE_STATE_KEY, JSON.stringify(state));
+  } catch (err) {
+    console.warn('ZingIt: Failed to save response state', err);
+  }
+}
+
+/**
+ * Load response dialog state from sessionStorage
+ */
+export function loadResponseState(): ResponseState | null {
+  try {
+    const raw = sessionStorage.getItem(RESPONSE_STATE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Clear response dialog state from sessionStorage
+ */
+export function clearResponseState(): void {
+  try {
+    sessionStorage.removeItem(RESPONSE_STATE_KEY);
+  } catch (err) {
+    console.warn('ZingIt: Failed to clear response state', err);
   }
 }

@@ -281,6 +281,7 @@ export class ZingResponse extends LitElement {
 
   @property({ type: Boolean, reflect: true }) open = false;
   @property({ type: Boolean }) processing = false;
+  @property({ type: Boolean }) autoRefresh = false;
   @property({ type: String }) content = '';
   @property({ type: String }) toolStatus = '';
   @property({ type: String }) error = '';
@@ -313,7 +314,7 @@ export class ZingResponse extends LitElement {
                 </svg>
                 Stop
               </button>
-            ` : this.content ? html`
+            ` : this.content && !this.autoRefresh ? html`
               <button class="refresh-btn" @click=${this.handleRefresh}>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                   <path d="M23 4v6h-6"/>

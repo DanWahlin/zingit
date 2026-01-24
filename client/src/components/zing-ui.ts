@@ -7,7 +7,7 @@ import html2canvas from 'html2canvas';
 import type { Annotation, ZingSettings, WSMessage, AgentInfo } from '../types/index.js';
 import { WebSocketClient } from '../services/websocket.js';
 import { generateSelector, generateIdentifier, getElementHtml, getParentContext, getTextContent, getSiblingContext, getParentHtml } from '../services/selector.js';
-import { saveAnnotations, loadAnnotations, clearAnnotations, saveSettings, loadSettings, saveAnnotationActive, loadAnnotationActive, saveToolbarPosition, loadToolbarPosition, clearToolbarPosition, type ToolbarPosition } from '../services/storage.js';
+import { saveAnnotations, loadAnnotations, clearAnnotations, saveSettings, loadSettings, saveAnnotationActive, loadAnnotationActive, saveToolbarPosition, loadToolbarPosition, clearToolbarPosition, saveResponseState, loadResponseState, clearResponseState, type ToolbarPosition } from '../services/storage.js';
 import { getElementViewportRect } from '../utils/geometry.js';
 import { formatAnnotationsMarkdown, copyToClipboard } from '../utils/markdown.js';
 
@@ -160,6 +160,17 @@ export class ZingUI extends LitElement {
     // Load saved annotations
     this.annotations = loadAnnotations();
 
+    // Restore response dialog state if it was saved before auto-refresh
+    const savedResponseState = loadResponseState();
+    if (savedResponseState) {
+      this.responseOpen = savedResponseState.open;
+      this.responseContent = savedResponseState.content;
+      this.responseError = savedResponseState.error;
+      this.responseScreenshotCount = savedResponseState.screenshotCount;
+      // Clear saved state after restoring (one-time restore)
+      clearResponseState();
+    }
+
     // Set up WebSocket
     this.initWebSocket();
 
@@ -244,6 +255,16 @@ export class ZingUI extends LitElement {
 
       case 'delta':
         this.responseContent += msg.content || '';
+        // Continuously save response state if autoRefresh is enabled
+        // This ensures state persists even if Vite HMR triggers before our explicit reload
+        if (this.settings.autoRefresh && this.responseContent) {
+          saveResponseState({
+            open: this.responseOpen,
+            content: this.responseContent,
+            error: this.responseError,
+            screenshotCount: this.responseScreenshotCount
+          });
+        }
         break;
 
       case 'tool_start':
@@ -268,6 +289,13 @@ export class ZingUI extends LitElement {
         }
         // Auto refresh page if enabled
         if (this.settings.autoRefresh) {
+          // Save response dialog state before refresh so it persists
+          saveResponseState({
+            open: this.responseOpen,
+            content: this.responseContent,
+            error: this.responseError,
+            screenshotCount: this.responseScreenshotCount
+          });
           this.toast.info('Refreshing page...');
           setTimeout(() => window.location.reload(), 1000);
         }
@@ -628,32 +656,60 @@ export class ZingUI extends LitElement {
   }
 
   /**
+   * Check if event originated from within any zing-* element.
+   * Uses composedPath to check all elements in the event path.
+   */
+  private isEventFromOwnElement(e: MouseEvent): boolean {
+    const path = e.composedPath();
+    for (const node of path) {
+      if (node instanceof Element && node.tagName?.toLowerCase().startsWith('zing-')) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
    * Get the deepest target element from a mouse event, excluding ZingIt's own elements.
    * Uses composedPath() which traverses through shadow DOM boundaries and gives
    * the actual event propagation path from deepest element to window.
    */
   private getTargetElement(e: MouseEvent): Element | null {
+    // Quick check: if the event originated from any zing-* element, return null immediately
+    if (this.isEventFromOwnElement(e)) {
+      return null;
+    }
+
     // composedPath() returns the event path from deepest target to window,
     // including elements inside shadow DOMs
     const path = e.composedPath();
 
-    // Find the first Element in the path (the actual click target)
-    const firstElement = path.find(node => node instanceof Element) as Element | undefined;
+    for (const node of path) {
+      if (!(node instanceof Element)) {
+        continue;
+      }
 
-    // If the click originated on a ZingIt element, ignore it entirely
-    if (firstElement && this.isOwnElement(firstElement)) {
-      return null;
-    }
+      // Stop at body/html - if we've reached here, nothing valid was found
+      const tagName = node.tagName.toLowerCase();
+      if (tagName === 'body' || tagName === 'html') {
+        break;
+      }
 
-    // Return the first element (which we already know is not a ZingIt element)
-    if (firstElement) {
-      return firstElement;
+      if (!this.isOwnElement(node)) {
+        return node;
+      }
     }
 
     // Fallback to elementsFromPoint if composedPath doesn't help
     // (e.g., when event target is document itself)
     const elements = document.elementsFromPoint(e.clientX, e.clientY);
     for (const el of elements) {
+      // Skip body/html in fallback too
+      const tagName = el.tagName.toLowerCase();
+      if (tagName === 'body' || tagName === 'html') {
+        continue;
+      }
+
       if (!this.isOwnElement(el)) {
         return el;
       }
@@ -758,6 +814,7 @@ export class ZingUI extends LitElement {
       <zing-response
         .open=${this.responseOpen}
         .processing=${this.processing}
+        .autoRefresh=${this.settings.autoRefresh}
         .content=${this.responseContent}
         .toolStatus=${this.responseToolStatus}
         .error=${this.responseError}
