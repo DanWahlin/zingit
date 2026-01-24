@@ -6,7 +6,7 @@ import { customElement, state, query } from 'lit/decorators.js';
 import type { Annotation, ZingSettings, WSMessage, AgentInfo } from '../types/index.js';
 import { WebSocketClient } from '../services/websocket.js';
 import { generateSelector, generateIdentifier, getElementHtml, getParentContext, getTextContent, getSiblingContext, getParentHtml } from '../services/selector.js';
-import { saveAnnotations, loadAnnotations, clearAnnotations, saveSettings, loadSettings, saveAnnotationActive, loadAnnotationActive } from '../services/storage.js';
+import { saveAnnotations, loadAnnotations, clearAnnotations, saveSettings, loadSettings, saveAnnotationActive, loadAnnotationActive, saveToolbarPosition, loadToolbarPosition, clearToolbarPosition, type ToolbarPosition } from '../services/storage.js';
 import { getElementViewportRect } from '../utils/geometry.js';
 import { formatAnnotationsMarkdown, copyToClipboard } from '../utils/markdown.js';
 
@@ -39,11 +39,22 @@ export class ZingUI extends LitElement {
 
     .toolbar-container {
       position: fixed;
+      pointer-events: auto;
+      z-index: 2147483646;
+    }
+
+    .toolbar-container.default-position {
       bottom: 20px;
       left: 50%;
       transform: translateX(-50%);
-      pointer-events: auto;
-      z-index: 2147483646;
+    }
+
+    .toolbar-container.custom-position {
+      transform: none;
+    }
+
+    .toolbar-container.dragging {
+      user-select: none;
     }
   `;
 
@@ -96,16 +107,25 @@ export class ZingUI extends LitElement {
   // Undo stack for annotations
   private undoStack: Annotation[] = [];
 
+  // Toolbar position and drag state
+  @state() private toolbarPosition: ToolbarPosition | null = loadToolbarPosition();
+  @state() private isDragging = false;
+  private dragOffset = { x: 0, y: 0 };
+
   private ws: WebSocketClient | null = null;
   private clickHandler: (e: MouseEvent) => void;
   private mouseMoveHandler: (e: MouseEvent) => void;
   private keydownHandler: (e: KeyboardEvent) => void;
+  private dragMoveHandler: (e: MouseEvent) => void;
+  private dragEndHandler: (e: MouseEvent) => void;
 
   constructor() {
     super();
     this.clickHandler = this.handleDocumentClick.bind(this);
     this.mouseMoveHandler = this.handleDocumentMouseMove.bind(this);
     this.keydownHandler = this.handleDocumentKeydown.bind(this);
+    this.dragMoveHandler = this.handleDragMove.bind(this);
+    this.dragEndHandler = this.handleDragEnd.bind(this);
   }
 
   connectedCallback() {
@@ -470,7 +490,10 @@ export class ZingUI extends LitElement {
         @marker-delete=${this.handleMarkerDelete}
       ></zing-markers>
 
-      <div class="toolbar-container">
+      <div
+        class="toolbar-container ${this.toolbarPosition ? 'custom-position' : 'default-position'} ${this.isDragging ? 'dragging' : ''}"
+        style="${this.toolbarPosition ? `left: ${this.toolbarPosition.x}px; top: ${this.toolbarPosition.y}px;` : ''}"
+      >
         <zing-toolbar
           .active=${this.annotationActive}
           .connected=${this.wsConnected}
@@ -492,6 +515,8 @@ export class ZingUI extends LitElement {
           @reconnect=${this.handleReconnect}
           @toggle-response=${() => this.responseOpen = !this.responseOpen}
           @change-agent=${() => this.agentPickerOpen = true}
+          @drag-start=${this.handleToolbarDragStart}
+          @drag-reset=${this.handleToolbarDragReset}
         ></zing-toolbar>
       </div>
 
@@ -790,6 +815,70 @@ export class ZingUI extends LitElement {
     } catch (err) {
       console.warn('ZingIt: Could not play completion sound', err);
     }
+  }
+
+  // Toolbar drag handlers
+  private handleToolbarDragStart(e: CustomEvent<{ clientX: number; clientY: number }>) {
+    const { clientX, clientY } = e.detail;
+
+    // Get the toolbar container element
+    const container = this.shadowRoot?.querySelector('.toolbar-container') as HTMLElement;
+    if (!container) return;
+
+    const rect = container.getBoundingClientRect();
+
+    // Calculate offset from mouse to element top-left
+    this.dragOffset = {
+      x: clientX - rect.left,
+      y: clientY - rect.top
+    };
+
+    this.isDragging = true;
+
+    // Add document-level listeners for drag
+    document.addEventListener('mousemove', this.dragMoveHandler);
+    document.addEventListener('mouseup', this.dragEndHandler);
+  }
+
+  private handleDragMove(e: MouseEvent) {
+    if (!this.isDragging) return;
+
+    const x = e.clientX - this.dragOffset.x;
+    const y = e.clientY - this.dragOffset.y;
+
+    // Clamp to viewport bounds
+    const container = this.shadowRoot?.querySelector('.toolbar-container') as HTMLElement;
+    if (!container) return;
+
+    const rect = container.getBoundingClientRect();
+    const maxX = window.innerWidth - rect.width;
+    const maxY = window.innerHeight - rect.height;
+
+    this.toolbarPosition = {
+      x: Math.max(0, Math.min(x, maxX)),
+      y: Math.max(0, Math.min(y, maxY))
+    };
+  }
+
+  private handleDragEnd() {
+    if (!this.isDragging) return;
+
+    this.isDragging = false;
+
+    // Remove document-level listeners
+    document.removeEventListener('mousemove', this.dragMoveHandler);
+    document.removeEventListener('mouseup', this.dragEndHandler);
+
+    // Save position to storage
+    if (this.toolbarPosition) {
+      saveToolbarPosition(this.toolbarPosition);
+    }
+  }
+
+  private handleToolbarDragReset() {
+    this.toolbarPosition = null;
+    clearToolbarPosition();
+    this.toast.info('Toolbar position reset');
   }
 }
 
