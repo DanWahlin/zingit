@@ -287,6 +287,13 @@ export class ZingUI extends LitElement {
         if (this.settings.playSoundOnComplete) {
           this.playCompletionSound();
         }
+        // Refresh history after a short delay to get finalized checkpoint data
+        // (finalization happens on server after idle is sent)
+        setTimeout(() => {
+          if (this.ws && this.wsConnected) {
+            this.ws.send({ type: 'get_history' });
+          }
+        }, 500);
         // Auto refresh page if enabled
         if (this.settings.autoRefresh) {
           // Save response dialog state before refresh so it persists
@@ -498,8 +505,8 @@ export class ZingUI extends LitElement {
       return;
     }
 
-    // Ignore if modal is open
-    if (this.modalOpen || this.settingsOpen || this.agentPickerOpen) {
+    // Ignore if modal or panel is open
+    if (this.modalOpen || this.settingsOpen || this.agentPickerOpen || this.historyOpen || this.diffViewerOpen) {
       return;
     }
 

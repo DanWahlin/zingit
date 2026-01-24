@@ -11,6 +11,7 @@ export class ZingHistoryPanel extends LitElement {
     :host {
       display: block;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      pointer-events: auto;
     }
 
     .panel {
@@ -27,6 +28,7 @@ export class ZingHistoryPanel extends LitElement {
       display: flex;
       flex-direction: column;
       box-shadow: -4px 0 20px rgba(0, 0, 0, 0.3);
+      pointer-events: auto;
     }
 
     .panel.open {
@@ -128,7 +130,7 @@ export class ZingHistoryPanel extends LitElement {
       font-weight: 500;
     }
 
-    .checkpoint-status.pending {
+    .checkpoint-status.live {
       background: #fbbf24;
       color: #1f2937;
     }
@@ -271,7 +273,7 @@ export class ZingHistoryPanel extends LitElement {
     const canUndo = this.checkpoints.some(cp => cp.canUndo);
 
     return html`
-      <div class="panel ${this.isOpen ? 'open' : ''}">
+      <div class="panel ${this.isOpen ? 'open' : ''}" @click=${this._stopPropagation} @mousedown=${this._stopPropagation} @pointerdown=${this._stopPropagation}>
         <div class="header">
           <h3>
             <svg class="header-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -349,15 +351,15 @@ export class ZingHistoryPanel extends LitElement {
     return html`
       <div
         class="checkpoint ${isCurrent ? 'current' : ''} ${isReverted ? 'reverted' : ''}"
-        @click=${() => this._handleRevertTo(checkpoint)}
+        @click=${(e: Event) => this._handleRevertTo(e, checkpoint)}
         title="${isReverted ? 'This change was reverted' : isCurrent ? 'Current state' : 'Click to revert to this point'}"
       >
         <div class="checkpoint-header">
           <span class="checkpoint-time">
             ${this._formatTime(checkpoint.timestamp)}
           </span>
-          <span class="checkpoint-status ${checkpoint.status}">
-            ${checkpoint.status === 'applied' && isCurrent ? 'current' : checkpoint.status}
+          <span class="checkpoint-status ${checkpoint.status === 'pending' ? 'live' : checkpoint.status}">
+            ${checkpoint.status === 'applied' && isCurrent ? 'Current' : checkpoint.status === 'pending' ? 'Live' : checkpoint.status === 'applied' ? 'Applied' : 'Reverted'}
           </span>
         </div>
         <div class="checkpoint-annotations">
@@ -407,11 +409,19 @@ export class ZingHistoryPanel extends LitElement {
     return date.toLocaleDateString();
   }
 
-  private _handleClose() {
+  private _stopPropagation(e: Event) {
+    e.stopPropagation();
+  }
+
+  private _handleClose(e: Event) {
+    e.preventDefault();
+    e.stopPropagation();
     this.dispatchEvent(new CustomEvent('close', { bubbles: true, composed: true }));
   }
 
-  private _handleUndo() {
+  private _handleUndo(e: Event) {
+    e.preventDefault();
+    e.stopPropagation();
     this.isUndoing = true;
     this.dispatchEvent(new CustomEvent('undo', { bubbles: true, composed: true }));
     // Reset after a delay in case the event doesn't come back
@@ -420,7 +430,9 @@ export class ZingHistoryPanel extends LitElement {
     }, 5000);
   }
 
-  private _handleRevertTo(checkpoint: CheckpointInfo) {
+  private _handleRevertTo(e: Event, checkpoint: CheckpointInfo) {
+    e.preventDefault();
+    e.stopPropagation();
     if (checkpoint.status === 'reverted' || checkpoint.canUndo) {
       return; // Can't revert to already reverted or current checkpoint
     }
@@ -436,7 +448,9 @@ export class ZingHistoryPanel extends LitElement {
     }
   }
 
-  private _handleClearHistory() {
+  private _handleClearHistory(e: Event) {
+    e.preventDefault();
+    e.stopPropagation();
     if (confirm('Clear all history?\n\nThis will remove all checkpoint records but will not undo any changes.')) {
       this.dispatchEvent(new CustomEvent('clear-history', { bubbles: true, composed: true }));
     }
