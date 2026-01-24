@@ -167,6 +167,24 @@ export class ZingToolbar extends LitElement {
     .btn-toggle.inactive:hover {
       background: #4b5563;
     }
+
+    .drag-handle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px 2px;
+      cursor: grab;
+      color: #6b7280;
+      transition: color 0.15s ease;
+    }
+
+    .drag-handle:hover {
+      color: #9ca3af;
+    }
+
+    .drag-handle:active {
+      cursor: grabbing;
+    }
   `;
 
   @property({ type: Boolean }) active = true;
@@ -199,6 +217,17 @@ export class ZingToolbar extends LitElement {
 
     return html`
       <div class="toolbar">
+        <div class="drag-handle" title="Drag to move (double-click to reset)" @mousedown=${this.handleDragStart} @dblclick=${this.handleDragReset}>
+          <svg width="12" height="16" viewBox="0 0 12 16" fill="currentColor">
+            <circle cx="3" cy="3" r="1.5"/>
+            <circle cx="9" cy="3" r="1.5"/>
+            <circle cx="3" cy="8" r="1.5"/>
+            <circle cx="9" cy="8" r="1.5"/>
+            <circle cx="3" cy="13" r="1.5"/>
+            <circle cx="9" cy="13" r="1.5"/>
+          </svg>
+        </div>
+
         <button
           class="btn-toggle ${this.active ? '' : 'inactive'}"
           title="${this.active ? 'Pause annotation mode' : 'Resume annotation mode'}"
@@ -399,6 +428,24 @@ export class ZingToolbar extends LitElement {
     if (this.connected && this.agent) {
       this.dispatchEvent(new CustomEvent('change-agent', { bubbles: true, composed: true }));
     }
+  }
+
+  private handleDragStart(e: MouseEvent) {
+    e.preventDefault();
+    this.dispatchEvent(new CustomEvent('drag-start', {
+      bubbles: true,
+      composed: true,
+      detail: { clientX: e.clientX, clientY: e.clientY }
+    }));
+  }
+
+  private handleDragReset(e: MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    this.dispatchEvent(new CustomEvent('drag-reset', {
+      bubbles: true,
+      composed: true
+    }));
   }
 }
 

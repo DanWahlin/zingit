@@ -25,7 +25,6 @@ export class ZingHighlight extends LitElement {
     .label {
       position: absolute;
       top: -24px;
-      left: 0;
       padding: 2px 8px;
       background: var(--highlight-color, #fbbf24);
       color: #1f2937;
@@ -38,6 +37,18 @@ export class ZingHighlight extends LitElement {
       overflow: hidden;
       text-overflow: ellipsis;
     }
+
+    /* Default: label on the left */
+    .label.align-left {
+      left: 0;
+      right: auto;
+    }
+
+    /* When near right edge: label on the right */
+    .label.align-right {
+      left: auto;
+      right: 0;
+    }
   `;
 
   @property({ type: Number }) top = 0;
@@ -46,6 +57,30 @@ export class ZingHighlight extends LitElement {
   @property({ type: Number }) height = 0;
   @property({ type: String }) label = '';
   @property({ type: Boolean }) visible = false;
+
+  /**
+   * Determine if the label should be right-aligned to prevent overflow.
+   * If the element is in the right portion of the viewport, align label to the right.
+   */
+  private get labelAlignment(): 'align-left' | 'align-right' {
+    // Calculate where the right edge of the highlight box is
+    const highlightRight = this.left + this.width;
+    const viewportWidth = window.innerWidth;
+
+    // If the highlight's right edge is within 220px of the viewport edge
+    // (200px max label width + 20px buffer), align the label to the right
+    if (highlightRight > viewportWidth - 220) {
+      return 'align-right';
+    }
+
+    // Also check if the highlight starts past the midpoint and is narrow
+    // This handles cases where element is small but positioned far right
+    if (this.left > viewportWidth - 250) {
+      return 'align-right';
+    }
+
+    return 'align-left';
+  }
 
   render() {
     if (!this.visible) {
@@ -57,7 +92,7 @@ export class ZingHighlight extends LitElement {
         class="highlight"
         style="top: ${this.top}px; left: ${this.left}px; width: ${this.width}px; height: ${this.height}px;"
       >
-        ${this.label ? html`<span class="label">${this.label}</span>` : ''}
+        ${this.label ? html`<span class="label ${this.labelAlignment}">${this.label}</span>` : ''}
       </div>
     `;
   }

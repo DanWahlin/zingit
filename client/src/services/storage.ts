@@ -6,6 +6,12 @@ import type { Annotation, ZingSettings } from '../types/index.js';
 const STORAGE_KEY = 'zingit_annotations';
 const SETTINGS_KEY = 'zingit_settings';
 const ACTIVE_KEY = 'zingit_active';
+const TOOLBAR_POS_KEY = 'zingit_toolbar_position';
+
+export interface ToolbarPosition {
+  x: number;
+  y: number;
+}
 
 export function saveAnnotations(annotations: Annotation[]): void {
   try {
@@ -104,5 +110,31 @@ export function loadAnnotationActive(): boolean {
     return JSON.parse(raw);
   } catch {
     return true;
+  }
+}
+
+export function saveToolbarPosition(position: ToolbarPosition): void {
+  try {
+    localStorage.setItem(TOOLBAR_POS_KEY, JSON.stringify(position));
+  } catch (err) {
+    console.warn('ZingIt: Failed to save toolbar position', err);
+  }
+}
+
+export function loadToolbarPosition(): ToolbarPosition | null {
+  try {
+    const raw = localStorage.getItem(TOOLBAR_POS_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+export function clearToolbarPosition(): void {
+  try {
+    localStorage.removeItem(TOOLBAR_POS_KEY);
+  } catch (err) {
+    console.warn('ZingIt: Failed to clear toolbar position', err);
   }
 }

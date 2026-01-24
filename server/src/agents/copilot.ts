@@ -4,7 +4,11 @@
 import type { WebSocket } from 'ws';
 import { CopilotClient } from '@github/copilot-sdk';
 import { BaseAgent } from './base.js';
-import type { AgentSession, WSOutgoingMessage } from '../types.js';
+import type { AgentSession, WSOutgoingMessage, ImageContent } from '../types.js';
+import { promises as fs } from 'fs';
+import * as path from 'path';
+import * as os from 'os';
+import { randomUUID } from 'crypto';
 
 export class CopilotAgent extends BaseAgent {
   name = 'copilot';
@@ -72,6 +76,9 @@ When given annotations about UI elements:
       },
     });
 
+    // Track temp files for cleanup on session destroy (prevents race condition)
+    const sessionTempFiles: string[] = [];
+
     // Subscribe to streaming events and capture unsubscribe function
     const unsubscribe = session.on((event) => {
       switch (event.type) {
@@ -103,18 +110,62 @@ When given annotations about UI elements:
     });
 
     return {
-      send: async (msg: { prompt: string }) => {
+      send: async (msg: { prompt: string; images?: ImageContent[] }) => {
         try {
+          // If images are provided, save them as temp files and attach them
+          // Copilot SDK supports file attachments for images
+          const attachments: Array<{ type: 'file'; path: string; displayName?: string }> = [];
+
+          if (msg.images && msg.images.length > 0) {
+            const tempDir = os.tmpdir();
+
+            for (let i = 0; i < msg.images.length; i++) {
+              const img = msg.images[i];
+              // Use UUID to avoid filename collisions
+              const ext = img.mediaType.split('/')[1] || 'png';
+              const tempPath = path.join(tempDir, `zingit-screenshot-${randomUUID()}.${ext}`);
+
+              // Decode base64 to buffer with error handling
+              let buffer: Buffer;
+              try {
+                buffer = Buffer.from(img.base64, 'base64');
+              } catch (decodeErr) {
+                console.warn(`ZingIt: Failed to decode base64 for image ${i + 1}:`, decodeErr);
+                continue; // Skip this image
+              }
+
+              // Save with restrictive permissions (owner read/write only)
+              await fs.writeFile(tempPath, buffer, { mode: 0o600 });
+              sessionTempFiles.push(tempPath);
+
+              attachments.push({
+                type: 'file',
+                path: tempPath,
+                displayName: img.label || `Screenshot ${i + 1}`
+              });
+            }
+          }
+
           await session.sendAndWait({
             prompt: msg.prompt,
+            attachments: attachments.length > 0 ? attachments : undefined
           });
         } catch (err) {
           send({ type: 'error', message: (err as Error).message });
         }
+        // Note: Temp files cleaned up on session destroy to avoid race condition
       },
       destroy: async () => {
         unsubscribe();
         await session.destroy();
+
+        // Clean up all temp files after session is fully destroyed
+        for (const tempPath of sessionTempFiles) {
+          fs.unlink(tempPath).catch((cleanupErr) => {
+            console.debug(`ZingIt: Failed to clean up temp file ${tempPath}:`, cleanupErr);
+          });
+        }
+        sessionTempFiles.length = 0; // Clear the array
       }
     };
   }

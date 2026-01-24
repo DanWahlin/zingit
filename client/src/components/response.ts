@@ -178,6 +178,31 @@ export class ZingResponse extends LitElement {
       word-break: break-word;
     }
 
+    .action-step {
+      padding: 10px 12px;
+      background: rgba(59, 130, 246, 0.1);
+      border-left: 3px solid #3b82f6;
+      border-radius: 0 6px 6px 0;
+      margin: 8px 0;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .action-step.check {
+      background: rgba(251, 191, 36, 0.1);
+      border-left-color: #fbbf24;
+    }
+
+    .action-step.result {
+      background: rgba(34, 197, 94, 0.1);
+      border-left-color: #22c55e;
+    }
+
+    .action-step.observation {
+      background: rgba(156, 163, 175, 0.1);
+      border-left-color: #9ca3af;
+    }
+
     .error {
       color: #f87171;
       background: rgba(248, 113, 113, 0.1);
@@ -235,6 +260,23 @@ export class ZingResponse extends LitElement {
       opacity: 0.5;
       cursor: not-allowed;
     }
+
+    .screenshot-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      background: rgba(59, 130, 246, 0.15);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      border-radius: 6px;
+      font-size: 12px;
+      color: #60a5fa;
+      margin-bottom: 12px;
+    }
+
+    .screenshot-badge svg {
+      flex-shrink: 0;
+    }
   `;
 
   @property({ type: Boolean, reflect: true }) open = false;
@@ -242,6 +284,7 @@ export class ZingResponse extends LitElement {
   @property({ type: String }) content = '';
   @property({ type: String }) toolStatus = '';
   @property({ type: String }) error = '';
+  @property({ type: Number }) screenshotCount = 0;
 
   @state() private followUpMessage = '';
   @query('.content') private contentEl!: HTMLElement;
@@ -290,6 +333,17 @@ export class ZingResponse extends LitElement {
         </div>
 
         <div class="content">
+          ${this.screenshotCount > 0 ? html`
+            <div class="screenshot-badge">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                <circle cx="8.5" cy="8.5" r="1.5"/>
+                <polyline points="21 15 16 10 5 21"/>
+              </svg>
+              <span>${this.screenshotCount} screenshot${this.screenshotCount > 1 ? 's' : ''} included</span>
+            </div>
+          ` : ''}
+
           ${this.toolStatus ? html`
             <div class="tool-status">
               <div class="spinner"></div>
@@ -374,8 +428,67 @@ export class ZingResponse extends LitElement {
       if (segment.type === 'code') {
         return html`<div class="code-block">${segment.content}</div>`;
       }
-      return html`<div class="text-block">${segment.content}</div>`;
+      // Parse text into action steps for better readability
+      return this.renderTextAsSteps(segment.content);
     });
+  }
+
+  private renderTextAsSteps(text: string) {
+    // Split on sentence boundaries that typically indicate new actions
+    // Look for: period/colon followed by capital letter (with optional space)
+    const steps = text
+      .split(/(?<=[.:])\s*(?=[A-Z][a-z])/)
+      .map(s => s.trim())
+      .filter(s => s.length > 0);
+
+    if (steps.length <= 1) {
+      // If we can't split meaningfully, render as plain text
+      return html`<div class="text-block">${text}</div>`;
+    }
+
+    return steps.map(step => {
+      const stepClass = this.classifyStep(step);
+      return html`<div class="action-step ${stepClass}">${step}</div>`;
+    });
+  }
+
+  private classifyStep(step: string): string {
+    const lower = step.toLowerCase();
+
+    // Check/investigation actions (yellow)
+    if (lower.startsWith('let me check') ||
+        lower.startsWith('let me look') ||
+        lower.startsWith('let me run') ||
+        lower.startsWith('let me also') ||
+        lower.startsWith('looking at') ||
+        lower.startsWith('checking')) {
+      return 'check';
+    }
+
+    // Results/conclusions (green)
+    if (lower.startsWith('added') ||
+        lower.startsWith('updated') ||
+        lower.startsWith('created') ||
+        lower.startsWith('removed') ||
+        lower.startsWith('fixed') ||
+        lower.startsWith('changed')) {
+      return 'result';
+    }
+
+    // Observations/notes (gray)
+    if (lower.startsWith('i don\'t see') ||
+        lower.startsWith('i can see') ||
+        lower.startsWith('there\'s no') ||
+        lower.startsWith('there is no') ||
+        lower.startsWith('the ') ||
+        lower.startsWith('it\'s possible') ||
+        lower.startsWith('perhaps') ||
+        lower.startsWith('however')) {
+      return 'observation';
+    }
+
+    // Default action (blue)
+    return '';
   }
 
   private handleClose() {

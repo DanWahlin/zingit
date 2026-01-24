@@ -3,10 +3,11 @@
 
 import { LitElement, html, css } from 'lit';
 import { customElement, state, query } from 'lit/decorators.js';
+import html2canvas from 'html2canvas';
 import type { Annotation, ZingSettings, WSMessage, AgentInfo } from '../types/index.js';
 import { WebSocketClient } from '../services/websocket.js';
 import { generateSelector, generateIdentifier, getElementHtml, getParentContext, getTextContent, getSiblingContext, getParentHtml } from '../services/selector.js';
-import { saveAnnotations, loadAnnotations, clearAnnotations, saveSettings, loadSettings, saveAnnotationActive, loadAnnotationActive } from '../services/storage.js';
+import { saveAnnotations, loadAnnotations, clearAnnotations, saveSettings, loadSettings, saveAnnotationActive, loadAnnotationActive, saveToolbarPosition, loadToolbarPosition, clearToolbarPosition, type ToolbarPosition } from '../services/storage.js';
 import { getElementViewportRect } from '../utils/geometry.js';
 import { formatAnnotationsMarkdown, copyToClipboard } from '../utils/markdown.js';
 
@@ -45,11 +46,22 @@ export class ZingUI extends LitElement {
 
     .toolbar-container {
       position: fixed;
+      pointer-events: auto;
+      z-index: 2147483646;
+    }
+
+    .toolbar-container.default-position {
       bottom: 20px;
       left: 50%;
       transform: translateX(-50%);
-      pointer-events: auto;
-      z-index: 2147483646;
+    }
+
+    .toolbar-container.custom-position {
+      transform: none;
+    }
+
+    .toolbar-container.dragging {
+      user-select: none;
     }
   `;
 
@@ -85,6 +97,9 @@ export class ZingUI extends LitElement {
   @state() private modalSelectedText = '';
   @state() private modalNotes = '';
   @state() private pendingElement: Element | null = null;
+  @state() private modalCaptureScreenshot = false;
+  @state() private modalScreenshotPreview = '';
+  @state() private modalScreenshotLoading = false;
 
   // Settings panel state
   @state() private settingsOpen = false;
@@ -100,6 +115,7 @@ export class ZingUI extends LitElement {
   @state() private responseContent = '';
   @state() private responseToolStatus = '';
   @state() private responseError = '';
+  @state() private responseScreenshotCount = 0;
 
   // Undo stack for annotations
   private undoStack: Annotation[] = [];
@@ -117,16 +133,25 @@ export class ZingUI extends LitElement {
   @state() private diffViewerOpen = false;
   @state() private previewSummary: PreviewSummary | null = null;
 
+  // Toolbar position and drag state
+  @state() private toolbarPosition: ToolbarPosition | null = loadToolbarPosition();
+  @state() private isDragging = false;
+  private dragOffset = { x: 0, y: 0 };
+
   private ws: WebSocketClient | null = null;
   private clickHandler: (e: MouseEvent) => void;
   private mouseMoveHandler: (e: MouseEvent) => void;
   private keydownHandler: (e: KeyboardEvent) => void;
+  private dragMoveHandler: (e: MouseEvent) => void;
+  private dragEndHandler: (e: MouseEvent) => void;
 
   constructor() {
     super();
     this.clickHandler = this.handleDocumentClick.bind(this);
     this.mouseMoveHandler = this.handleDocumentMouseMove.bind(this);
     this.keydownHandler = this.handleDocumentKeydown.bind(this);
+    this.dragMoveHandler = this.handleDragMove.bind(this);
+    this.dragEndHandler = this.handleDragEnd.bind(this);
   }
 
   connectedCallback() {
@@ -435,13 +460,6 @@ export class ZingUI extends LitElement {
   }
 
   private handleDocumentClick(e: MouseEvent) {
-    const target = e.target as Element;
-
-    // Ignore clicks on our own UI
-    if (this.isOwnElement(target)) {
-      return;
-    }
-
     // Ignore if annotation mode is paused
     if (!this.annotationActive) {
       return;
@@ -457,6 +475,14 @@ export class ZingUI extends LitElement {
       return;
     }
 
+    // Get the deepest element from the event, piercing through Shadow DOM
+    const target = this.getTargetElement(e);
+
+    // Ignore if no valid target found (only ZingIt elements at this point)
+    if (!target) {
+      return;
+    }
+
     // Capture click for annotation
     e.preventDefault();
     e.stopPropagation();
@@ -467,6 +493,8 @@ export class ZingUI extends LitElement {
     this.modalSelector = generateSelector(target);
     this.modalIdentifier = generateIdentifier(target);
     this.modalNotes = '';
+    this.modalCaptureScreenshot = false;
+    this.modalScreenshotPreview = '';
 
     // Get selected text if any
     const selection = window.getSelection();
@@ -494,10 +522,12 @@ export class ZingUI extends LitElement {
       return;
     }
 
-    const target = e.target as Element;
+    // Get the deepest element from the event, piercing through Shadow DOM
+    // This allows highlighting elements inside Lit components (headers, footers, etc.)
+    const target = this.getTargetElement(e);
 
-    // Ignore our own elements
-    if (this.isOwnElement(target)) {
+    // Hide highlight if no valid target found
+    if (!target) {
       this.highlightVisible = false;
       return;
     }
@@ -510,10 +540,18 @@ export class ZingUI extends LitElement {
     this.highlightVisible = true;
   }
 
-  private isEditableTarget(target: EventTarget | null): boolean {
-    if (!(target instanceof HTMLElement)) return false;
-    const tagName = target.tagName?.toLowerCase();
-    return tagName === 'input' || tagName === 'textarea' || target.isContentEditable;
+  private isEditableTarget(e: KeyboardEvent): boolean {
+    // Use composedPath to handle Shadow DOM - the actual target might be inside a shadow root
+    const path = e.composedPath();
+    for (const el of path) {
+      if (el instanceof HTMLElement) {
+        const tagName = el.tagName?.toLowerCase();
+        if (tagName === 'input' || tagName === 'textarea' || el.isContentEditable) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   private handleDocumentKeydown(e: KeyboardEvent) {
@@ -536,8 +574,8 @@ export class ZingUI extends LitElement {
       }
     }
 
-    // Skip keyboard shortcuts if typing in an input field
-    if (this.isEditableTarget(e.target)) return;
+    // Skip keyboard shortcuts if typing in an input field (including inside Shadow DOM)
+    if (this.isEditableTarget(e)) return;
 
     // Cmd/Ctrl+Z for undo (both annotation and git-based)
     const canGitUndo = this.historyCheckpoints.some(c => c.canUndo);
@@ -589,6 +627,34 @@ export class ZingUI extends LitElement {
     return false;
   }
 
+  /**
+   * Get the deepest target element from a mouse event, excluding ZingIt's own elements.
+   * Uses composedPath() which traverses through shadow DOM boundaries and gives
+   * the actual event propagation path from deepest element to window.
+   */
+  private getTargetElement(e: MouseEvent): Element | null {
+    // composedPath() returns the event path from deepest target to window,
+    // including elements inside shadow DOMs
+    const path = e.composedPath();
+
+    for (const node of path) {
+      if (node instanceof Element && !this.isOwnElement(node)) {
+        return node;
+      }
+    }
+
+    // Fallback to elementsFromPoint if composedPath doesn't help
+    // (e.g., when event target is document itself)
+    const elements = document.elementsFromPoint(e.clientX, e.clientY);
+    for (const el of elements) {
+      if (!this.isOwnElement(el)) {
+        return el;
+      }
+    }
+
+    return null;
+  }
+
   render() {
     // When hidden, only render toast for notifications
     if (this.isHidden) {
@@ -613,7 +679,10 @@ export class ZingUI extends LitElement {
         @marker-delete=${this.handleMarkerDelete}
       ></zing-markers>
 
-      <div class="toolbar-container">
+      <div
+        class="toolbar-container ${this.toolbarPosition ? 'custom-position' : 'default-position'} ${this.isDragging ? 'dragging' : ''}"
+        style="${this.toolbarPosition ? `left: ${this.toolbarPosition.x}px; top: ${this.toolbarPosition.y}px;` : ''}"
+      >
         <zing-toolbar
           .active=${this.annotationActive}
           .connected=${this.wsConnected}
@@ -637,6 +706,8 @@ export class ZingUI extends LitElement {
           @toggle-response=${() => this.responseOpen = !this.responseOpen}
           @toggle-history=${this.handleToggleHistory}
           @change-agent=${() => this.agentPickerOpen = true}
+          @drag-start=${this.handleToolbarDragStart}
+          @drag-reset=${this.handleToolbarDragReset}
         ></zing-toolbar>
       </div>
 
@@ -648,8 +719,12 @@ export class ZingUI extends LitElement {
         .identifier=${this.modalIdentifier}
         .selectedText=${this.modalSelectedText}
         .notes=${this.modalNotes}
-        @cancel=${() => this.modalOpen = false}
+        .captureScreenshot=${this.modalCaptureScreenshot}
+        .screenshotPreview=${this.modalScreenshotPreview}
+        .screenshotLoading=${this.modalScreenshotLoading}
+        @cancel=${this.handleModalCancel}
         @save=${this.handleModalSave}
+        @screenshot-toggle=${this.handleScreenshotToggle}
       ></zing-modal>
 
       <zing-settings
@@ -679,6 +754,7 @@ export class ZingUI extends LitElement {
         .content=${this.responseContent}
         .toolStatus=${this.responseToolStatus}
         .error=${this.responseError}
+        .screenshotCount=${this.responseScreenshotCount}
         @close=${() => this.responseOpen = false}
         @stop=${this.handleStop}
         @followup=${this.handleFollowUp}
@@ -720,22 +796,72 @@ export class ZingUI extends LitElement {
     `;
   }
 
-  private handleModalSave(e: CustomEvent<{ notes: string; editMode: boolean; annotationId: string }>) {
+  private handleModalCancel() {
+    this.modalOpen = false;
+    this.pendingElement = null;
+    this.modalCaptureScreenshot = false;
+    this.modalScreenshotPreview = '';
+    this.modalScreenshotLoading = false;
+  }
+
+  private async handleScreenshotToggle(e: CustomEvent<{ enabled: boolean }>) {
+    // Sync parent state with checkbox
+    this.modalCaptureScreenshot = e.detail.enabled;
+
+    if (e.detail.enabled && this.pendingElement) {
+      // Capture new screenshot preview (even if editing, recapture for current element state)
+      this.modalScreenshotLoading = true;
+      try {
+        const canvas = await html2canvas(this.pendingElement as HTMLElement, {
+          logging: false,
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: null,
+          scale: 1
+        });
+        this.modalScreenshotPreview = canvas.toDataURL('image/png');
+      } catch (err) {
+        console.warn('ZingIt: Failed to capture screenshot preview', err);
+        this.modalScreenshotPreview = '';
+      }
+      this.modalScreenshotLoading = false;
+    } else if (!e.detail.enabled) {
+      // Clear preview when unchecked
+      this.modalScreenshotPreview = '';
+    }
+  }
+
+  private handleModalSave(e: CustomEvent<{ notes: string; editMode: boolean; annotationId: string; captureScreenshot: boolean }>) {
     try {
-      const { notes, editMode, annotationId } = e.detail;
+      const { notes, editMode, annotationId, captureScreenshot } = e.detail;
 
       if (editMode) {
         // Update existing annotation and reset status to pending so it can be sent again
-        this.annotations = this.annotations.map(a =>
-          a.id === annotationId ? { ...a, notes, status: 'pending' as const } : a
-        );
+        // Also update the screenshot: use current preview if capturing, or remove if unchecked
+        const screenshot = captureScreenshot && this.modalScreenshotPreview ? this.modalScreenshotPreview : undefined;
+
+        this.annotations = this.annotations.map(a => {
+          if (a.id === annotationId) {
+            // Create updated annotation, removing screenshot property if not capturing
+            const updated = { ...a, notes, status: 'pending' as const };
+            if (screenshot) {
+              updated.screenshot = screenshot;
+            } else {
+              delete updated.screenshot;
+            }
+            return updated;
+          }
+          return a;
+        });
         saveAnnotations(this.annotations);
-        this.modalOpen = false;
-        this.pendingElement = null;
+        this.handleModalCancel();
         this.toast.success('Annotation updated');
       } else {
         // Create new annotation
         if (!this.pendingElement) return;
+
+        // Use pre-captured screenshot if available
+        const screenshot = captureScreenshot && this.modalScreenshotPreview ? this.modalScreenshotPreview : undefined;
 
         const annotation: Annotation = {
           id: crypto.randomUUID(),
@@ -748,7 +874,8 @@ export class ZingUI extends LitElement {
           siblingContext: getSiblingContext(this.pendingElement),
           parentHtml: getParentHtml(this.pendingElement),
           status: 'pending',
-          ...(this.modalSelectedText ? { selectedText: this.modalSelectedText } : {})
+          ...(this.modalSelectedText ? { selectedText: this.modalSelectedText } : {}),
+          ...(screenshot ? { screenshot } : {})
         };
 
         this.annotations = [...this.annotations, annotation];
@@ -757,9 +884,8 @@ export class ZingUI extends LitElement {
         // Push to undo stack
         this.undoStack = [...this.undoStack, annotation];
 
-        this.modalOpen = false;
-        this.pendingElement = null;
-        this.toast.success('Annotation saved');
+        this.handleModalCancel();
+        this.toast.success(screenshot ? 'Annotation saved with screenshot' : 'Annotation saved');
       }
     } catch (err) {
       console.error('ZingIt: Error saving annotation', err);
@@ -778,6 +904,11 @@ export class ZingUI extends LitElement {
         this.modalIdentifier = annotation.identifier;
         this.modalSelectedText = annotation.selectedText || '';
         this.modalNotes = annotation.notes;
+
+        // Restore screenshot state if annotation has a screenshot
+        this.modalCaptureScreenshot = !!annotation.screenshot;
+        this.modalScreenshotPreview = annotation.screenshot || '';
+
         this.pendingElement = document.querySelector(annotation.selector);
         if (!this.pendingElement) {
           this.toast.info('Element no longer exists on page');
@@ -825,13 +956,24 @@ export class ZingUI extends LitElement {
 
     // Send only the annotations being processed
     const annotationsToSend = this.annotations.filter(a => a.status === 'processing');
+    const screenshotCount = annotationsToSend.filter(a => a.screenshot).length;
+
+    // Store screenshot count for response panel
+    this.responseScreenshotCount = screenshotCount;
+
     this.ws.sendBatch({
       pageUrl: window.location.href,
       pageTitle: document.title,
       annotations: annotationsToSend
     }, projectDir);
 
-    this.toast.info(`Sent ${annotationsToSend.length} annotation${annotationsToSend.length > 1 ? 's' : ''} to agent`);
+    // Build toast message with screenshot info
+    let message = `Sent ${annotationsToSend.length} annotation${annotationsToSend.length > 1 ? 's' : ''}`;
+    if (screenshotCount > 0) {
+      message += ` (${screenshotCount} with screenshot${screenshotCount > 1 ? 's' : ''})`;
+    }
+    message += ' to agent';
+    this.toast.info(message);
   }
 
   private handleExport() {
@@ -1051,6 +1193,70 @@ export class ZingUI extends LitElement {
     } catch (err) {
       console.warn('ZingIt: Could not play completion sound', err);
     }
+  }
+
+  // Toolbar drag handlers
+  private handleToolbarDragStart(e: CustomEvent<{ clientX: number; clientY: number }>) {
+    const { clientX, clientY } = e.detail;
+
+    // Get the toolbar container element
+    const container = this.shadowRoot?.querySelector('.toolbar-container') as HTMLElement;
+    if (!container) return;
+
+    const rect = container.getBoundingClientRect();
+
+    // Calculate offset from mouse to element top-left
+    this.dragOffset = {
+      x: clientX - rect.left,
+      y: clientY - rect.top
+    };
+
+    this.isDragging = true;
+
+    // Add document-level listeners for drag
+    document.addEventListener('mousemove', this.dragMoveHandler);
+    document.addEventListener('mouseup', this.dragEndHandler);
+  }
+
+  private handleDragMove(e: MouseEvent) {
+    if (!this.isDragging) return;
+
+    const x = e.clientX - this.dragOffset.x;
+    const y = e.clientY - this.dragOffset.y;
+
+    // Clamp to viewport bounds
+    const container = this.shadowRoot?.querySelector('.toolbar-container') as HTMLElement;
+    if (!container) return;
+
+    const rect = container.getBoundingClientRect();
+    const maxX = window.innerWidth - rect.width;
+    const maxY = window.innerHeight - rect.height;
+
+    this.toolbarPosition = {
+      x: Math.max(0, Math.min(x, maxX)),
+      y: Math.max(0, Math.min(y, maxY))
+    };
+  }
+
+  private handleDragEnd() {
+    if (!this.isDragging) return;
+
+    this.isDragging = false;
+
+    // Remove document-level listeners
+    document.removeEventListener('mousemove', this.dragMoveHandler);
+    document.removeEventListener('mouseup', this.dragEndHandler);
+
+    // Save position to storage
+    if (this.toolbarPosition) {
+      saveToolbarPosition(this.toolbarPosition);
+    }
+  }
+
+  private handleToolbarDragReset() {
+    this.toolbarPosition = null;
+    clearToolbarPosition();
+    this.toast.info('Toolbar position reset');
   }
 }
 

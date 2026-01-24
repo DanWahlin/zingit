@@ -157,7 +157,7 @@ export class ZingMarkers extends LitElement {
 
       // Use viewport coordinates since zing-ui is position: fixed
       const rect = getElementViewportRect(element);
-      const pos = getMarkerPosition(rect);
+      const pos = getMarkerPosition(rect, { width: viewport.width, height: viewport.height });
       // Check if element is in viewport (rect is already in viewport coords)
       const visible = rect.bottom > 0 && rect.top < viewport.height &&
                       rect.right > 0 && rect.left < viewport.width;

@@ -267,14 +267,15 @@ async function main(): Promise<void> {
             }
 
             const prompt = state.agent.formatPrompt(msg.data, projectDir);
+            const images = state.agent.extractImages(msg.data);
             sendMessage(ws, { type: 'processing' });
-            await state.session.send({ prompt });
+            await state.session.send({ prompt, images: images.length > 0 ? images : undefined });
 
             // If not in preview mode, finalize checkpoint after processing
             // Note: In preview mode, checkpoint is finalized when changes are approved
             if (!state.previewEnabled && state.gitManager && state.currentCheckpointId) {
               try {
-                const fileChanges = await state.gitManager.finalizeCheckpoint(
+                await state.gitManager.finalizeCheckpoint(
                   state.currentCheckpointId
                 );
                 // Send updated checkpoint info

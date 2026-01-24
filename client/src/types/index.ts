@@ -14,6 +14,7 @@ export interface Annotation {
   siblingContext?: string; // Position among siblings (e.g., "Position 1 of 3 in parent")
   parentHtml?: string;     // Parent HTML with target element marked
   status?: AnnotationStatus;  // pending = blue (default), processing = red, completed = green
+  screenshot?: string;     // Base64 encoded screenshot of the element
 }
 
 export interface ZingSettings {

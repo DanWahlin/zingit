@@ -4,7 +4,30 @@
 import type { WebSocket } from 'ws';
 import { query } from '@anthropic-ai/claude-agent-sdk';
 import { BaseAgent } from './base.js';
-import type { AgentSession, WSOutgoingMessage } from '../types.js';
+import type { AgentSession, WSOutgoingMessage, ImageContent } from '../types.js';
+
+// Content block types for Claude API multimodal support
+type TextBlock = { type: 'text'; text: string };
+type ImageBlock = {
+  type: 'image';
+  source: {
+    type: 'base64';
+    media_type: string;
+    data: string;
+  };
+};
+type ContentBlock = TextBlock | ImageBlock;
+
+// SDK-compatible user message type
+type SDKUserMessage = {
+  type: 'user';
+  message: {
+    role: 'user';
+    content: ContentBlock[];
+  };
+  parent_tool_use_id: string | null;
+  session_id: string;
+};
 
 export class ClaudeCodeAgent extends BaseAgent {
   name = 'claude';
@@ -18,6 +41,52 @@ export class ClaudeCodeAgent extends BaseAgent {
     // SDK handles cleanup automatically
   }
 
+  /**
+   * Build content blocks for multimodal message with images and text
+   */
+  private buildContentBlocks(prompt: string, images?: ImageContent[]): ContentBlock[] {
+    const content: ContentBlock[] = [];
+
+    // Add images first so Claude sees them before the text instructions
+    if (images && images.length > 0) {
+      for (const img of images) {
+        // Add label as text before each image for context
+        if (img.label) {
+          content.push({ type: 'text', text: `[${img.label}]` });
+        }
+        content.push({
+          type: 'image',
+          source: {
+            type: 'base64',
+            media_type: img.mediaType,
+            data: img.base64
+          }
+        });
+      }
+    }
+
+    // Add the main text prompt
+    content.push({ type: 'text', text: prompt });
+
+    return content;
+  }
+
+  /**
+   * Create a generator that yields the initial user message with optional images
+   */
+  private async *createMessageGenerator(prompt: string, images?: ImageContent[]): AsyncGenerator<SDKUserMessage> {
+    const content = this.buildContentBlocks(prompt, images);
+    yield {
+      type: 'user' as const,
+      message: {
+        role: 'user' as const,
+        content
+      },
+      parent_tool_use_id: null,
+      session_id: ''  // SDK will assign the actual session ID
+    };
+  }
+
   async createSession(ws: WebSocket, projectDir: string): Promise<AgentSession> {
     const send = (data: WSOutgoingMessage): void => {
       if (ws.readyState === ws.OPEN) {
@@ -25,20 +94,27 @@ export class ClaudeCodeAgent extends BaseAgent {
       }
     };
 
-    let currentSessionId: string | undefined;
-
     return {
-      send: async (msg: { prompt: string }) => {
+      send: async (msg: { prompt: string; images?: ImageContent[] }) => {
         try {
+          // Use generator function to pass multimodal content (text + images)
+          // This allows Claude to actually see the screenshots
+          const messageGenerator = this.createMessageGenerator(msg.prompt, msg.images);
+
           const response = query({
-            prompt: msg.prompt,
+            prompt: messageGenerator,
             options: {
               model: this.model,
               cwd: projectDir,
               permissionMode: 'acceptEdits',  // Auto-approve file edits (no interactive terminal)
               systemPrompt: `You are a UI debugging assistant. When given annotations about UI elements,
 you search for the corresponding code using the selectors and HTML context provided,
-then make the requested changes. Be thorough in finding the right files and making precise edits.`
+then make the requested changes. Be thorough in finding the right files and making precise edits.
+
+When screenshots are provided, use them to:
+- Better understand the visual context and styling of the elements
+- Identify the exact appearance that needs to be changed
+- Verify you're targeting the correct element based on its visual representation`
             }
           });
 
@@ -46,9 +122,7 @@ then make the requested changes. Be thorough in finding the right files and maki
           for await (const message of response) {
             switch (message.type) {
               case 'system':
-                if (message.subtype === 'init') {
-                  currentSessionId = message.session_id;
-                }
+                // Session initialized - SDK handles session management
                 break;
 
               case 'assistant':
