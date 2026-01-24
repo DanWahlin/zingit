@@ -703,12 +703,18 @@ export class ZingDiffViewer extends LitElement {
   }
 
   private _approveChange(id: string) {
-    this.rejectedIds.delete(id);
+    // Create new Sets to trigger Lit reactivity
+    const newRejected = new Set(this.rejectedIds);
+    newRejected.delete(id);
+    this.rejectedIds = newRejected;
     this.approvedIds = new Set([...this.approvedIds, id]);
   }
 
   private _rejectChange(id: string) {
-    this.approvedIds.delete(id);
+    // Create new Sets to trigger Lit reactivity
+    const newApproved = new Set(this.approvedIds);
+    newApproved.delete(id);
+    this.approvedIds = newApproved;
     this.rejectedIds = new Set([...this.rejectedIds, id]);
   }
 
