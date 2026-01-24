@@ -435,10 +435,25 @@ export class ZingResponse extends LitElement {
   }
 
   private renderTextAsSteps(text: string) {
-    // Split on sentence boundaries that typically indicate new actions
-    // Look for: period/colon followed by capital letter (with optional space)
+    // Don't split if the text contains:
+    // - Markdown lists (numbered or bulleted options)
+    // - Backticks (inline code)
+    // - Questions (ends with ?)
+    // - Multiple newlines (already formatted)
+    const hasMarkdownList = /\d+\.\s+\*\*|^[-*]\s+/m.test(text);
+    const hasInlineCode = /`[^`]+`/.test(text);
+    const isQuestion = text.trim().endsWith('?');
+    const hasMultipleNewlines = /\n\s*\n/.test(text);
+
+    if (hasMarkdownList || hasInlineCode || isQuestion || hasMultipleNewlines) {
+      // Render as plain text with preserved formatting
+      return html`<div class="text-block">${text}</div>`;
+    }
+
+    // Only split on clear action sentence boundaries
+    // Look for: period followed by space and capital letter starting an action phrase
     const steps = text
-      .split(/(?<=[.:])\s*(?=[A-Z][a-z])/)
+      .split(/(?<=\.)\s+(?=[A-Z][a-z])/)
       .map(s => s.trim())
       .filter(s => s.length > 0);
 
