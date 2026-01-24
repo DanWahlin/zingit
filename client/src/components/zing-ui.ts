@@ -637,10 +637,17 @@ export class ZingUI extends LitElement {
     // including elements inside shadow DOMs
     const path = e.composedPath();
 
-    for (const node of path) {
-      if (node instanceof Element && !this.isOwnElement(node)) {
-        return node;
-      }
+    // Find the first Element in the path (the actual click target)
+    const firstElement = path.find(node => node instanceof Element) as Element | undefined;
+
+    // If the click originated on a ZingIt element, ignore it entirely
+    if (firstElement && this.isOwnElement(firstElement)) {
+      return null;
+    }
+
+    // Return the first element (which we already know is not a ZingIt element)
+    if (firstElement) {
+      return firstElement;
     }
 
     // Fallback to elementsFromPoint if composedPath doesn't help
