@@ -178,6 +178,7 @@ export class ZingToolbar extends LitElement {
   @property({ type: String }) agent = '';
   @property({ type: String }) model = '';
   @property({ type: Boolean }) responseOpen = false;  // Whether the response panel is open
+  @property({ type: Boolean }) historyOpen = false;   // Whether the history panel is open
 
   render() {
     const statusClass = this.maxAttemptsReached
@@ -265,12 +266,23 @@ export class ZingToolbar extends LitElement {
         <button
           class="btn-icon"
           ?disabled=${!this.canUndo}
-          title="Undo"
+          title="Undo (Ctrl+Z)"
           @click=${this.handleUndo}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M3 7v6h6"/>
             <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6.36 2.64L3 13"/>
+          </svg>
+        </button>
+
+        <button
+          class="btn-icon ${this.historyOpen ? 'active' : ''}"
+          title="Change History"
+          @click=${this.handleHistory}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
           </svg>
         </button>
 
@@ -377,6 +389,10 @@ export class ZingToolbar extends LitElement {
 
   private handleToggleResponse() {
     this.dispatchEvent(new CustomEvent('toggle-response', { bubbles: true, composed: true }));
+  }
+
+  private handleHistory() {
+    this.dispatchEvent(new CustomEvent('toggle-history', { bubbles: true, composed: true }));
   }
 
   private handleAgentClick() {

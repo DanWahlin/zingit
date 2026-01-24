@@ -19,7 +19,11 @@ import './response.js';
 import './toast.js';
 import './help.js';
 import './agent-picker.js';
+import './history-panel.js';
+import './undo-bar.js';
 import type { ZingToast } from './toast.js';
+import type { ZingHistoryPanel } from './history-panel.js';
+import type { CheckpointInfo } from '../types/index.js';
 
 @customElement('zing-ui')
 export class ZingUI extends LitElement {
@@ -62,6 +66,7 @@ export class ZingUI extends LitElement {
   @state() private agentPickerError = '';
 
   @query('zing-toast') private toast!: ZingToast;
+  @query('zing-history-panel') private historyPanel!: ZingHistoryPanel;
 
   // Highlight state
   @state() private highlightVisible = false;
@@ -95,6 +100,15 @@ export class ZingUI extends LitElement {
 
   // Undo stack for annotations
   private undoStack: Annotation[] = [];
+
+  // History panel state
+  @state() private historyOpen = false;
+  @state() private historyCheckpoints: CheckpointInfo[] = [];
+  @state() private historyLoading = false;
+
+  // Undo bar state
+  @state() private undoBarVisible = false;
+  @state() private undoBarFilesModified = 0;
 
   private ws: WebSocketClient | null = null;
   private clickHandler: (e: MouseEvent) => void;
@@ -287,6 +301,63 @@ export class ZingUI extends LitElement {
         this.agentPickerError = msg.message || 'Failed to select agent';
         this.toast.error(msg.message || 'Failed to select agent');
         break;
+
+      // History/Undo feature handlers
+      case 'checkpoint_created':
+        if (msg.checkpoint) {
+          // Update or add checkpoint
+          const existingIndex = this.historyCheckpoints.findIndex(c => c.id === msg.checkpoint!.id);
+          if (existingIndex >= 0) {
+            this.historyCheckpoints = [
+              ...this.historyCheckpoints.slice(0, existingIndex),
+              msg.checkpoint,
+              ...this.historyCheckpoints.slice(existingIndex + 1)
+            ];
+          } else {
+            this.historyCheckpoints = [...this.historyCheckpoints, msg.checkpoint];
+          }
+
+          // Show undo bar if checkpoint is applied and settings allow
+          if (msg.checkpoint.status === 'applied' && msg.checkpoint.filesModified > 0 && this.settings.showUndoBar) {
+            this.undoBarFilesModified = msg.checkpoint.filesModified;
+            this.undoBarVisible = true;
+          }
+        }
+        break;
+
+      case 'history':
+        this.historyCheckpoints = msg.checkpoints || [];
+        this.historyLoading = false;
+        break;
+
+      case 'undo_complete':
+        this.historyPanel?.undoComplete();
+        this.undoBarVisible = false;
+        this.toast.success('Change undone');
+        // Refresh history
+        this.ws?.send({ type: 'get_history' });
+        // Refresh page to show reverted state
+        if (this.settings.autoRefresh) {
+          setTimeout(() => window.location.reload(), 500);
+        }
+        break;
+
+      case 'revert_complete':
+        this.historyPanel?.undoComplete();
+        this.undoBarVisible = false;
+        this.toast.success('Reverted to checkpoint');
+        // Refresh history
+        this.ws?.send({ type: 'get_history' });
+        // Refresh page to show reverted state
+        if (this.settings.autoRefresh) {
+          setTimeout(() => window.location.reload(), 500);
+        }
+        break;
+
+      case 'history_cleared':
+        this.historyCheckpoints = [];
+        this.toast.info('History cleared');
+        break;
     }
   }
 
@@ -381,16 +452,21 @@ export class ZingUI extends LitElement {
         this.modalOpen = false;
       } else if (this.settingsOpen) {
         this.settingsOpen = false;
+      } else if (this.historyOpen) {
+        this.historyOpen = false;
       } else if (this.responseOpen) {
         this.responseOpen = false;
+      } else if (this.undoBarVisible) {
+        this.undoBarVisible = false;
       }
     }
 
     // Skip keyboard shortcuts if typing in an input field
     if (this.isEditableTarget(e.target)) return;
 
-    // Cmd/Ctrl+Z for undo
-    if ((e.metaKey || e.ctrlKey) && e.key === 'z' && !e.shiftKey && this.undoStack.length > 0) {
+    // Cmd/Ctrl+Z for undo (both annotation and git-based)
+    const canGitUndo = this.historyCheckpoints.some(c => c.canUndo);
+    if ((e.metaKey || e.ctrlKey) && e.key === 'z' && !e.shiftKey && (this.undoStack.length > 0 || canGitUndo)) {
       e.preventDefault();
       this.handleUndo();
     }
@@ -469,10 +545,11 @@ export class ZingUI extends LitElement {
           .processing=${this.processing}
           .maxAttemptsReached=${this.wsMaxAttemptsReached}
           .annotationCount=${this.annotations.length}
-          .canUndo=${this.undoStack.length > 0}
+          .canUndo=${this.undoStack.length > 0 || this.historyCheckpoints.some(c => c.canUndo)}
           .agent=${this.agentName}
           .model=${this.agentModel}
           .responseOpen=${this.responseOpen}
+          .historyOpen=${this.historyOpen}
           @toggle=${this.handleToggle}
           @send=${this.handleSend}
           @undo=${this.handleUndo}
@@ -483,6 +560,7 @@ export class ZingUI extends LitElement {
           @close=${this.handleClose}
           @reconnect=${this.handleReconnect}
           @toggle-response=${() => this.responseOpen = !this.responseOpen}
+          @toggle-history=${this.handleToggleHistory}
           @change-agent=${() => this.agentPickerOpen = true}
         ></zing-toolbar>
       </div>
@@ -535,6 +613,24 @@ export class ZingUI extends LitElement {
         .open=${this.helpOpen}
         @close=${() => this.helpOpen = false}
       ></zing-help>
+
+      <zing-history-panel
+        .isOpen=${this.historyOpen}
+        .checkpoints=${this.historyCheckpoints}
+        .isLoading=${this.historyLoading}
+        @close=${() => this.historyOpen = false}
+        @undo=${this.handleGitUndo}
+        @revert-to=${this.handleRevertTo}
+        @clear-history=${this.handleClearHistory}
+      ></zing-history-panel>
+
+      <zing-undo-bar
+        .visible=${this.undoBarVisible}
+        .filesModified=${this.undoBarFilesModified}
+        .timeout=${this.settings.undoBarTimeout}
+        @undo=${this.handleGitUndo}
+        @dismiss=${() => this.undoBarVisible = false}
+      ></zing-undo-bar>
 
       <zing-toast></zing-toast>
     `;
@@ -663,6 +759,14 @@ export class ZingUI extends LitElement {
   }
 
   private handleUndo() {
+    // First try git-based undo if available
+    const canGitUndo = this.historyCheckpoints.some(c => c.canUndo);
+    if (canGitUndo) {
+      this.handleGitUndo();
+      return;
+    }
+
+    // Fall back to annotation undo stack
     if (this.undoStack.length === 0) return;
 
     // Pop the last annotation from the undo stack
@@ -674,6 +778,50 @@ export class ZingUI extends LitElement {
     saveAnnotations(this.annotations);
 
     this.toast.info('Annotation removed');
+  }
+
+  private handleGitUndo() {
+    if (!this.ws || !this.wsConnected) {
+      this.toast.error('Not connected to server');
+      return;
+    }
+
+    // Send undo request to server
+    this.ws.send({ type: 'undo' });
+    this.undoBarVisible = false;
+  }
+
+  private handleRevertTo(e: CustomEvent<{ checkpointId: string }>) {
+    if (!this.ws || !this.wsConnected) {
+      this.toast.error('Not connected to server');
+      return;
+    }
+
+    // Send revert request to server
+    this.ws.send({
+      type: 'revert_to',
+      checkpointId: e.detail.checkpointId
+    });
+  }
+
+  private handleClearHistory() {
+    if (!this.ws || !this.wsConnected) {
+      this.toast.error('Not connected to server');
+      return;
+    }
+
+    // Send clear history request to server
+    this.ws.send({ type: 'clear_history' });
+  }
+
+  private handleToggleHistory() {
+    this.historyOpen = !this.historyOpen;
+
+    // Load history when opening
+    if (this.historyOpen && this.ws && this.wsConnected) {
+      this.historyLoading = true;
+      this.ws.send({ type: 'get_history' });
+    }
   }
 
   private handleClear() {
