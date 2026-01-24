@@ -1051,6 +1051,13 @@ export class ZingUI extends LitElement {
 
   private handleFollowUp(e: CustomEvent<{ message: string }>) {
     if (!this.ws || !this.wsConnected) return;
+
+    // Show processing state and prepare for response
+    this.processing = true;
+    this.responseContent += `\n\n---\n**You:** ${e.detail.message}\n\n`;
+    this.responseError = '';
+    this.responseToolStatus = '';
+
     this.ws.sendMessage(e.detail.message);
   }
 
