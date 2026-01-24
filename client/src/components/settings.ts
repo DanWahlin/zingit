@@ -123,18 +123,35 @@ export class ZingSettingsPanel extends LitElement {
       color: #6b7280;
     }
 
-    .color-field {
-      display: flex;
-      align-items: center;
+    .colors-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
       gap: 12px;
     }
 
+    .color-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .color-item label {
+      font-size: 11px;
+      margin-bottom: 0;
+    }
+
+    .color-field {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
     input[type="color"] {
-      width: 40px;
-      height: 40px;
+      width: 32px;
+      height: 32px;
       padding: 0;
       border: none;
-      border-radius: 6px;
+      border-radius: 4px;
       cursor: pointer;
       background: none;
     }
@@ -145,11 +162,11 @@ export class ZingSettingsPanel extends LitElement {
 
     input[type="color"]::-webkit-color-swatch {
       border: none;
-      border-radius: 6px;
+      border-radius: 4px;
     }
 
     .color-value {
-      font-size: 13px;
+      font-size: 11px;
       color: #9ca3af;
       font-family: 'SF Mono', Monaco, monospace;
     }
@@ -298,50 +315,52 @@ export class ZingSettingsPanel extends LitElement {
             </div>
 
             <div class="field">
-              <label>Highlight Color</label>
-              <div class="color-field">
-                <input
-                  type="color"
-                  .value=${this.localSettings.highlightColor}
-                  @input=${(e: Event) => this.updateSetting('highlightColor', (e.target as HTMLInputElement).value)}
-                />
-                <span class="color-value">${this.localSettings.highlightColor}</span>
-              </div>
-            </div>
-
-            <div class="field">
-              <label>Pending Color</label>
-              <div class="color-field">
-                <input
-                  type="color"
-                  .value=${this.localSettings.markerColor}
-                  @input=${(e: Event) => this.updateSetting('markerColor', (e.target as HTMLInputElement).value)}
-                />
-                <span class="color-value">${this.localSettings.markerColor}</span>
-              </div>
-            </div>
-
-            <div class="field">
-              <label>Processing Color</label>
-              <div class="color-field">
-                <input
-                  type="color"
-                  .value=${this.localSettings.processingColor}
-                  @input=${(e: Event) => this.updateSetting('processingColor', (e.target as HTMLInputElement).value)}
-                />
-                <span class="color-value">${this.localSettings.processingColor}</span>
-              </div>
-            </div>
-
-            <div class="field">
-              <label>Completed Color</label>
-              <div class="color-field">
-                <input
-                  type="color"
-                  .value=${this.localSettings.completedColor}
-                  @input=${(e: Event) => this.updateSetting('completedColor', (e.target as HTMLInputElement).value)}
-                />
-                <span class="color-value">${this.localSettings.completedColor}</span>
+              <label>Colors</label>
+              <div class="colors-grid">
+                <div class="color-item">
+                  <label>Highlight</label>
+                  <div class="color-field">
+                    <input
+                      type="color"
+                      .value=${this.localSettings.highlightColor}
+                      @input=${(e: Event) => this.updateSetting('highlightColor', (e.target as HTMLInputElement).value)}
+                    />
+                    <span class="color-value">${this.localSettings.highlightColor}</span>
+                  </div>
+                </div>
+                <div class="color-item">
+                  <label>Pending</label>
+                  <div class="color-field">
+                    <input
+                      type="color"
+                      .value=${this.localSettings.markerColor}
+                      @input=${(e: Event) => this.updateSetting('markerColor', (e.target as HTMLInputElement).value)}
+                    />
+                    <span class="color-value">${this.localSettings.markerColor}</span>
+                  </div>
+                </div>
+                <div class="color-item">
+                  <label>Processing</label>
+                  <div class="color-field">
+                    <input
+                      type="color"
+                      .value=${this.localSettings.processingColor}
+                      @input=${(e: Event) => this.updateSetting('processingColor', (e.target as HTMLInputElement).value)}
+                    />
+                    <span class="color-value">${this.localSettings.processingColor}</span>
+                  </div>
+                </div>
+                <div class="color-item">
+                  <label>Completed</label>
+                  <div class="color-field">
+                    <input
+                      type="color"
+                      .value=${this.localSettings.completedColor}
+                      @input=${(e: Event) => this.updateSetting('completedColor', (e.target as HTMLInputElement).value)}
+                    />
+                    <span class="color-value">${this.localSettings.completedColor}</span>
+                  </div>
+                </div>
               </div>
             </div>
 
