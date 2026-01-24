@@ -5,6 +5,8 @@ import { CopilotAgent } from './agents/copilot.js';
 import { ClaudeCodeAgent } from './agents/claude.js';
 import { CodexAgent } from './agents/codex.js';
 import { detectAgents, type AgentInfo } from './utils/agent-detection.js';
+import { GitManager, GitManagerError } from './services/git-manager.js';
+import { PreviewManager, PreviewError } from './services/preview-manager.js';
 import type { Agent, AgentSession, WSIncomingMessage, WSOutgoingMessage } from './types.js';
 
 const PORT = parseInt(process.env.PORT || '8765', 10);
@@ -57,6 +59,12 @@ interface ConnectionState {
   session: AgentSession | null;
   agentName: string | null;
   agent: Agent | null;
+  // History/Undo feature
+  gitManager: GitManager | null;
+  currentCheckpointId: string | null;
+  // Preview/Diff feature
+  previewManager: PreviewManager | null;
+  previewEnabled: boolean;
 }
 
 async function main(): Promise<void> {
@@ -100,10 +108,22 @@ async function main(): Promise<void> {
     console.log('Client connected');
 
     // Initialize connection state
+    const gitManager = new GitManager(PROJECT_DIR);
+    const previewManager = new PreviewManager(PROJECT_DIR);
+
+    // Initialize git manager (async but don't block connection)
+    gitManager.initialize().catch((err) => {
+      console.warn('Failed to initialize GitManager:', err.message);
+    });
+
     const state: ConnectionState = {
       session: null,
       agentName: DEFAULT_AGENT,  // Use default if set
-      agent: DEFAULT_AGENT ? initializedAgents.get(DEFAULT_AGENT) || null : null
+      agent: DEFAULT_AGENT ? initializedAgents.get(DEFAULT_AGENT) || null : null,
+      gitManager,
+      currentCheckpointId: null,
+      previewManager,
+      previewEnabled: false,
     };
     connections.set(ws, state);
 
@@ -203,6 +223,45 @@ async function main(): Promise<void> {
             // Use client-specified projectDir, or fall back to server default
             const projectDir = msg.data.projectDir || PROJECT_DIR;
 
+            // Create a checkpoint before AI modifications (if git manager available)
+            if (state.gitManager) {
+              try {
+                const checkpoint = await state.gitManager.createCheckpoint({
+                  annotations: msg.data.annotations,
+                  pageUrl: msg.data.pageUrl,
+                  pageTitle: msg.data.pageTitle,
+                  agentName: state.agentName,
+                });
+                state.currentCheckpointId = checkpoint.id;
+                sendMessage(ws, {
+                  type: 'checkpoint_created',
+                  checkpoint: {
+                    id: checkpoint.id,
+                    timestamp: checkpoint.timestamp,
+                    annotations: checkpoint.annotations,
+                    filesModified: 0,
+                    linesChanged: 0,
+                    agentName: checkpoint.agentName,
+                    pageUrl: checkpoint.pageUrl,
+                    status: 'pending',
+                    canUndo: false,
+                  },
+                });
+              } catch (err) {
+                // Log but don't block - checkpoint is optional
+                console.warn('Failed to create checkpoint:', (err as Error).message);
+              }
+            }
+
+            // Start preview session if preview mode is enabled
+            if (state.previewEnabled && state.previewManager) {
+              state.previewManager.startPreview(msg.data.annotations);
+              sendMessage(ws, {
+                type: 'preview_start',
+                previewId: state.previewManager.getPreviewId() || undefined,
+              });
+            }
+
             if (!state.session) {
               state.session = await state.agent.createSession(ws, projectDir);
             }
@@ -210,6 +269,30 @@ async function main(): Promise<void> {
             const prompt = state.agent.formatPrompt(msg.data, projectDir);
             sendMessage(ws, { type: 'processing' });
             await state.session.send({ prompt });
+
+            // If not in preview mode, finalize checkpoint after processing
+            // Note: In preview mode, checkpoint is finalized when changes are approved
+            if (!state.previewEnabled && state.gitManager && state.currentCheckpointId) {
+              try {
+                const fileChanges = await state.gitManager.finalizeCheckpoint(
+                  state.currentCheckpointId
+                );
+                // Send updated checkpoint info
+                const checkpoints = await state.gitManager.getHistory();
+                const updatedCheckpoint = checkpoints.find(
+                  (c) => c.id === state.currentCheckpointId
+                );
+                if (updatedCheckpoint) {
+                  sendMessage(ws, {
+                    type: 'checkpoint_created',
+                    checkpoint: updatedCheckpoint,
+                  });
+                }
+              } catch (err) {
+                console.warn('Failed to finalize checkpoint:', (err as Error).message);
+              }
+              state.currentCheckpointId = null;
+            }
             break;
           }
 
@@ -236,6 +319,215 @@ async function main(): Promise<void> {
             }
             sendMessage(ws, { type: 'idle' });
             break;
+
+          // ============================================
+          // History/Undo Feature Handlers
+          // ============================================
+
+          case 'get_history': {
+            if (!state.gitManager) {
+              sendMessage(ws, { type: 'error', message: 'Git manager not initialized' });
+              break;
+            }
+            try {
+              const checkpoints = await state.gitManager.getHistory();
+              sendMessage(ws, { type: 'history', checkpoints });
+            } catch (err) {
+              sendMessage(ws, {
+                type: 'error',
+                message: `Failed to get history: ${(err as Error).message}`,
+              });
+            }
+            break;
+          }
+
+          case 'undo': {
+            if (!state.gitManager) {
+              sendMessage(ws, { type: 'error', message: 'Git manager not initialized' });
+              break;
+            }
+            try {
+              const result = await state.gitManager.undoLastCheckpoint();
+              state.currentCheckpointId = null;
+              sendMessage(ws, {
+                type: 'undo_complete',
+                checkpointId: result.checkpointId,
+                filesReverted: result.filesReverted,
+              });
+            } catch (err) {
+              if (err instanceof GitManagerError) {
+                sendMessage(ws, { type: 'error', message: err.message });
+              } else {
+                sendMessage(ws, {
+                  type: 'error',
+                  message: `Undo failed: ${(err as Error).message}`,
+                });
+              }
+            }
+            break;
+          }
+
+          case 'revert_to': {
+            if (!state.gitManager) {
+              sendMessage(ws, { type: 'error', message: 'Git manager not initialized' });
+              break;
+            }
+            if (!msg.checkpointId) {
+              sendMessage(ws, { type: 'error', message: 'No checkpoint ID specified' });
+              break;
+            }
+            try {
+              const result = await state.gitManager.revertToCheckpoint(msg.checkpointId);
+              sendMessage(ws, {
+                type: 'revert_complete',
+                checkpointId: msg.checkpointId,
+                filesReverted: result.filesReverted,
+              });
+            } catch (err) {
+              if (err instanceof GitManagerError) {
+                sendMessage(ws, { type: 'error', message: err.message });
+              } else {
+                sendMessage(ws, {
+                  type: 'error',
+                  message: `Revert failed: ${(err as Error).message}`,
+                });
+              }
+            }
+            break;
+          }
+
+          case 'clear_history': {
+            if (!state.gitManager) {
+              sendMessage(ws, { type: 'error', message: 'Git manager not initialized' });
+              break;
+            }
+            try {
+              await state.gitManager.clearHistory();
+              sendMessage(ws, { type: 'history_cleared' });
+            } catch (err) {
+              sendMessage(ws, {
+                type: 'error',
+                message: `Failed to clear history: ${(err as Error).message}`,
+              });
+            }
+            break;
+          }
+
+          // ============================================
+          // Preview/Diff Feature Handlers
+          // ============================================
+
+          case 'enable_preview': {
+            state.previewEnabled = true;
+            sendMessage(ws, { type: 'preview_enabled', previewEnabled: true });
+            console.log('Preview mode enabled');
+            break;
+          }
+
+          case 'disable_preview': {
+            state.previewEnabled = false;
+            if (state.previewManager?.isPreviewActive()) {
+              state.previewManager.discardPreview();
+            }
+            sendMessage(ws, { type: 'preview_disabled', previewEnabled: false });
+            console.log('Preview mode disabled');
+            break;
+          }
+
+          case 'approve_changes': {
+            if (!state.previewManager) {
+              sendMessage(ws, { type: 'error', message: 'Preview manager not initialized' });
+              break;
+            }
+            if (!msg.changeIds || msg.changeIds.length === 0) {
+              sendMessage(ws, { type: 'error', message: 'No changes specified to approve' });
+              break;
+            }
+            try {
+              const appliedFiles = await state.previewManager.applyChanges(msg.changeIds);
+
+              // Finalize checkpoint if git manager is active
+              if (state.gitManager && state.currentCheckpointId) {
+                await state.gitManager.finalizeCheckpoint(state.currentCheckpointId);
+              }
+
+              sendMessage(ws, {
+                type: 'changes_applied',
+                previewId: state.previewManager.getPreviewId() || undefined,
+                appliedChanges: msg.changeIds,
+                filesModified: appliedFiles,
+              });
+
+              // Clear the preview after applying
+              state.previewManager.discardPreview();
+              state.currentCheckpointId = null;
+            } catch (err) {
+              if (err instanceof PreviewError) {
+                sendMessage(ws, { type: 'error', message: err.message });
+              } else {
+                sendMessage(ws, {
+                  type: 'error',
+                  message: `Failed to apply changes: ${(err as Error).message}`,
+                });
+              }
+            }
+            break;
+          }
+
+          case 'approve_all': {
+            if (!state.previewManager) {
+              sendMessage(ws, { type: 'error', message: 'Preview manager not initialized' });
+              break;
+            }
+            try {
+              const appliedFiles = await state.previewManager.applyAllChanges();
+
+              // Finalize checkpoint if git manager is active
+              if (state.gitManager && state.currentCheckpointId) {
+                await state.gitManager.finalizeCheckpoint(state.currentCheckpointId);
+              }
+
+              const preview = state.previewManager.getCurrentPreview();
+              sendMessage(ws, {
+                type: 'changes_applied',
+                previewId: state.previewManager.getPreviewId() || undefined,
+                appliedChanges: preview?.changes.map((c) => c.id) || [],
+                filesModified: appliedFiles,
+              });
+
+              // Clear the preview after applying
+              state.previewManager.discardPreview();
+              state.currentCheckpointId = null;
+            } catch (err) {
+              if (err instanceof PreviewError) {
+                sendMessage(ws, { type: 'error', message: err.message });
+              } else {
+                sendMessage(ws, {
+                  type: 'error',
+                  message: `Failed to apply changes: ${(err as Error).message}`,
+                });
+              }
+            }
+            break;
+          }
+
+          case 'reject_changes':
+          case 'reject_all': {
+            if (!state.previewManager) {
+              sendMessage(ws, { type: 'error', message: 'Preview manager not initialized' });
+              break;
+            }
+
+            const previewId = state.previewManager.getPreviewId();
+            state.previewManager.discardPreview();
+            state.currentCheckpointId = null;
+
+            sendMessage(ws, {
+              type: 'changes_rejected',
+              previewId: previewId || undefined,
+            });
+            break;
+          }
         }
       } catch (err) {
         sendMessage(ws, { type: 'error', message: (err as Error).message });

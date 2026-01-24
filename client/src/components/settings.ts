@@ -223,7 +223,12 @@ export class ZingSettingsPanel extends LitElement {
     projectDir: '',
     playSoundOnComplete: true,
     selectedAgent: '',
-    autoRefresh: false
+    autoRefresh: false,
+    // Undo/Redo & Preview features
+    previewMode: true,
+    diffStyle: 'unified',
+    showUndoBar: true,
+    undoBarTimeout: 10000,
   };
 
   private localSettings: ZingSettings = { ...this.settings };
