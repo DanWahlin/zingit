@@ -2,7 +2,6 @@
 
 import type { WebSocket } from 'ws';
 import type { CheckpointInfo } from './services/git-manager.js';
-import type { ProposedChange, PreviewSummary } from './services/preview-manager.js';
 
 export interface Agent {
   name: string;
@@ -57,14 +56,7 @@ export type WSIncomingType =
   | 'get_history'
   | 'undo'
   | 'revert_to'
-  | 'clear_history'
-  // Preview/Diff feature
-  | 'enable_preview'
-  | 'disable_preview'
-  | 'approve_changes'
-  | 'reject_changes'
-  | 'approve_all'
-  | 'reject_all';
+  | 'clear_history';
 
 export interface WSIncomingMessage {
   type: WSIncomingType;
@@ -73,9 +65,6 @@ export interface WSIncomingMessage {
   agent?: string;  // For select_agent and batch messages
   // History/Undo feature
   checkpointId?: string;  // For revert_to
-  // Preview/Diff feature
-  previewId?: string;     // For approve/reject operations
-  changeIds?: string[];   // For approve_changes/reject_changes
 }
 
 export type WSOutgoingType =
@@ -96,15 +85,7 @@ export type WSOutgoingType =
   | 'history'
   | 'undo_complete'
   | 'revert_complete'
-  | 'history_cleared'
-  // Preview/Diff feature
-  | 'preview_enabled'
-  | 'preview_disabled'
-  | 'preview_start'
-  | 'preview_change'
-  | 'preview_complete'
-  | 'changes_applied'
-  | 'changes_rejected';
+  | 'history_cleared';
 
 export interface AgentInfoMessage {
   name: string;
@@ -129,11 +110,4 @@ export interface WSOutgoingMessage {
   checkpoints?: CheckpointInfo[];   // For history
   checkpointId?: string;            // For undo_complete, revert_complete
   filesReverted?: string[];         // For undo_complete, revert_complete
-  // Preview/Diff feature
-  previewId?: string;               // For preview operations
-  previewEnabled?: boolean;         // For preview_enabled/disabled
-  change?: ProposedChange;          // For preview_change
-  summary?: PreviewSummary;         // For preview_complete
-  appliedChanges?: string[];        // For changes_applied (change IDs)
-  filesModified?: string[];         // For changes_applied (file paths)
 }

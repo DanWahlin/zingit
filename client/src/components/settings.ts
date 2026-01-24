@@ -241,9 +241,7 @@ export class ZingSettingsPanel extends LitElement {
     playSoundOnComplete: true,
     selectedAgent: '',
     autoRefresh: false,
-    // Undo/Redo & Preview features
-    previewMode: true,
-    diffStyle: 'unified',
+    // Undo/Redo features
     showUndoBar: true,
     undoBarTimeout: 10000,
   };
@@ -409,35 +407,12 @@ export class ZingSettingsPanel extends LitElement {
               <div class="checkbox-field">
                 <input
                   type="checkbox"
-                  id="previewMode"
-                  .checked=${this.localSettings.previewMode}
-                  @change=${(e: Event) => this.updateSetting('previewMode', (e.target as HTMLInputElement).checked)}
-                />
-                <label class="checkbox-label" for="previewMode">Preview changes before applying</label>
-              </div>
-            </div>
-
-            <div class="field">
-              <div class="checkbox-field">
-                <input
-                  type="checkbox"
                   id="showUndoBar"
                   .checked=${this.localSettings.showUndoBar}
                   @change=${(e: Event) => this.updateSetting('showUndoBar', (e.target as HTMLInputElement).checked)}
                 />
                 <label class="checkbox-label" for="showUndoBar">Show undo bar after changes</label>
               </div>
-            </div>
-
-            <div class="field">
-              <label for="diffStyle">Diff View Style</label>
-              <select
-                id="diffStyle"
-                @change=${(e: Event) => this.updateSetting('diffStyle', (e.target as HTMLSelectElement).value as 'unified' | 'split')}
-              >
-                <option value="unified" ?selected=${this.localSettings.diffStyle === 'unified'}>Unified</option>
-                <option value="split" ?selected=${this.localSettings.diffStyle === 'split'}>Split</option>
-              </select>
             </div>
           </div>
 

@@ -76,9 +76,7 @@ const defaultSettings: ZingSettings = {
   playSoundOnComplete: true,    // Play ding when agent completes
   selectedAgent: '',            // Empty = show agent picker on first connect
   autoRefresh: false,           // Auto refresh page when agent completes (disabled by default)
-  // Undo/Redo & Preview features
-  previewMode: true,            // Enable preview before apply (default: true)
-  diffStyle: 'unified',         // Preferred diff view style
+  // Undo/Redo features
   showUndoBar: true,            // Show undo toast after changes (default: true)
   undoBarTimeout: 10000,        // Undo bar auto-dismiss timeout ms (default: 10000)
 };

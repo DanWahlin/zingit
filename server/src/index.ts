@@ -6,7 +6,6 @@ import { ClaudeCodeAgent } from './agents/claude.js';
 import { CodexAgent } from './agents/codex.js';
 import { detectAgents, type AgentInfo } from './utils/agent-detection.js';
 import { GitManager, GitManagerError } from './services/git-manager.js';
-import { PreviewManager, PreviewError } from './services/preview-manager.js';
 import type { Agent, AgentSession, WSIncomingMessage, WSOutgoingMessage } from './types.js';
 
 const PORT = parseInt(process.env.PORT || '8765', 10);
@@ -62,9 +61,6 @@ interface ConnectionState {
   // History/Undo feature
   gitManager: GitManager | null;
   currentCheckpointId: string | null;
-  // Preview/Diff feature
-  previewManager: PreviewManager | null;
-  previewEnabled: boolean;
 }
 
 async function main(): Promise<void> {
@@ -109,7 +105,6 @@ async function main(): Promise<void> {
 
     // Initialize connection state
     const gitManager = new GitManager(PROJECT_DIR);
-    const previewManager = new PreviewManager(PROJECT_DIR);
 
     // Initialize git manager (async but don't block connection)
     gitManager.initialize().catch((err) => {
@@ -122,8 +117,6 @@ async function main(): Promise<void> {
       agent: DEFAULT_AGENT ? initializedAgents.get(DEFAULT_AGENT) || null : null,
       gitManager,
       currentCheckpointId: null,
-      previewManager,
-      previewEnabled: false,
     };
     connections.set(ws, state);
 
@@ -253,15 +246,6 @@ async function main(): Promise<void> {
               }
             }
 
-            // Start preview session if preview mode is enabled
-            if (state.previewEnabled && state.previewManager) {
-              state.previewManager.startPreview(msg.data.annotations);
-              sendMessage(ws, {
-                type: 'preview_start',
-                previewId: state.previewManager.getPreviewId() || undefined,
-              });
-            }
-
             if (!state.session) {
               state.session = await state.agent.createSession(ws, projectDir);
             }
@@ -271,9 +255,8 @@ async function main(): Promise<void> {
             sendMessage(ws, { type: 'processing' });
             await state.session.send({ prompt, images: images.length > 0 ? images : undefined });
 
-            // If not in preview mode, finalize checkpoint after processing
-            // Note: In preview mode, checkpoint is finalized when changes are approved
-            if (!state.previewEnabled && state.gitManager && state.currentCheckpointId) {
+            // Finalize checkpoint after processing
+            if (state.gitManager && state.currentCheckpointId) {
               try {
                 await state.gitManager.finalizeCheckpoint(
                   state.currentCheckpointId
@@ -414,121 +397,6 @@ async function main(): Promise<void> {
             break;
           }
 
-          // ============================================
-          // Preview/Diff Feature Handlers
-          // ============================================
-
-          case 'enable_preview': {
-            state.previewEnabled = true;
-            sendMessage(ws, { type: 'preview_enabled', previewEnabled: true });
-            console.log('Preview mode enabled');
-            break;
-          }
-
-          case 'disable_preview': {
-            state.previewEnabled = false;
-            if (state.previewManager?.isPreviewActive()) {
-              state.previewManager.discardPreview();
-            }
-            sendMessage(ws, { type: 'preview_disabled', previewEnabled: false });
-            console.log('Preview mode disabled');
-            break;
-          }
-
-          case 'approve_changes': {
-            if (!state.previewManager) {
-              sendMessage(ws, { type: 'error', message: 'Preview manager not initialized' });
-              break;
-            }
-            if (!msg.changeIds || msg.changeIds.length === 0) {
-              sendMessage(ws, { type: 'error', message: 'No changes specified to approve' });
-              break;
-            }
-            try {
-              const appliedFiles = await state.previewManager.applyChanges(msg.changeIds);
-
-              // Finalize checkpoint if git manager is active
-              if (state.gitManager && state.currentCheckpointId) {
-                await state.gitManager.finalizeCheckpoint(state.currentCheckpointId);
-              }
-
-              sendMessage(ws, {
-                type: 'changes_applied',
-                previewId: state.previewManager.getPreviewId() || undefined,
-                appliedChanges: msg.changeIds,
-                filesModified: appliedFiles,
-              });
-
-              // Clear the preview after applying
-              state.previewManager.discardPreview();
-              state.currentCheckpointId = null;
-            } catch (err) {
-              if (err instanceof PreviewError) {
-                sendMessage(ws, { type: 'error', message: err.message });
-              } else {
-                sendMessage(ws, {
-                  type: 'error',
-                  message: `Failed to apply changes: ${(err as Error).message}`,
-                });
-              }
-            }
-            break;
-          }
-
-          case 'approve_all': {
-            if (!state.previewManager) {
-              sendMessage(ws, { type: 'error', message: 'Preview manager not initialized' });
-              break;
-            }
-            try {
-              const appliedFiles = await state.previewManager.applyAllChanges();
-
-              // Finalize checkpoint if git manager is active
-              if (state.gitManager && state.currentCheckpointId) {
-                await state.gitManager.finalizeCheckpoint(state.currentCheckpointId);
-              }
-
-              const preview = state.previewManager.getCurrentPreview();
-              sendMessage(ws, {
-                type: 'changes_applied',
-                previewId: state.previewManager.getPreviewId() || undefined,
-                appliedChanges: preview?.changes.map((c) => c.id) || [],
-                filesModified: appliedFiles,
-              });
-
-              // Clear the preview after applying
-              state.previewManager.discardPreview();
-              state.currentCheckpointId = null;
-            } catch (err) {
-              if (err instanceof PreviewError) {
-                sendMessage(ws, { type: 'error', message: err.message });
-              } else {
-                sendMessage(ws, {
-                  type: 'error',
-                  message: `Failed to apply changes: ${(err as Error).message}`,
-                });
-              }
-            }
-            break;
-          }
-
-          case 'reject_changes':
-          case 'reject_all': {
-            if (!state.previewManager) {
-              sendMessage(ws, { type: 'error', message: 'Preview manager not initialized' });
-              break;
-            }
-
-            const previewId = state.previewManager.getPreviewId();
-            state.previewManager.discardPreview();
-            state.currentCheckpointId = null;
-
-            sendMessage(ws, {
-              type: 'changes_rejected',
-              previewId: previewId || undefined,
-            });
-            break;
-          }
         }
       } catch (err) {
         sendMessage(ws, { type: 'error', message: (err as Error).message });

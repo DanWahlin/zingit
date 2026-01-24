@@ -28,9 +28,7 @@ export interface ZingSettings {
   playSoundOnComplete: boolean;  // Play a ding sound when agent completes
   selectedAgent: string;         // Selected agent name (claude, copilot, codex)
   autoRefresh: boolean;          // Auto refresh page when agent completes
-  // Undo/Redo & Preview features
-  previewMode: boolean;          // Enable preview before apply (default: true)
-  diffStyle: 'unified' | 'split'; // Preferred diff view style
+  // Undo/Redo features
   showUndoBar: boolean;          // Show undo toast after changes (default: true)
   undoBarTimeout: number;        // Undo bar auto-dismiss timeout ms (default: 10000)
 }
@@ -81,21 +79,7 @@ export type WSMessageType =
   | 'history'
   | 'undo_complete'
   | 'revert_complete'
-  | 'history_cleared'
-  // Preview/Diff feature
-  | 'enable_preview'
-  | 'disable_preview'
-  | 'approve_changes'
-  | 'reject_changes'
-  | 'approve_all'
-  | 'reject_all'
-  | 'preview_enabled'
-  | 'preview_disabled'
-  | 'preview_start'
-  | 'preview_change'
-  | 'preview_complete'
-  | 'changes_applied'
-  | 'changes_rejected';
+  | 'history_cleared';
 
 export interface WSMessage {
   type: WSMessageType;
@@ -112,13 +96,6 @@ export interface WSMessage {
   checkpoints?: CheckpointInfo[];   // For history
   checkpointId?: string;            // For undo/revert operations
   filesReverted?: string[];         // For undo_complete, revert_complete
-  // Preview/Diff feature
-  previewId?: string;               // For preview operations
-  previewEnabled?: boolean;         // For preview_enabled/disabled
-  change?: ProposedChange;          // For preview_change
-  summary?: PreviewSummary;         // For preview_complete
-  appliedChanges?: string[];        // For changes_applied (change IDs)
-  filesModified?: string[];         // For changes_applied (file paths)
 }
 
 // ============================================
@@ -146,38 +123,4 @@ export interface HistoryState {
   checkpoints: CheckpointInfo[];
   isLoading: boolean;
   error: string | null;
-}
-
-// ============================================
-// Preview/Diff Feature Types
-// ============================================
-
-export interface ProposedChange {
-  id: string;
-  filePath: string;
-  changeType: 'create' | 'modify' | 'delete';
-  originalContent: string | null;
-  proposedContent: string | null;
-  diff: string;
-  language: string;
-  linesAdded: number;
-  linesRemoved: number;
-}
-
-export interface PreviewSummary {
-  previewId: string;
-  totalFiles: number;
-  linesAdded: number;
-  linesRemoved: number;
-  changes: ProposedChange[];
-}
-
-export interface DiffViewState {
-  previewId: string;
-  changes: ProposedChange[];
-  selectedChangeId: string | null;
-  approvedIds: Set<string>;
-  rejectedIds: Set<string>;
-  diffStyle: 'unified' | 'split';
-  isApplying: boolean;
 }

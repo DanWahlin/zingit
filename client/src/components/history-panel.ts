@@ -262,6 +262,51 @@ export class ZingHistoryPanel extends LitElement {
       background: #374151;
       color: #f3f4f6;
     }
+
+    /* Page grouping styles */
+    .page-group {
+      margin-bottom: 16px;
+    }
+
+    .page-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .page-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: #374151;
+      border-radius: 6px;
+      margin-bottom: 8px;
+      cursor: default;
+    }
+
+    .page-icon {
+      width: 14px;
+      height: 14px;
+      color: #9ca3af;
+      flex-shrink: 0;
+    }
+
+    .page-url {
+      font-size: 12px;
+      color: #d1d5db;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex: 1;
+    }
+
+    .page-count {
+      font-size: 11px;
+      color: #6b7280;
+      background: #1f2937;
+      padding: 2px 6px;
+      border-radius: 10px;
+      flex-shrink: 0;
+    }
   `;
 
   @property({ type: Array }) checkpoints: CheckpointInfo[] = [];
@@ -295,7 +340,7 @@ export class ZingHistoryPanel extends LitElement {
             ? html`<div class="loading"><div class="spinner"></div></div>`
             : this.checkpoints.length === 0
               ? this._renderEmptyState()
-              : this.checkpoints.slice().reverse().map((cp) => this._renderCheckpoint(cp))
+              : this._renderGroupedCheckpoints()
           }
         </div>
 
@@ -327,6 +372,69 @@ export class ZingHistoryPanel extends LitElement {
         </div>
       </div>
     `;
+  }
+
+  /** Group checkpoints by pageUrl, preserving chronological order within groups */
+  private _groupCheckpointsByPage(): Map<string, CheckpointInfo[]> {
+    const groups = new Map<string, CheckpointInfo[]>();
+    // Process in reverse chronological order (newest first)
+    const reversed = this.checkpoints.slice().reverse();
+
+    for (const checkpoint of reversed) {
+      const pageUrl = checkpoint.pageUrl || 'Unknown Page';
+      if (!groups.has(pageUrl)) {
+        groups.set(pageUrl, []);
+      }
+      groups.get(pageUrl)!.push(checkpoint);
+    }
+
+    return groups;
+  }
+
+  /** Format a URL for display (show path, or domain + path if short) */
+  private _formatPageUrl(url: string): string {
+    if (!url || url === 'Unknown Page') return 'Unknown Page';
+
+    try {
+      const parsed = new URL(url);
+      const path = parsed.pathname;
+
+      // If path is just "/", show the hostname
+      if (path === '/') {
+        return parsed.hostname;
+      }
+
+      // Otherwise show the path (or last part if too long)
+      if (path.length > 40) {
+        const parts = path.split('/').filter(Boolean);
+        return '.../' + parts.slice(-2).join('/');
+      }
+
+      return path;
+    } catch {
+      // If URL parsing fails, just truncate
+      return url.length > 40 ? url.substring(0, 37) + '...' : url;
+    }
+  }
+
+  private _renderGroupedCheckpoints() {
+    const groups = this._groupCheckpointsByPage();
+
+    return Array.from(groups.entries()).map(([pageUrl, checkpoints]) => html`
+      <div class="page-group">
+        <div class="page-header">
+          <svg class="page-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+          </svg>
+          <span class="page-url" title="${pageUrl}">${this._formatPageUrl(pageUrl)}</span>
+          <span class="page-count">${checkpoints.length}</span>
+        </div>
+        ${checkpoints.map(cp => this._renderCheckpoint(cp))}
+      </div>
+    `);
   }
 
   private _renderEmptyState() {

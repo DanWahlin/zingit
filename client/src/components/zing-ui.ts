@@ -22,11 +22,9 @@ import './help.js';
 import './agent-picker.js';
 import './history-panel.js';
 import './undo-bar.js';
-import './diff-viewer.js';
 import type { ZingToast } from './toast.js';
 import type { ZingHistoryPanel } from './history-panel.js';
-import type { ZingDiffViewer } from './diff-viewer.js';
-import type { CheckpointInfo, PreviewSummary } from '../types/index.js';
+import type { CheckpointInfo } from '../types/index.js';
 
 @customElement('zing-ui')
 export class ZingUI extends LitElement {
@@ -81,7 +79,6 @@ export class ZingUI extends LitElement {
 
   @query('zing-toast') private toast!: ZingToast;
   @query('zing-history-panel') private historyPanel!: ZingHistoryPanel;
-  @query('zing-diff-viewer') private diffViewer!: ZingDiffViewer;
 
   // Highlight state
   @state() private highlightVisible = false;
@@ -128,10 +125,6 @@ export class ZingUI extends LitElement {
   // Undo bar state
   @state() private undoBarVisible = false;
   @state() private undoBarFilesModified = 0;
-
-  // Diff viewer state
-  @state() private diffViewerOpen = false;
-  @state() private previewSummary: PreviewSummary | null = null;
 
   // Toolbar position and drag state
   @state() private toolbarPosition: ToolbarPosition | null = loadToolbarPosition();
@@ -258,12 +251,7 @@ export class ZingUI extends LitElement {
         // Continuously save response state if autoRefresh is enabled
         // This ensures state persists even if Vite HMR triggers before our explicit reload
         if (this.settings.autoRefresh && this.responseContent) {
-          saveResponseState({
-            open: this.responseOpen,
-            content: this.responseContent,
-            error: this.responseError,
-            screenshotCount: this.responseScreenshotCount
-          });
+          this.saveCurrentResponseState();
         }
         break;
 
@@ -278,31 +266,18 @@ export class ZingUI extends LitElement {
       case 'idle':
         this.processing = false;
         this.responseToolStatus = '';
-        // Mark all processing annotations as completed
-        this.annotations = this.annotations.map(a =>
-          a.status === 'processing' ? { ...a, status: 'completed' as const } : a
-        );
-        saveAnnotations(this.annotations);
-        // Play completion sound if enabled
+        this.updateAnnotationStatuses('processing', 'completed');
         if (this.settings.playSoundOnComplete) {
           this.playCompletionSound();
         }
         // Refresh history after a short delay to get finalized checkpoint data
-        // (finalization happens on server after idle is sent)
         setTimeout(() => {
           if (this.ws && this.wsConnected) {
             this.ws.send({ type: 'get_history' });
           }
         }, 500);
-        // Auto refresh page if enabled
         if (this.settings.autoRefresh) {
-          // Save response dialog state before refresh so it persists
-          saveResponseState({
-            open: this.responseOpen,
-            content: this.responseContent,
-            error: this.responseError,
-            screenshotCount: this.responseScreenshotCount
-          });
+          this.saveCurrentResponseState();
           this.toast.info('Refreshing page...');
           setTimeout(() => window.location.reload(), 1000);
         }
@@ -312,11 +287,7 @@ export class ZingUI extends LitElement {
         this.responseError = msg.message || 'Unknown error';
         this.processing = false;
         this.responseToolStatus = '';
-        // Revert processing annotations back to pending so user can retry
-        this.annotations = this.annotations.map(a =>
-          a.status === 'processing' ? { ...a, status: 'pending' as const } : a
-        );
-        saveAnnotations(this.annotations);
+        this.updateAnnotationStatuses('processing', 'pending');
         this.toast.error(msg.message || 'An error occurred');
         break;
 
@@ -398,98 +369,16 @@ export class ZingUI extends LitElement {
         break;
 
       case 'undo_complete':
-        this.historyPanel?.undoComplete();
-        this.undoBarVisible = false;
-        this.toast.success('Change undone');
-        // Refresh history
-        this.ws?.send({ type: 'get_history' });
-        // Refresh page to show reverted state
-        if (this.settings.autoRefresh) {
-          setTimeout(() => window.location.reload(), 500);
-        }
+        this.handleCheckpointRestored('Change undone');
         break;
 
       case 'revert_complete':
-        this.historyPanel?.undoComplete();
-        this.undoBarVisible = false;
-        this.toast.success('Reverted to checkpoint');
-        // Refresh history
-        this.ws?.send({ type: 'get_history' });
-        // Refresh page to show reverted state
-        if (this.settings.autoRefresh) {
-          setTimeout(() => window.location.reload(), 500);
-        }
+        this.handleCheckpointRestored('Reverted to checkpoint');
         break;
 
       case 'history_cleared':
         this.historyCheckpoints = [];
         this.toast.info('History cleared');
-        break;
-
-      // Preview/Diff feature handlers
-      case 'preview_enabled':
-        this.toast.info('Preview mode enabled');
-        break;
-
-      case 'preview_disabled':
-        this.toast.info('Preview mode disabled');
-        break;
-
-      case 'preview_start':
-        // Preview session started - changes will be collected
-        this.previewSummary = null;
-        break;
-
-      case 'preview_change':
-        // Individual change added to preview
-        if (msg.change && this.previewSummary) {
-          this.previewSummary = {
-            ...this.previewSummary,
-            changes: [...this.previewSummary.changes, msg.change],
-            totalFiles: this.previewSummary.totalFiles + 1,
-            linesAdded: this.previewSummary.linesAdded + msg.change.linesAdded,
-            linesRemoved: this.previewSummary.linesRemoved + msg.change.linesRemoved,
-          };
-        }
-        break;
-
-      case 'preview_complete':
-        // All changes collected - show diff viewer
-        if (msg.summary) {
-          this.previewSummary = msg.summary;
-          this.diffViewerOpen = true;
-          this.processing = false;
-        }
-        break;
-
-      case 'changes_applied':
-        // Changes were applied from preview
-        this.diffViewer?.applyComplete();
-        this.diffViewerOpen = false;
-        this.previewSummary = null;
-        this.toast.success(`Applied ${msg.filesModified?.length || 0} file(s)`);
-        // Show undo bar
-        if (this.settings.showUndoBar && msg.filesModified?.length) {
-          this.undoBarFilesModified = msg.filesModified.length;
-          this.undoBarVisible = true;
-        }
-        // Mark annotations as completed
-        this.annotations = this.annotations.map(a =>
-          a.status === 'processing' ? { ...a, status: 'completed' as const } : a
-        );
-        saveAnnotations(this.annotations);
-        break;
-
-      case 'changes_rejected':
-        // User rejected all changes
-        this.diffViewerOpen = false;
-        this.previewSummary = null;
-        // Revert annotations back to pending
-        this.annotations = this.annotations.map(a =>
-          a.status === 'processing' ? { ...a, status: 'pending' as const } : a
-        );
-        saveAnnotations(this.annotations);
-        this.toast.info('Changes rejected');
         break;
     }
   }
@@ -506,7 +395,7 @@ export class ZingUI extends LitElement {
     }
 
     // Ignore if modal or panel is open
-    if (this.modalOpen || this.settingsOpen || this.agentPickerOpen || this.historyOpen || this.diffViewerOpen) {
+    if (this.modalOpen || this.settingsOpen || this.agentPickerOpen || this.historyOpen) {
       return;
     }
 
@@ -592,9 +481,7 @@ export class ZingUI extends LitElement {
   private handleDocumentKeydown(e: KeyboardEvent) {
     // Escape to close modals
     if (e.key === 'Escape') {
-      if (this.diffViewerOpen) {
-        this.handleRejectAll();
-      } else if (this.helpOpen) {
+      if (this.helpOpen) {
         this.helpOpen = false;
       } else if (this.modalOpen) {
         this.modalOpen = false;
@@ -854,15 +741,6 @@ export class ZingUI extends LitElement {
         @dismiss=${() => this.undoBarVisible = false}
       ></zing-undo-bar>
 
-      <zing-diff-viewer
-        .isOpen=${this.diffViewerOpen}
-        .summary=${this.previewSummary}
-        .diffStyle=${this.settings.diffStyle}
-        @close=${() => this.handleRejectAll()}
-        @apply=${this.handleApplyChanges}
-        @reject-all=${this.handleRejectAll}
-      ></zing-diff-viewer>
-
       <zing-toast></zing-toast>
     `;
   }
@@ -1014,16 +892,7 @@ export class ZingUI extends LitElement {
       return;
     }
 
-    // Enable preview mode if setting is enabled
-    if (this.settings.previewMode) {
-      this.ws.send({ type: 'enable_preview' });
-    }
-
-    // Mark pending annotations as processing
-    this.annotations = this.annotations.map(a =>
-      a.status === 'pending' ? { ...a, status: 'processing' as const } : a
-    );
-    saveAnnotations(this.annotations);
+    this.updateAnnotationStatuses('pending', 'processing');
 
     // Send only the annotations being processed
     const annotationsToSend = this.annotations.filter(a => a.status === 'processing');
@@ -1116,38 +985,6 @@ export class ZingUI extends LitElement {
     this.ws.send({ type: 'clear_history' });
   }
 
-  private handleApplyChanges(e: CustomEvent<{ approvedIds: string[]; rejectedIds: string[] }>) {
-    if (!this.ws || !this.wsConnected) {
-      this.toast.error('Not connected to server');
-      return;
-    }
-
-    const { approvedIds, rejectedIds } = e.detail;
-
-    // If all are approved, use approve_all for efficiency
-    if (rejectedIds.length === 0 && this.previewSummary) {
-      this.ws.send({ type: 'approve_all' });
-    } else {
-      // Send selective approval - server expects 'changeIds'
-      this.ws.send({
-        type: 'approve_changes',
-        changeIds: approvedIds
-      });
-    }
-  }
-
-  private handleRejectAll() {
-    if (!this.ws || !this.wsConnected) {
-      this.diffViewerOpen = false;
-      this.previewSummary = null;
-      return;
-    }
-
-    this.ws.send({ type: 'reject_all' });
-    this.diffViewerOpen = false;
-    this.previewSummary = null;
-  }
-
   private handleToggleHistory() {
     this.historyOpen = !this.historyOpen;
 
@@ -1222,11 +1059,7 @@ export class ZingUI extends LitElement {
     this.ws.sendStop();
     this.processing = false;
     this.responseToolStatus = '';
-    // Revert processing annotations back to pending
-    this.annotations = this.annotations.map(a =>
-      a.status === 'processing' ? { ...a, status: 'pending' as const } : a
-    );
-    saveAnnotations(this.annotations);
+    this.updateAnnotationStatuses('processing', 'pending');
     this.toast.info('Agent stopped');
   }
 
@@ -1263,6 +1096,42 @@ export class ZingUI extends LitElement {
       setTimeout(() => audioContext.close(), 500);
     } catch (err) {
       console.warn('ZingIt: Could not play completion sound', err);
+    }
+  }
+
+  // ============================================
+  // Helper methods for common operations
+  // ============================================
+
+  /** Save current response state to storage (for persistence across refresh) */
+  private saveCurrentResponseState() {
+    saveResponseState({
+      open: this.responseOpen,
+      content: this.responseContent,
+      error: this.responseError,
+      screenshotCount: this.responseScreenshotCount
+    });
+  }
+
+  /** Update annotation statuses and save to storage */
+  private updateAnnotationStatuses(
+    fromStatus: 'pending' | 'processing' | 'completed',
+    toStatus: 'pending' | 'processing' | 'completed'
+  ) {
+    this.annotations = this.annotations.map(a =>
+      a.status === fromStatus ? { ...a, status: toStatus as const } : a
+    );
+    saveAnnotations(this.annotations);
+  }
+
+  /** Handle checkpoint restoration (undo or revert) */
+  private handleCheckpointRestored(successMessage: string) {
+    this.historyPanel?.undoComplete();
+    this.undoBarVisible = false;
+    this.toast.success(successMessage);
+    this.ws?.send({ type: 'get_history' });
+    if (this.settings.autoRefresh) {
+      setTimeout(() => window.location.reload(), 500);
     }
   }
 
