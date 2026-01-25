@@ -271,9 +271,17 @@ export class ZingToolbar extends LitElement {
                 title="Send to ${this.agent ? this.agent.charAt(0).toUpperCase() + this.agent.slice(1) : 'Agent'}"
                 @click=${this.handleSend}
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <line x1="22" y1="2" x2="11" y2="13"/>
-                  <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <!-- Robot head -->
+                  <rect x="5" y="8" width="14" height="12" rx="2"/>
+                  <!-- Eyes -->
+                  <circle cx="9" cy="13" r="1.5" fill="currentColor" stroke="none"/>
+                  <circle cx="15" cy="13" r="1.5" fill="currentColor" stroke="none"/>
+                  <!-- Antenna -->
+                  <line x1="12" y1="8" x2="12" y2="4"/>
+                  <circle cx="12" cy="3" r="1"/>
+                  <!-- Mouth -->
+                  <line x1="9" y1="17" x2="15" y2="17"/>
                 </svg>
               </button>
             `
