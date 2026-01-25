@@ -26,7 +26,7 @@ export class SiteFooter extends LitElement {
       max-width: 1200px;
       margin: 0 auto;
       display: flex;
-      justify-content: space-between;
+      justify-content: flex-start;
       align-items: center;
       flex-wrap: wrap;
       gap: 16px;
