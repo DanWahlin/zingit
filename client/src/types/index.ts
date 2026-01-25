@@ -102,6 +102,7 @@ export interface WSMessage {
 // ============================================
 
 export interface AnnotationSummary {
+  id: string;           // Annotation UUID for precise matching during undo
   identifier: string;
   notes: string;
 }

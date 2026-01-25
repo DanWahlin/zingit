@@ -266,10 +266,10 @@ export class ZingToolbar extends LitElement {
             `
           : html`
               <button
-                class="btn-icon"
-                ?disabled=${!this.connected || this.processing || this.annotationCount === 0}
-                title="Send to ${this.agent ? this.agent.charAt(0).toUpperCase() + this.agent.slice(1) : 'Agent'}"
-                @click=${this.handleSend}
+                class="btn-icon ${this.responseOpen ? 'active' : ''}"
+                ?disabled=${!this.connected}
+                title="${this.annotationCount > 0 && !this.processing ? `Send to ${this.agent ? this.agent.charAt(0).toUpperCase() + this.agent.slice(1) : 'Agent'}` : (this.responseOpen ? 'Hide agent panel' : 'Show agent panel')}"
+                @click=${this.handleAgentButton}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <!-- Robot head -->
@@ -286,17 +286,6 @@ export class ZingToolbar extends LitElement {
               </button>
             `
         }
-
-        <button
-          class="btn-icon ${this.responseOpen ? 'active' : ''}"
-          title="${this.responseOpen ? 'Hide agent console' : 'Show agent console'}"
-          @click=${this.handleToggleResponse}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="4 17 10 11 4 5"/>
-            <line x1="12" y1="19" x2="20" y2="19"/>
-          </svg>
-        </button>
 
         <div class="divider"></div>
 
@@ -388,8 +377,14 @@ export class ZingToolbar extends LitElement {
     `;
   }
 
-  private handleSend() {
-    this.dispatchEvent(new CustomEvent('send', { bubbles: true, composed: true }));
+  private handleAgentButton() {
+    // If we have annotations and not processing, send them (panel will open automatically)
+    // Otherwise, just toggle the panel
+    if (this.annotationCount > 0 && !this.processing) {
+      this.dispatchEvent(new CustomEvent('send', { bubbles: true, composed: true }));
+    } else {
+      this.dispatchEvent(new CustomEvent('toggle-response', { bubbles: true, composed: true }));
+    }
   }
 
   private handleExport() {
@@ -422,10 +417,6 @@ export class ZingToolbar extends LitElement {
 
   private handleUndo() {
     this.dispatchEvent(new CustomEvent('undo', { bubbles: true, composed: true }));
-  }
-
-  private handleToggleResponse() {
-    this.dispatchEvent(new CustomEvent('toggle-response', { bubbles: true, composed: true }));
   }
 
   private handleHistory() {

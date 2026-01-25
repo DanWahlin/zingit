@@ -6,7 +6,86 @@ import { ClaudeCodeAgent } from './agents/claude.js';
 import { CodexAgent } from './agents/codex.js';
 import { detectAgents, type AgentInfo } from './utils/agent-detection.js';
 import { GitManager, GitManagerError } from './services/git-manager.js';
-import type { Agent, AgentSession, WSIncomingMessage, WSOutgoingMessage } from './types.js';
+import type { Agent, AgentSession, WSIncomingMessage, WSOutgoingMessage, BatchData, Annotation } from './types.js';
+
+// ============================================
+// Payload Validation
+// ============================================
+
+const MAX_ANNOTATIONS = 50;
+const MAX_HTML_LENGTH = 50000;
+const MAX_NOTES_LENGTH = 5000;
+const MAX_SELECTOR_LENGTH = 1000;
+const MAX_SCREENSHOT_SIZE = 500000; // ~500KB base64
+
+interface ValidationResult {
+  valid: boolean;
+  error?: string;
+  sanitizedData?: BatchData;
+}
+
+const VALID_STATUSES = ['pending', 'processing', 'completed'];
+
+function validateAnnotation(annotation: Annotation, index: number): { valid: boolean; error?: string } {
+  if (!annotation.id || typeof annotation.id !== 'string') {
+    return { valid: false, error: `Annotation ${index}: missing or invalid id` };
+  }
+  if (!annotation.identifier || typeof annotation.identifier !== 'string') {
+    return { valid: false, error: `Annotation ${index}: missing or invalid identifier` };
+  }
+  if (annotation.status && !VALID_STATUSES.includes(annotation.status)) {
+    return { valid: false, error: `Annotation ${index}: invalid status '${annotation.status}'` };
+  }
+  if (annotation.selector && annotation.selector.length > MAX_SELECTOR_LENGTH) {
+    return { valid: false, error: `Annotation ${index}: selector too long (max ${MAX_SELECTOR_LENGTH})` };
+  }
+  if (annotation.html && annotation.html.length > MAX_HTML_LENGTH) {
+    return { valid: false, error: `Annotation ${index}: html too long (max ${MAX_HTML_LENGTH})` };
+  }
+  if (annotation.notes && annotation.notes.length > MAX_NOTES_LENGTH) {
+    return { valid: false, error: `Annotation ${index}: notes too long (max ${MAX_NOTES_LENGTH})` };
+  }
+  if (annotation.screenshot && annotation.screenshot.length > MAX_SCREENSHOT_SIZE) {
+    return { valid: false, error: `Annotation ${index}: screenshot too large (max ${MAX_SCREENSHOT_SIZE / 1000}KB)` };
+  }
+  return { valid: true };
+}
+
+function validateBatchData(data: BatchData): ValidationResult {
+  if (!data) {
+    return { valid: false, error: 'Missing batch data' };
+  }
+
+  if (!data.annotations || !Array.isArray(data.annotations)) {
+    return { valid: false, error: 'Missing or invalid annotations array' };
+  }
+
+  if (data.annotations.length === 0) {
+    return { valid: false, error: 'No annotations provided' };
+  }
+
+  if (data.annotations.length > MAX_ANNOTATIONS) {
+    return { valid: false, error: `Too many annotations (max ${MAX_ANNOTATIONS})` };
+  }
+
+  // Validate each annotation
+  for (let i = 0; i < data.annotations.length; i++) {
+    const result = validateAnnotation(data.annotations[i], i);
+    if (!result.valid) {
+      return { valid: false, error: result.error };
+    }
+  }
+
+  // Sanitize and return
+  return {
+    valid: true,
+    sanitizedData: {
+      ...data,
+      pageUrl: data.pageUrl ? data.pageUrl.slice(0, 2000) : data.pageUrl,
+      pageTitle: data.pageTitle ? data.pageTitle.slice(0, 500) : data.pageTitle,
+    }
+  };
+}
 
 const PORT = parseInt(process.env.PORT || '8765', 10);
 
@@ -188,6 +267,16 @@ async function main(): Promise<void> {
           case 'batch': {
             if (!msg.data) break;
 
+            // Validate batch data
+            const validation = validateBatchData(msg.data);
+            if (!validation.valid) {
+              sendMessage(ws, { type: 'error', message: validation.error || 'Invalid batch data' });
+              break;
+            }
+
+            // Use sanitized data
+            const batchData = validation.sanitizedData!;
+
             // Check if agent is selected
             if (!state.agentName || !state.agent) {
               // If agent specified in batch message, try to select it
@@ -214,15 +303,15 @@ async function main(): Promise<void> {
             }
 
             // Use client-specified projectDir, or fall back to server default
-            const projectDir = msg.data.projectDir || PROJECT_DIR;
+            const projectDir = batchData.projectDir || PROJECT_DIR;
 
             // Create a checkpoint before AI modifications (if git manager available)
             if (state.gitManager) {
               try {
                 const checkpoint = await state.gitManager.createCheckpoint({
-                  annotations: msg.data.annotations,
-                  pageUrl: msg.data.pageUrl,
-                  pageTitle: msg.data.pageTitle,
+                  annotations: batchData.annotations,
+                  pageUrl: batchData.pageUrl,
+                  pageTitle: batchData.pageTitle,
                   agentName: state.agentName,
                 });
                 state.currentCheckpointId = checkpoint.id;
@@ -250,8 +339,8 @@ async function main(): Promise<void> {
               state.session = await state.agent.createSession(ws, projectDir);
             }
 
-            const prompt = state.agent.formatPrompt(msg.data, projectDir);
-            const images = state.agent.extractImages(msg.data);
+            const prompt = state.agent.formatPrompt(batchData, projectDir);
+            const images = state.agent.extractImages(batchData);
             sendMessage(ws, { type: 'processing' });
             await state.session.send({ prompt, images: images.length > 0 ? images : undefined });
 

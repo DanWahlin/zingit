@@ -1,6 +1,6 @@
 // server/src/services/git-manager.ts
 
-import { exec } from 'child_process';
+import { exec, execFile } from 'child_process';
 import { promisify } from 'util';
 import * as fs from 'fs/promises';
 import * as path from 'path';
@@ -8,6 +8,21 @@ import { v4 as uuidv4 } from 'uuid';
 import type { Annotation } from '../types.js';
 
 const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
+
+/**
+ * Sanitize a string for safe use in git commit messages.
+ * Removes/escapes characters that could cause shell injection.
+ */
+function sanitizeForGit(str: string | null | undefined): string {
+  if (!str) return '';
+  // Remove or replace dangerous characters
+  return str
+    .replace(/[`$"\\]/g, '') // Remove shell-dangerous chars
+    .replace(/[\r\n]/g, ' ') // Replace newlines with spaces
+    .trim()
+    .slice(0, 200); // Limit length
+}
 
 export interface Checkpoint {
   id: string;
@@ -24,6 +39,7 @@ export interface Checkpoint {
 }
 
 export interface AnnotationSummary {
+  id: string;           // Annotation UUID for precise matching during undo
   identifier: string;
   notes: string;
 }
@@ -147,8 +163,8 @@ export class GitManager {
     // If there are uncommitted changes, auto-commit them
     if (!status.isClean) {
       try {
-        await execAsync('git add -A', { cwd: this.projectDir });
-        await execAsync('git commit -m "[ZingIt] Auto-save before AI modifications"', {
+        await execFileAsync('git', ['add', '-A'], { cwd: this.projectDir });
+        await execFileAsync('git', ['commit', '-m', '[ZingIt] Auto-save before AI modifications'], {
           cwd: this.projectDir,
         });
       } catch (err) {
@@ -168,6 +184,7 @@ export class GitManager {
       commitHash: commitHash.trim(),
       branchName: status.branch,
       annotations: metadata.annotations.map((a) => ({
+        id: a.id,
         identifier: a.identifier,
         notes: a.notes,
       })),
@@ -253,10 +270,11 @@ export class GitManager {
     // Commit the changes if there are any
     if (fileChanges.length > 0) {
       try {
-        await execAsync('git add -A', { cwd: this.projectDir });
-        const identifiers = checkpoint.annotations.map((a) => a.identifier).join(', ');
+        await execFileAsync('git', ['add', '-A'], { cwd: this.projectDir });
+        const identifiers = checkpoint.annotations.map((a) => sanitizeForGit(a.identifier)).join(', ');
         const commitMsg = `[ZingIt] ${identifiers}`;
-        await execAsync(`git commit -m "${commitMsg}"`, { cwd: this.projectDir });
+        // Use execFile with array args to avoid shell injection
+        await execFileAsync('git', ['commit', '-m', commitMsg], { cwd: this.projectDir });
       } catch (err) {
         console.log('Note: Commit skipped -', (err as Error).message);
       }

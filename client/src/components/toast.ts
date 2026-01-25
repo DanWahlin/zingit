@@ -9,6 +9,10 @@ interface ToastMessage {
   message: string;
   type: 'success' | 'error' | 'info';
   duration: number;
+  action?: {
+    label: string;
+    callback: () => void;
+  };
 }
 
 @customElement('zing-toast')
@@ -64,6 +68,28 @@ export class ZingToast extends LitElement {
       animation: slideDown 0.2s ease-in forwards;
     }
 
+    .toast-content {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .toast-action {
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      padding: 4px 10px;
+      border-radius: 4px;
+      color: white;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+
+    .toast-action:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
     @keyframes slideUp {
       from {
         opacity: 0;
@@ -90,26 +116,28 @@ export class ZingToast extends LitElement {
   @state() private toasts: ToastMessage[] = [];
   private exitingIds = new Set<string>();
 
-  show(message: string, type: 'success' | 'error' | 'info' = 'info', duration = 3000) {
+  show(message: string, type: 'success' | 'error' | 'info' = 'info', duration = 3000, action?: { label: string; callback: () => void }) {
     const id = crypto.randomUUID();
-    const toast: ToastMessage = { id, message, type, duration };
+    const toast: ToastMessage = { id, message, type, duration, action };
     this.toasts = [...this.toasts, toast];
 
     if (duration > 0) {
       setTimeout(() => this.dismiss(id), duration);
     }
+
+    return id;  // Return ID so caller can dismiss early if needed
   }
 
   success(message: string, duration = 3000) {
-    this.show(message, 'success', duration);
+    return this.show(message, 'success', duration);
   }
 
   error(message: string, duration = 5000) {
-    this.show(message, 'error', duration);
+    return this.show(message, 'error', duration);
   }
 
-  info(message: string, duration = 3000) {
-    this.show(message, 'info', duration);
+  info(message: string, duration = 3000, action?: { label: string; callback: () => void }) {
+    return this.show(message, 'info', duration, action);
   }
 
   private dismiss(id: string) {
@@ -131,11 +159,25 @@ export class ZingToast extends LitElement {
       <div class="toast-container">
         ${this.toasts.map(toast => html`
           <div class="toast ${toast.type} ${this.exitingIds.has(toast.id) ? 'exiting' : ''}">
-            ${toast.message}
+            <div class="toast-content">
+              <span>${toast.message}</span>
+              ${toast.action ? html`
+                <button class="toast-action" @click=${() => this.handleAction(toast)}>
+                  ${toast.action.label}
+                </button>
+              ` : ''}
+            </div>
           </div>
         `)}
       </div>
     `;
+  }
+
+  private handleAction(toast: ToastMessage) {
+    if (toast.action) {
+      toast.action.callback();
+      this.dismiss(toast.id);
+    }
   }
 }
 

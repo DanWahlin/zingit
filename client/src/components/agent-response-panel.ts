@@ -439,7 +439,10 @@ export class ZingAgentResponsePanel extends LitElement {
 
   private _renderContent() {
     if (!this.content) {
-      return html`<div class="text-block">Waiting for response...</div>`;
+      if (this.processing) {
+        return html`<div class="text-block">Waiting for response...</div>`;
+      }
+      return html`<div class="text-block" style="color: #6b7280;">Add annotations and click the agent button to send them.</div>`;
     }
 
     const segments = this._parseContent(this.content);
