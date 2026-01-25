@@ -23,8 +23,6 @@ export class SiteFooter extends LitElement {
     }
 
     .footer-content {
-      max-width: 1200px;
-      margin: 0 auto;
       display: flex;
       justify-content: flex-start;
       align-items: center;
