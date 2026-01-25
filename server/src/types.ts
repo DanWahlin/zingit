@@ -30,6 +30,7 @@ export interface Annotation {
   identifier: string;
   html: string;
   notes: string;
+  status?: 'pending' | 'processing' | 'completed';  // Annotation processing status
   selectedText?: string;
   parentContext?: string;  // Parent elements path like "div.card > section.content"
   textContent?: string;    // Plain text content (easier to search than HTML)
