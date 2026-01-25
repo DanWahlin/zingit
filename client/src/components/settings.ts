@@ -236,11 +236,13 @@ export class ZingSettingsPanel extends LitElement {
     markerColor: '#3b82f6',
     processingColor: '#ef4444',
     completedColor: '#22c55e',
-    autoConnect: true,
     projectDir: '',
     playSoundOnComplete: true,
     selectedAgent: '',
-    autoRefresh: false
+    autoRefresh: false,
+    // Undo/Redo features
+    showUndoBar: true,
+    undoBarTimeout: 10000,
   };
 
   private localSettings: ZingSettings = { ...this.settings };
@@ -368,18 +370,6 @@ export class ZingSettingsPanel extends LitElement {
               <div class="checkbox-field">
                 <input
                   type="checkbox"
-                  id="autoConnect"
-                  .checked=${this.localSettings.autoConnect}
-                  @change=${(e: Event) => this.updateSetting('autoConnect', (e.target as HTMLInputElement).checked)}
-                />
-                <label class="checkbox-label" for="autoConnect">Auto-connect on startup</label>
-              </div>
-            </div>
-
-            <div class="field">
-              <div class="checkbox-field">
-                <input
-                  type="checkbox"
                   id="playSoundOnComplete"
                   .checked=${this.localSettings.playSoundOnComplete}
                   @change=${(e: Event) => this.updateSetting('playSoundOnComplete', (e.target as HTMLInputElement).checked)}
@@ -397,6 +387,18 @@ export class ZingSettingsPanel extends LitElement {
                   @change=${(e: Event) => this.updateSetting('autoRefresh', (e.target as HTMLInputElement).checked)}
                 />
                 <label class="checkbox-label" for="autoRefresh">Auto refresh page when agent completes</label>
+              </div>
+            </div>
+
+            <div class="field">
+              <div class="checkbox-field">
+                <input
+                  type="checkbox"
+                  id="showUndoBar"
+                  .checked=${this.localSettings.showUndoBar}
+                  @change=${(e: Event) => this.updateSetting('showUndoBar', (e.target as HTMLInputElement).checked)}
+                />
+                <label class="checkbox-label" for="showUndoBar">Show undo bar after changes</label>
               </div>
             </div>
           </div>

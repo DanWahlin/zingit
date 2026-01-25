@@ -17,6 +17,7 @@ export class SiteHeader extends LitElement {
       padding: 16px 24px;
       background: #fff;
       color: white;
+      position: relative;
     }
 
     .brand {
@@ -38,6 +39,8 @@ export class SiteHeader extends LitElement {
       display: flex;
       align-items: center;
       gap: 24px;
+      margin-left: auto;
+      margin-right: 16px;
     }
 
     .nav-links a {
@@ -60,6 +63,8 @@ export class SiteHeader extends LitElement {
     }
 
     .nav-actions a {
+      display: flex;
+      align-items: center;
       color: black;
       transition: color 0.15s ease;
     }
@@ -74,15 +79,13 @@ export class SiteHeader extends LitElement {
       <nav class="site-nav">
         <a href="/" class="brand">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill="currentColor" stroke="none"/>
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill="#fbbf24" stroke="none"/>
           </svg>
           ZingIt
         </a>
         <div class="nav-links">
-          <a href="/products.html" class=${this.activePage === 'products' ? 'active' : ''}>Products</a>
           <a href="/about.html" class=${this.activePage === 'about' ? 'active' : ''}>About</a>
-          <a href="/contact.html" class=${this.activePage === 'contact' ? 'active' : ''}>Contact</a>
-          <a href="https://github.com/danwahlin/zingit" target="_blank">GitHub</a>
+          <a href="/contact.html" class=${this.activePage === 'contact' ? 'active' : ''}>Contribute</a>
         </div>
         <div class="nav-actions">
           <a href="https://github.com/danwahlin/zingit" target="_blank" title="GitHub">

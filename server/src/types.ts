@@ -1,6 +1,7 @@
 // server/src/types.ts
 
 import type { WebSocket } from 'ws';
+import type { CheckpointInfo } from './services/git-manager.js';
 
 export interface Agent {
   name: string;
@@ -29,6 +30,7 @@ export interface Annotation {
   identifier: string;
   html: string;
   notes: string;
+  status?: 'pending' | 'processing' | 'completed';  // Annotation processing status
   selectedText?: string;
   parentContext?: string;  // Parent elements path like "div.card > section.content"
   textContent?: string;    // Plain text content (easier to search than HTML)
@@ -44,13 +46,26 @@ export interface BatchData {
   projectDir?: string;  // Client-specified project directory (overrides server default)
 }
 
-export type WSIncomingType = 'batch' | 'message' | 'reset' | 'stop' | 'get_agents' | 'select_agent';
+export type WSIncomingType =
+  | 'batch'
+  | 'message'
+  | 'reset'
+  | 'stop'
+  | 'get_agents'
+  | 'select_agent'
+  // History/Undo feature
+  | 'get_history'
+  | 'undo'
+  | 'revert_to'
+  | 'clear_history';
 
 export interface WSIncomingMessage {
   type: WSIncomingType;
   data?: BatchData;
   content?: string;
   agent?: string;  // For select_agent and batch messages
+  // History/Undo feature
+  checkpointId?: string;  // For revert_to
 }
 
 export type WSOutgoingType =
@@ -65,7 +80,13 @@ export type WSOutgoingType =
   | 'reset_complete'
   | 'agents'
   | 'agent_selected'
-  | 'agent_error';
+  | 'agent_error'
+  // History/Undo feature
+  | 'checkpoint_created'
+  | 'history'
+  | 'undo_complete'
+  | 'revert_complete'
+  | 'history_cleared';
 
 export interface AgentInfoMessage {
   name: string;
@@ -85,4 +106,9 @@ export interface WSOutgoingMessage {
   model?: string;
   projectDir?: string;  // Server's default project directory
   agents?: AgentInfoMessage[];  // For 'agents' message type
+  // History/Undo feature
+  checkpoint?: CheckpointInfo;      // For checkpoint_created
+  checkpoints?: CheckpointInfo[];   // For history
+  checkpointId?: string;            // For undo_complete, revert_complete
+  filesReverted?: string[];         // For undo_complete, revert_complete
 }

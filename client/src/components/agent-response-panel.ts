@@ -1,7 +1,7 @@
-// client/src/components/response.ts
-// Response panel with safe streaming display
+// client/src/components/agent-response-panel.ts
+// Slide-in panel for agent responses with streaming display
 
-import { LitElement, html, css, nothing } from 'lit';
+import { LitElement, html, css } from 'lit';
 import { customElement, property, query, state } from 'lit/decorators.js';
 
 interface ContentSegment {
@@ -10,70 +10,83 @@ interface ContentSegment {
   language?: string;
 }
 
-@customElement('zing-response')
-export class ZingResponse extends LitElement {
+@customElement('zing-agent-response-panel')
+export class ZingAgentResponsePanel extends LitElement {
   static styles = css`
     :host {
-      display: none;
-    }
-
-    :host([open]) {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      width: 100vw;
-      height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: rgba(0, 0, 0, 0.5);
-      z-index: 2147483646;
+      display: block;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       pointer-events: auto;
     }
 
     .panel {
-      width: 500px;
-      max-height: 60vh;
+      position: fixed;
+      right: 0;
+      top: 0;
+      width: 400px;
+      height: 100vh;
       background: #1f2937;
-      border-radius: 12px;
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+      border-left: 1px solid #374151;
+      transform: translateX(100%);
+      transition: transform 0.3s ease;
+      z-index: 2147483645;
       display: flex;
       flex-direction: column;
+      box-shadow: -4px 0 20px rgba(0, 0, 0, 0.3);
+      pointer-events: auto;
+    }
+
+    .panel.open {
+      transform: translateX(0);
     }
 
     .header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 12px 16px;
+      padding: 16px;
       border-bottom: 1px solid #374151;
+      background: #111827;
     }
 
-    .title {
+    .header h3 {
+      margin: 0;
+      color: #f3f4f6;
       font-size: 14px;
       font-weight: 600;
-      color: white;
-      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .header-icon {
+      width: 18px;
+      height: 18px;
+      color: #9ca3af;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
     .close-btn {
       background: none;
       border: none;
-      padding: 4px;
-      cursor: pointer;
       color: #9ca3af;
+      cursor: pointer;
+      padding: 4px;
       display: flex;
       align-items: center;
       justify-content: center;
       border-radius: 4px;
+      transition: all 0.15s ease;
     }
 
     .close-btn:hover {
       background: #374151;
-      color: white;
+      color: #f3f4f6;
     }
 
     .stop-btn {
@@ -88,6 +101,7 @@ export class ZingResponse extends LitElement {
       display: flex;
       align-items: center;
       gap: 4px;
+      transition: all 0.15s ease;
     }
 
     .stop-btn:hover {
@@ -106,6 +120,7 @@ export class ZingResponse extends LitElement {
       display: flex;
       align-items: center;
       gap: 4px;
+      transition: all 0.15s ease;
     }
 
     .refresh-btn:hover {
@@ -214,6 +229,7 @@ export class ZingResponse extends LitElement {
     .footer {
       padding: 12px 16px;
       border-top: 1px solid #374151;
+      background: #111827;
     }
 
     .input-row {
@@ -241,7 +257,7 @@ export class ZingResponse extends LitElement {
       color: #6b7280;
     }
 
-    button {
+    .send-btn {
       padding: 8px 16px;
       font-size: 14px;
       font-weight: 500;
@@ -250,13 +266,14 @@ export class ZingResponse extends LitElement {
       cursor: pointer;
       background: #3b82f6;
       color: white;
+      transition: all 0.15s ease;
     }
 
-    button:hover {
+    .send-btn:hover {
       background: #2563eb;
     }
 
-    button:disabled {
+    .send-btn:disabled {
       opacity: 0.5;
       cursor: not-allowed;
     }
@@ -279,7 +296,7 @@ export class ZingResponse extends LitElement {
     }
   `;
 
-  @property({ type: Boolean, reflect: true }) open = false;
+  @property({ type: Boolean }) isOpen = false;
   @property({ type: Boolean }) processing = false;
   @property({ type: Boolean }) autoRefresh = false;
   @property({ type: String }) content = '';
@@ -298,24 +315,25 @@ export class ZingResponse extends LitElement {
   }
 
   render() {
-    if (!this.open) {
-      return nothing;
-    }
-
     return html`
-      <div class="panel">
+      <div class="panel ${this.isOpen ? 'open' : ''}" @click=${this._stopPropagation} @mousedown=${this._stopPropagation} @pointerdown=${this._stopPropagation}>
         <div class="header">
-          <h3 class="title">Agent Response</h3>
-          <div style="display: flex; align-items: center; gap: 8px;">
+          <h3>
+            <svg class="header-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+            Agent Response
+          </h3>
+          <div class="header-actions">
             ${this.processing ? html`
-              <button class="stop-btn" @click=${this.handleStop}>
+              <button class="stop-btn" @click=${this._handleStop}>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
                   <rect x="4" y="4" width="16" height="16" rx="2"/>
                 </svg>
                 Stop
               </button>
             ` : this.content && !this.autoRefresh ? html`
-              <button class="refresh-btn" @click=${this.handleRefresh}>
+              <button class="refresh-btn" @click=${this._handleRefresh}>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                   <path d="M23 4v6h-6"/>
                   <path d="M1 20v-6h6"/>
@@ -324,8 +342,8 @@ export class ZingResponse extends LitElement {
                 Refresh
               </button>
             ` : ''}
-            <button class="close-btn" @click=${this.handleClose}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <button class="close-btn" @click=${this._handleClose} title="Close">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <line x1="18" y1="6" x2="6" y2="18"/>
                 <line x1="6" y1="6" x2="18" y2="18"/>
               </svg>
@@ -356,7 +374,7 @@ export class ZingResponse extends LitElement {
             <div class="error">${this.error}</div>
           ` : ''}
 
-          ${this.renderContent()}
+          ${this._renderContent()}
         </div>
 
         <div class="footer">
@@ -365,12 +383,13 @@ export class ZingResponse extends LitElement {
               type="text"
               placeholder="Follow-up message..."
               .value=${this.followUpMessage}
-              @input=${this.handleInputChange}
-              @keydown=${this.handleInputKeydown}
+              @input=${this._handleInputChange}
+              @keydown=${this._handleInputKeydown}
               ?disabled=${this.processing}
             />
             <button
-              @click=${this.handleSendFollowUp}
+              class="send-btn"
+              @click=${this._handleSendFollowUp}
               ?disabled=${this.processing || !this.followUpMessage.trim()}
             >
               Send
@@ -381,7 +400,7 @@ export class ZingResponse extends LitElement {
     `;
   }
 
-  private parseContent(content: string): ContentSegment[] {
+  private _parseContent(content: string): ContentSegment[] {
     const segments: ContentSegment[] = [];
     const codeBlockRegex = /```(\w*)\n?([\s\S]*?)```/g;
 
@@ -418,27 +437,45 @@ export class ZingResponse extends LitElement {
     return segments;
   }
 
-  private renderContent() {
+  private _renderContent() {
     if (!this.content) {
-      return html`<div class="text-block">Waiting for response...</div>`;
+      if (this.processing) {
+        return html`<div class="text-block">Waiting for response...</div>`;
+      }
+      return html`<div class="text-block" style="color: #6b7280;">Add annotations and click the agent button to send them.</div>`;
     }
 
-    const segments = this.parseContent(this.content);
+    const segments = this._parseContent(this.content);
 
     return segments.map(segment => {
       if (segment.type === 'code') {
         return html`<div class="code-block">${segment.content}</div>`;
       }
       // Parse text into action steps for better readability
-      return this.renderTextAsSteps(segment.content);
+      return this._renderTextAsSteps(segment.content);
     });
   }
 
-  private renderTextAsSteps(text: string) {
-    // Split on sentence boundaries that typically indicate new actions
-    // Look for: period/colon followed by capital letter (with optional space)
+  private _renderTextAsSteps(text: string) {
+    // Don't split if the text contains:
+    // - Markdown lists (numbered or bulleted options)
+    // - Backticks (inline code)
+    // - Questions (ends with ?)
+    // - Multiple newlines (already formatted)
+    const hasMarkdownList = /\d+\.\s+\*\*|^[-*]\s+/m.test(text);
+    const hasInlineCode = /`[^`]+`/.test(text);
+    const isQuestion = text.trim().endsWith('?');
+    const hasMultipleNewlines = /\n\s*\n/.test(text);
+
+    if (hasMarkdownList || hasInlineCode || isQuestion || hasMultipleNewlines) {
+      // Render as plain text with preserved formatting
+      return html`<div class="text-block">${text}</div>`;
+    }
+
+    // Only split on clear action sentence boundaries
+    // Look for: period followed by space and capital letter starting an action phrase
     const steps = text
-      .split(/(?<=[.:])\s*(?=[A-Z][a-z])/)
+      .split(/(?<=\.)\s+(?=[A-Z][a-z])/)
       .map(s => s.trim())
       .filter(s => s.length > 0);
 
@@ -448,12 +485,12 @@ export class ZingResponse extends LitElement {
     }
 
     return steps.map(step => {
-      const stepClass = this.classifyStep(step);
+      const stepClass = this._classifyStep(step);
       return html`<div class="action-step ${stepClass}">${step}</div>`;
     });
   }
 
-  private classifyStep(step: string): string {
+  private _classifyStep(step: string): string {
     const lower = step.toLowerCase();
 
     // Check/investigation actions (yellow)
@@ -492,30 +529,38 @@ export class ZingResponse extends LitElement {
     return '';
   }
 
-  private handleClose() {
+  private _stopPropagation(e: Event) {
+    e.stopPropagation();
+  }
+
+  private _handleClose(e: Event) {
+    e.preventDefault();
+    e.stopPropagation();
     this.dispatchEvent(new CustomEvent('close', { bubbles: true, composed: true }));
   }
 
-  private handleStop() {
+  private _handleStop(e: Event) {
+    e.preventDefault();
+    e.stopPropagation();
     this.dispatchEvent(new CustomEvent('stop', { bubbles: true, composed: true }));
   }
 
-  private handleRefresh() {
+  private _handleRefresh() {
     window.location.reload();
   }
 
-  private handleInputChange(e: Event) {
+  private _handleInputChange(e: Event) {
     this.followUpMessage = (e.target as HTMLInputElement).value;
   }
 
-  private handleInputKeydown(e: KeyboardEvent) {
+  private _handleInputKeydown(e: KeyboardEvent) {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      this.handleSendFollowUp();
+      this._handleSendFollowUp();
     }
   }
 
-  private handleSendFollowUp() {
+  private _handleSendFollowUp() {
     if (!this.followUpMessage.trim() || this.processing) return;
 
     this.dispatchEvent(new CustomEvent('followup', {
@@ -529,6 +574,6 @@ export class ZingResponse extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'zing-response': ZingResponse;
+    'zing-agent-response-panel': ZingAgentResponsePanel;
   }
 }

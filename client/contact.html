@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Contact Us - ZingIt Demo</title>
+  <title>Contact & Contribute - ZingIt</title>
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
@@ -12,80 +12,73 @@
 
   <!-- Hero Section -->
   <section class="hero">
-    <h1>Get in Touch</h1>
-    <p>Have a question or feedback? We'd love to hear from you.</p>
+    <h1>Get Involved</h1>
+    <p>ZingIt is open source. Report issues, request features, or contribute code on GitHub.</p>
   </section>
 
   <!-- Contact Content -->
   <section class="content-section">
     <div class="contact-grid">
-      <div class="contact-form">
-        <h2>Send us a Message</h2>
-        <form>
-          <div class="form-group">
-            <label for="name">Full Name</label>
-            <input type="text" id="name" placeholder="John Doe">
-          </div>
-          <div class="form-group">
-            <label for="email">Email Address</label>
-            <input type="email" id="email" placeholder="john@example.com">
-          </div>
-          <div class="form-group">
-            <label for="subject">Subject</label>
-            <select id="subject">
-              <option value="">Select a topic...</option>
-              <option value="sales">Sales Inquiry</option>
-              <option value="support">Technical Support</option>
-              <option value="billing">Billing Question</option>
-              <option value="partnership">Partnership</option>
-              <option value="other">Other</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="message">Message</label>
-            <textarea id="message" placeholder="Tell us how we can help..."></textarea>
-          </div>
-          <button type="submit">Send Message</button>
-        </form>
-      </div>
-
       <div class="contact-info">
         <div class="info-card">
-          <div class="info-icon">&#x1F4E7;</div>
+          <div class="info-icon">&#x1F41B;</div>
           <div class="info-content">
-            <h3>Email Us</h3>
-            <p><a href="mailto:hello@example.com">hello@example.com</a></p>
-            <p><a href="mailto:support@example.com">support@example.com</a></p>
+            <h3>Report Issues</h3>
+            <p>Found a bug? Open an issue on GitHub with steps to reproduce.</p>
+            <p><a href="https://github.com/danwahlin/zingit/issues/new">Create Issue</a></p>
           </div>
         </div>
 
         <div class="info-card">
-          <div class="info-icon">&#x1F4DE;</div>
+          <div class="info-icon">&#x1F4A1;</div>
           <div class="info-content">
-            <h3>Call Us</h3>
-            <p>+1 (555) 123-4567</p>
-            <p>Mon-Fri, 9am-6pm EST</p>
+            <h3>Feature Requests</h3>
+            <p>Have an idea to make ZingIt better? We'd love to hear it.</p>
+            <p><a href="https://github.com/danwahlin/zingit/issues/new?labels=enhancement">Suggest Feature</a></p>
           </div>
         </div>
 
         <div class="info-card">
-          <div class="info-icon">&#x1F4CD;</div>
+          <div class="info-icon">&#x1F4BB;</div>
           <div class="info-content">
-            <h3>Visit Us</h3>
-            <p>123 Innovation Drive</p>
-            <p>San Francisco, CA 94107</p>
+            <h3>Contribute Code</h3>
+            <p>Pull requests are welcome! Check out the contributing guide to get started.</p>
+            <p><a href="https://github.com/danwahlin/zingit/blob/main/CONTRIBUTING.md">Contributing Guide</a></p>
+          </div>
+        </div>
+
+        <div class="info-card">
+          <div class="info-icon">&#x1F4D6;</div>
+          <div class="info-content">
+            <h3>Documentation</h3>
+            <p>Read the README for setup instructions, usage guides, and API docs.</p>
+            <p><a href="https://github.com/danwahlin/zingit#readme">View Docs</a></p>
           </div>
         </div>
 
         <div class="social-links">
-          <a href="#" class="social-link" title="Twitter">&#x1F426;</a>
-          <a href="#" class="social-link" title="LinkedIn">&#x1F4BC;</a>
-          <a href="#" class="social-link" title="GitHub">&#x1F419;</a>
-          <a href="#" class="social-link" title="Discord">&#x1F4AC;</a>
+          <a href="https://github.com/danwahlin/zingit" class="social-link" title="GitHub">&#x1F419;</a>
         </div>
+      </div>
 
-        <div class="map-placeholder">
-          &#x1F5FA;&#xFE0F; Map would go here
+      <div class="contact-form">
+        <h2>Quick Links</h2>
+        <div class="values">
+          <div class="value">
+            <h3>GitHub Repository</h3>
+            <p>Star the repo, fork it, or browse the source code.</p>
+            <p><a href="https://github.com/danwahlin/zingit">github.com/danwahlin/zingit</a></p>
+          </div>
+          <div class="value">
+            <h3>Quick Start</h3>
+            <p>Get up and running in minutes with our quick start guide.</p>
+            <p><a href="https://github.com/danwahlin/zingit#quick-start">Quick Start Guide</a></p>
+          </div>
+          <div class="value">
+            <h3>Supported Agents</h3>
+            <p>Learn about Claude, Copilot, and Codex integration.</p>
+            <p><a href="https://github.com/danwahlin/zingit#agents">Agent Setup</a></p>
+          </div>
         </div>
       </div>
     </div>
@@ -97,41 +90,41 @@
 
     <div class="faq-item">
       <div class="faq-question">
-        What is your response time?
+        Which AI agents does ZingIt support?
         <span>+</span>
       </div>
       <div class="faq-answer">
-        We typically respond to all inquiries within 24 hours during business days. For urgent technical issues, our support team is available 24/7.
+        ZingIt supports Claude Code (via the Claude Agent SDK), GitHub Copilot CLI, and OpenAI Codex. You can switch between agents in the settings.
       </div>
     </div>
 
     <div class="faq-item">
       <div class="faq-question">
-        Do you offer phone support?
+        Can I use ZingIt on any website?
         <span>+</span>
       </div>
       <div class="faq-answer">
-        Yes! Phone support is available for all Pro and Enterprise customers. You can reach us at +1 (555) 123-4567 during business hours.
+        Yes! The bookmarklet lets you inject ZingIt into any webpage. It uses Shadow DOM to isolate styles and avoid conflicts with the host page.
       </div>
     </div>
 
     <div class="faq-item">
       <div class="faq-question">
-        How do I request a feature?
+        How do I undo changes made by the AI?
         <span>+</span>
       </div>
       <div class="faq-answer">
-        We love hearing your ideas! You can submit feature requests through our feedback portal or by selecting "Other" in the contact form above.
+        ZingIt creates git checkpoints before each AI modification. Open the History panel to see all changes and click "Undo" to revert any modification.
       </div>
     </div>
 
     <div class="faq-item">
       <div class="faq-question">
-        Where can I find documentation?
+        Is ZingIt free to use?
         <span>+</span>
       </div>
       <div class="faq-answer">
-        Our comprehensive documentation is available at docs.example.com. It includes tutorials, API references, and troubleshooting guides.
+        Yes, ZingIt is completely free and open source under the MIT license. You'll need your own API keys or CLI tools for the AI agents.
       </div>
     </div>
   </section>

@@ -71,11 +71,13 @@ const defaultSettings: ZingSettings = {
   markerColor: '#3b82f6',       // Pending (blue)
   processingColor: '#ef4444',   // Processing (red)
   completedColor: '#22c55e',    // Completed (green)
-  autoConnect: true,
   projectDir: '',               // Empty = use server default
   playSoundOnComplete: true,    // Play ding when agent completes
   selectedAgent: '',            // Empty = show agent picker on first connect
-  autoRefresh: false            // Auto refresh page when agent completes (disabled by default)
+  autoRefresh: false,           // Auto refresh page when agent completes (disabled by default)
+  // Undo/Redo features
+  showUndoBar: true,            // Show undo toast after changes (default: true)
+  undoBarTimeout: 10000,        // Undo bar auto-dismiss timeout ms (default: 10000)
 };
 
 export function saveSettings(settings: ZingSettings): void {

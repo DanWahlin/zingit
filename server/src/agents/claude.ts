@@ -94,11 +94,13 @@ export class ClaudeCodeAgent extends BaseAgent {
       }
     };
 
+    // Track session ID for conversation continuity (stable V1 resume feature)
+    let sessionId: string | undefined;
+
     return {
       send: async (msg: { prompt: string; images?: ImageContent[] }) => {
         try {
           // Use generator function to pass multimodal content (text + images)
-          // This allows Claude to actually see the screenshots
           const messageGenerator = this.createMessageGenerator(msg.prompt, msg.images);
 
           const response = query({
@@ -107,6 +109,8 @@ export class ClaudeCodeAgent extends BaseAgent {
               model: this.model,
               cwd: projectDir,
               permissionMode: 'acceptEdits',  // Auto-approve file edits (no interactive terminal)
+              // Resume previous session if we have a session ID (enables follow-up conversations)
+              ...(sessionId && { resume: sessionId }),
               systemPrompt: `You are a UI debugging assistant. When given annotations about UI elements,
 you search for the corresponding code using the selectors and HTML context provided,
 then make the requested changes. Be thorough in finding the right files and making precise edits.
@@ -122,7 +126,10 @@ When screenshots are provided, use them to:
           for await (const message of response) {
             switch (message.type) {
               case 'system':
-                // Session initialized - SDK handles session management
+                // Capture session ID from init message for follow-up conversations
+                if ('subtype' in message && message.subtype === 'init') {
+                  sessionId = message.session_id;
+                }
                 break;
 
               case 'assistant':

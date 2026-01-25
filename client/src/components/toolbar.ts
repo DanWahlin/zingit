@@ -196,6 +196,7 @@ export class ZingToolbar extends LitElement {
   @property({ type: String }) agent = '';
   @property({ type: String }) model = '';
   @property({ type: Boolean }) responseOpen = false;  // Whether the response panel is open
+  @property({ type: Boolean }) historyOpen = false;   // Whether the history panel is open
 
   render() {
     const statusClass = this.maxAttemptsReached
@@ -265,41 +266,49 @@ export class ZingToolbar extends LitElement {
             `
           : html`
               <button
-                class="btn-icon"
-                ?disabled=${!this.connected || this.processing || this.annotationCount === 0}
-                title="Send to ${this.agent ? this.agent.charAt(0).toUpperCase() + this.agent.slice(1) : 'Agent'}"
-                @click=${this.handleSend}
+                class="btn-icon ${this.responseOpen ? 'active' : ''}"
+                ?disabled=${!this.connected}
+                title="${this.annotationCount > 0 && !this.processing ? `Send to ${this.agent ? this.agent.charAt(0).toUpperCase() + this.agent.slice(1) : 'Agent'}` : (this.responseOpen ? 'Hide agent panel' : 'Show agent panel')}"
+                @click=${this.handleAgentButton}
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <line x1="22" y1="2" x2="11" y2="13"/>
-                  <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <!-- Robot head -->
+                  <rect x="5" y="8" width="14" height="12" rx="2"/>
+                  <!-- Eyes -->
+                  <circle cx="9" cy="13" r="1.5" fill="currentColor" stroke="none"/>
+                  <circle cx="15" cy="13" r="1.5" fill="currentColor" stroke="none"/>
+                  <!-- Antenna -->
+                  <line x1="12" y1="8" x2="12" y2="4"/>
+                  <circle cx="12" cy="3" r="1"/>
+                  <!-- Mouth -->
+                  <line x1="9" y1="17" x2="15" y2="17"/>
                 </svg>
               </button>
             `
         }
-
-        <button
-          class="btn-icon ${this.responseOpen ? 'active' : ''}"
-          title="${this.responseOpen ? 'Hide agent console' : 'Show agent console'}"
-          @click=${this.handleToggleResponse}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="4 17 10 11 4 5"/>
-            <line x1="12" y1="19" x2="20" y2="19"/>
-          </svg>
-        </button>
 
         <div class="divider"></div>
 
         <button
           class="btn-icon"
           ?disabled=${!this.canUndo}
-          title="Undo"
+          title="Undo (Ctrl+Z)"
           @click=${this.handleUndo}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M3 7v6h6"/>
             <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6.36 2.64L3 13"/>
+          </svg>
+        </button>
+
+        <button
+          class="btn-icon ${this.historyOpen ? 'active' : ''}"
+          title="Change History"
+          @click=${this.handleHistory}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
           </svg>
         </button>
 
@@ -368,8 +377,14 @@ export class ZingToolbar extends LitElement {
     `;
   }
 
-  private handleSend() {
-    this.dispatchEvent(new CustomEvent('send', { bubbles: true, composed: true }));
+  private handleAgentButton() {
+    // If we have annotations and not processing, send them (panel will open automatically)
+    // Otherwise, just toggle the panel
+    if (this.annotationCount > 0 && !this.processing) {
+      this.dispatchEvent(new CustomEvent('send', { bubbles: true, composed: true }));
+    } else {
+      this.dispatchEvent(new CustomEvent('toggle-response', { bubbles: true, composed: true }));
+    }
   }
 
   private handleExport() {
@@ -404,8 +419,8 @@ export class ZingToolbar extends LitElement {
     this.dispatchEvent(new CustomEvent('undo', { bubbles: true, composed: true }));
   }
 
-  private handleToggleResponse() {
-    this.dispatchEvent(new CustomEvent('toggle-response', { bubbles: true, composed: true }));
+  private handleHistory() {
+    this.dispatchEvent(new CustomEvent('toggle-history', { bubbles: true, composed: true }));
   }
 
   private handleAgentClick() {

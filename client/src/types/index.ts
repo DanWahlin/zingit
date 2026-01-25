@@ -23,11 +23,13 @@ export interface ZingSettings {
   markerColor: string;           // Pending status color (blue default)
   processingColor: string;       // Processing status color (red default)
   completedColor: string;        // Completed status color (green default)
-  autoConnect: boolean;
   projectDir: string;            // Project directory for AI agent to work in
   playSoundOnComplete: boolean;  // Play a ding sound when agent completes
   selectedAgent: string;         // Selected agent name (claude, copilot, codex)
   autoRefresh: boolean;          // Auto refresh page when agent completes
+  // Undo/Redo features
+  showUndoBar: boolean;          // Show undo toast after changes (default: true)
+  undoBarTimeout: number;        // Undo bar auto-dismiss timeout ms (default: 10000)
 }
 
 export interface AgentInfo {
@@ -66,7 +68,17 @@ export type WSMessageType =
   | 'select_agent'
   | 'agents'
   | 'agent_selected'
-  | 'agent_error';
+  | 'agent_error'
+  // History/Undo feature
+  | 'get_history'
+  | 'undo'
+  | 'revert_to'
+  | 'clear_history'
+  | 'checkpoint_created'
+  | 'history'
+  | 'undo_complete'
+  | 'revert_complete'
+  | 'history_cleared';
 
 export interface WSMessage {
   type: WSMessageType;
@@ -78,4 +90,37 @@ export interface WSMessage {
   data?: BatchData;
   projectDir?: string;  // Server's default project directory (sent on connect)
   agents?: AgentInfo[]; // Available agents (from 'agents' message)
+  // History/Undo feature
+  checkpoint?: CheckpointInfo;      // For checkpoint_created
+  checkpoints?: CheckpointInfo[];   // For history
+  checkpointId?: string;            // For undo/revert operations
+  filesReverted?: string[];         // For undo_complete, revert_complete
+}
+
+// ============================================
+// History/Undo Feature Types
+// ============================================
+
+export interface AnnotationSummary {
+  id: string;           // Annotation UUID for precise matching during undo
+  identifier: string;
+  notes: string;
+}
+
+export interface CheckpointInfo {
+  id: string;
+  timestamp: string;
+  annotations: AnnotationSummary[];
+  filesModified: number;
+  linesChanged: number;
+  agentName: string;
+  pageUrl: string;
+  status: 'pending' | 'applied' | 'reverted';
+  canUndo: boolean;
+}
+
+export interface HistoryState {
+  checkpoints: CheckpointInfo[];
+  isLoading: boolean;
+  error: string | null;
 }

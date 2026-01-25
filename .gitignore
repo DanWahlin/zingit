@@ -46,3 +46,6 @@ coverage/
 # package-lock.json
 # yarn.lock
 # pnpm-lock.yaml
+
+# ZingIt history
+.zingit/

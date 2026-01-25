@@ -6,6 +6,13 @@ import type { WSMessage, BatchData } from '../types/index.js';
 export type WSEventType = 'open' | 'close' | 'message' | 'error' | 'max_attempts';
 export type WSEventHandler = (data?: WSMessage) => void;
 
+interface QueuedMessage {
+  message: object;
+  retries: number;
+  maxRetries: number;
+  onFail?: () => void;
+}
+
 export class WebSocketClient {
   private ws: WebSocket | null = null;
   private url: string;
@@ -14,6 +21,10 @@ export class WebSocketClient {
   private maxReconnectAttempts = 10;
   private reconnectTimer: number | null = null;
   private maxAttemptsReached = false;
+
+  // Message queue for retry on reconnection
+  private messageQueue: QueuedMessage[] = [];
+  private maxQueueSize = 10;
 
   constructor(url: string) {
     this.url = url;
@@ -31,6 +42,8 @@ export class WebSocketClient {
         this.reconnectAttempts = 0;
         this.maxAttemptsReached = false;
         this.emit('open');
+        // Flush any queued messages
+        this.flushMessageQueue();
       };
 
       this.ws.onclose = () => {
@@ -100,21 +113,80 @@ export class WebSocketClient {
       this.reconnectTimer = null;
     }
     this.maxAttemptsReached = true; // Prevent reconnection
+
+    // Clear message queue and call failure handlers
+    for (const item of this.messageQueue) {
+      item.onFail?.();
+    }
+    this.messageQueue = [];
+
     if (this.ws) {
       this.ws.close();
       this.ws = null;
     }
   }
 
-  send(message: object): void {
+  send(message: object, options?: { retry?: boolean; maxRetries?: number; onFail?: () => void }): boolean {
     if (this.ws?.readyState === WebSocket.OPEN) {
-      this.ws.send(JSON.stringify(message));
+      try {
+        this.ws.send(JSON.stringify(message));
+        return true;
+      } catch (err) {
+        console.warn('ZingIt: Failed to send message', err);
+        if (options?.retry) {
+          this.queueMessage(message, options.maxRetries ?? 3, options.onFail);
+        }
+        return false;
+      }
     } else {
       console.warn('ZingIt: WebSocket not connected');
+      if (options?.retry) {
+        this.queueMessage(message, options.maxRetries ?? 3, options.onFail);
+      }
+      return false;
     }
   }
 
-  sendBatch(data: BatchData, projectDir?: string, agent?: string): void {
+  private queueMessage(message: object, maxRetries: number, onFail?: () => void): void {
+    // Limit queue size to prevent memory issues
+    if (this.messageQueue.length >= this.maxQueueSize) {
+      const dropped = this.messageQueue.shift();
+      dropped?.onFail?.();
+      console.warn('ZingIt: Message queue full, dropped oldest message');
+    }
+    this.messageQueue.push({ message, retries: 0, maxRetries, onFail });
+  }
+
+  private flushMessageQueue(): void {
+    const queue = [...this.messageQueue];
+    this.messageQueue = [];
+
+    for (const item of queue) {
+      if (this.ws?.readyState === WebSocket.OPEN) {
+        try {
+          this.ws.send(JSON.stringify(item.message));
+        } catch {
+          item.retries++;
+          if (item.retries < item.maxRetries) {
+            this.messageQueue.push(item);
+          } else {
+            item.onFail?.();
+            console.warn('ZingIt: Message dropped after max retries');
+          }
+        }
+      } else {
+        // Still not connected, re-queue
+        item.retries++;
+        if (item.retries < item.maxRetries) {
+          this.messageQueue.push(item);
+        } else {
+          item.onFail?.();
+        }
+      }
+    }
+  }
+
+  sendBatch(data: BatchData, projectDir?: string, agent?: string, onFail?: () => void): boolean {
     // Include projectDir if specified (overrides server default)
     // Include agent if specified (for initial batch without prior agent selection)
     const batchData = projectDir ? { ...data, projectDir } : data;
@@ -122,7 +194,8 @@ export class WebSocketClient {
     if (agent) {
       message.agent = agent;
     }
-    this.send(message);
+    // Batch messages are important - enable retry
+    return this.send(message, { retry: true, maxRetries: 3, onFail });
   }
 
   sendMessage(content: string): void {
