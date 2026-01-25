@@ -17,6 +17,7 @@ export class SiteHeader extends LitElement {
       padding: 16px 24px;
       background: #fff;
       color: white;
+      position: relative;
     }
 
     .brand {
@@ -38,6 +39,9 @@ export class SiteHeader extends LitElement {
       display: flex;
       align-items: center;
       gap: 24px;
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
     }
 
     .nav-links a {
