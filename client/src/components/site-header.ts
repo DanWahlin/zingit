@@ -64,6 +64,8 @@ export class SiteHeader extends LitElement {
     }
 
     .nav-actions a {
+      display: flex;
+      align-items: center;
       color: black;
       transition: color 0.15s ease;
     }
