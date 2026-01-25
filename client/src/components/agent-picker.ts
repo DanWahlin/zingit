@@ -76,7 +76,7 @@ export class ZingAgentPicker extends LitElement {
       text-align: center;
     }
 
-    .agent-card:hover:not(.unavailable) {
+    .agent-card:hover:not(.unavailable):not(.selected) {
       border-color: #4a4a4a;
       background: #333;
     }
@@ -84,6 +84,11 @@ export class ZingAgentPicker extends LitElement {
     .agent-card.selected {
       border-color: #3b82f6;
       background: #1e3a5f;
+    }
+
+    .agent-card.selected:hover {
+      border-color: #60a5fa;
+      background: #2451a1;
     }
 
     .agent-card.unavailable {
