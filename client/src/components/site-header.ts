@@ -39,9 +39,8 @@ export class SiteHeader extends LitElement {
       display: flex;
       align-items: center;
       gap: 24px;
-      position: absolute;
-      left: 50%;
-      transform: translateX(-50%);
+      margin-left: auto;
+      margin-right: 16px;
     }
 
     .nav-links a {
@@ -87,7 +86,6 @@ export class SiteHeader extends LitElement {
         <div class="nav-links">
           <a href="/about.html" class=${this.activePage === 'about' ? 'active' : ''}>About</a>
           <a href="/contact.html" class=${this.activePage === 'contact' ? 'active' : ''}>Contribute</a>
-          <a href="https://github.com/danwahlin/zingit" target="_blank">GitHub</a>
         </div>
         <div class="nav-actions">
           <a href="https://github.com/danwahlin/zingit" target="_blank" title="GitHub">
