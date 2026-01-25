@@ -23,7 +23,6 @@ export interface ZingSettings {
   markerColor: string;           // Pending status color (blue default)
   processingColor: string;       // Processing status color (red default)
   completedColor: string;        // Completed status color (green default)
-  autoConnect: boolean;
   projectDir: string;            // Project directory for AI agent to work in
   playSoundOnComplete: boolean;  // Play a ding sound when agent completes
   selectedAgent: string;         // Selected agent name (claude, copilot, codex)

@@ -16,18 +16,18 @@ export class ZingHistoryPanel extends LitElement {
 
     .panel {
       position: fixed;
-      right: 0;
+      left: 0;
       top: 0;
       width: 320px;
       height: 100vh;
       background: #1f2937;
-      border-left: 1px solid #374151;
-      transform: translateX(100%);
+      border-right: 1px solid #374151;
+      transform: translateX(-100%);
       transition: transform 0.3s ease;
       z-index: 2147483645;
       display: flex;
       flex-direction: column;
-      box-shadow: -4px 0 20px rgba(0, 0, 0, 0.3);
+      box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
       pointer-events: auto;
     }
 

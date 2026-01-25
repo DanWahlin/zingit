@@ -236,7 +236,6 @@ export class ZingSettingsPanel extends LitElement {
     markerColor: '#3b82f6',
     processingColor: '#ef4444',
     completedColor: '#22c55e',
-    autoConnect: true,
     projectDir: '',
     playSoundOnComplete: true,
     selectedAgent: '',
@@ -364,18 +363,6 @@ export class ZingSettingsPanel extends LitElement {
                     <span class="color-value">${this.localSettings.completedColor}</span>
                   </div>
                 </div>
-              </div>
-            </div>
-
-            <div class="field">
-              <div class="checkbox-field">
-                <input
-                  type="checkbox"
-                  id="autoConnect"
-                  .checked=${this.localSettings.autoConnect}
-                  @change=${(e: Event) => this.updateSetting('autoConnect', (e.target as HTMLInputElement).checked)}
-                />
-                <label class="checkbox-label" for="autoConnect">Auto-connect on startup</label>
               </div>
             </div>
 

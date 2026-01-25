@@ -16,7 +16,7 @@ import './highlight.js';
 import './markers.js';
 import './modal.js';
 import './settings.js';
-import './response.js';
+import './agent-response-panel.js';
 import './toast.js';
 import './help.js';
 import './agent-picker.js';
@@ -155,13 +155,15 @@ export class ZingUI extends LitElement {
 
     // Restore response dialog state if it was saved before auto-refresh
     const savedResponseState = loadResponseState();
-    if (savedResponseState) {
-      this.responseOpen = savedResponseState.open;
+    if (savedResponseState && savedResponseState.content) {
+      this.responseOpen = true;  // Always show dialog if we have saved content
       this.responseContent = savedResponseState.content;
       this.responseError = savedResponseState.error;
       this.responseScreenshotCount = savedResponseState.screenshotCount;
       // Clear saved state after restoring (one-time restore)
       clearResponseState();
+      // Force re-render to ensure dialog appears
+      this.requestUpdate();
     }
 
     // Set up WebSocket
@@ -226,9 +228,7 @@ export class ZingUI extends LitElement {
       this.handleWSMessage(data as WSMessage);
     });
 
-    if (this.settings.autoConnect) {
-      this.ws.connect();
-    }
+    this.ws.connect();
   }
 
   private handleWSMessage(msg: WSMessage) {
@@ -705,8 +705,8 @@ export class ZingUI extends LitElement {
         ></zing-agent-picker>
       ` : ''}
 
-      <zing-response
-        .open=${this.responseOpen}
+      <zing-agent-response-panel
+        .isOpen=${this.responseOpen}
         .processing=${this.processing}
         .autoRefresh=${this.settings.autoRefresh}
         .content=${this.responseContent}
@@ -716,7 +716,7 @@ export class ZingUI extends LitElement {
         @close=${() => this.responseOpen = false}
         @stop=${this.handleStop}
         @followup=${this.handleFollowUp}
-      ></zing-response>
+      ></zing-agent-response-panel>
 
       <zing-help
         .open=${this.helpOpen}

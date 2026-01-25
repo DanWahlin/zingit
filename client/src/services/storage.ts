@@ -71,7 +71,6 @@ const defaultSettings: ZingSettings = {
   markerColor: '#3b82f6',       // Pending (blue)
   processingColor: '#ef4444',   // Processing (red)
   completedColor: '#22c55e',    // Completed (green)
-  autoConnect: true,
   projectDir: '',               // Empty = use server default
   playSoundOnComplete: true,    // Play ding when agent completes
   selectedAgent: '',            // Empty = show agent picker on first connect

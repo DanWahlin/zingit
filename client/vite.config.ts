@@ -35,7 +35,7 @@ export default defineConfig({
     port: 5200,
     cors: true,
     open: true,  // Auto-open browser on start
-    hmr: false,  // Disable hot reload to simulate production (manual refresh needed to see changes)
+    hmr: true,  // Disable hot reload to simulate production (manual refresh needed to see changes)
   },
   preview: {
     port: 5200,  // Same port for preview mode
