@@ -107,6 +107,11 @@ a:hover {
   color: #A0D8EF;
 }
 
+.hero-tagline .point-annotate {
+  color: #7C3AED;
+  font-weight: 600;
+}
+
 .hero-tagline .highlight {
   color: #FFB800;
   font-weight: 600;
