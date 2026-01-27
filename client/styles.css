@@ -84,43 +84,47 @@ a:hover {
 /* Hero Section - Used on all pages */
 .hero {
   text-align: center;
-  padding: 80px 24px;
-  background: var(--bg-hero);
+  padding: 120px 24px 100px;
+  background: linear-gradient(180deg, #0a0a0a 0%, #1a1a1a 100%);
   color: white;
 }
 
-.hero-problem {
-  font-size: 56px;
+.hero-headline {
+  font-size: clamp(40px, 6vw, 72px);
   font-weight: 700;
-  line-height: 1.2;
+  line-height: 1.1;
   max-width: 900px;
-  margin: 0 auto 32px;
+  margin: 0 auto 24px;
   color: white;
+  letter-spacing: -0.03em;
 }
 
-.hero h1 {
-  font-size: 36px;
+.hero-tagline {
+  font-size: clamp(18px, 2.5vw, 24px);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  margin: 0 auto 32px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.hero-tagline .highlight {
+  color: #FFB800;
   font-weight: 600;
-  margin-bottom: 16px;
-  line-height: 1.3;
-}
-
-.hero h1 .highlight {
-  color: var(--color-accent);
 }
 
 .hero-description {
-  font-size: 18px;
+  font-size: clamp(16px, 1.5vw, 18px);
   line-height: 1.6;
-  max-width: 600px;
+  max-width: 540px;
   margin: 0 auto;
-  color: rgba(255, 255, 255, 0.9);
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: 400;
 }
 
 .hero p {
-  font-size: 20px;
-  color: var(--color-gray-300);
-  max-width: 600px;
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.6);
+  max-width: 540px;
   margin: 0 auto;
 }
 
