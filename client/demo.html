@@ -118,7 +118,8 @@
         <h3>Get in Touch</h3>
         <div class="form-group">
           <label for="contact-name">Full Name</label>
-          <input type="text" id="contact-name" placeholder="John Doe" value="John Doe">
+          <input type="text" id="contact-name" placeholder="John Doe" value="John Doe" required minlength="2">
+          <span class="error-message" style="display: none;">Please enter a valid name (at least 2 characters)</span>
         </div>
         <div class="form-group error">
           <label for="contact-email">Email Address</label>
