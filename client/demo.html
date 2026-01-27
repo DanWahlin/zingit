@@ -17,64 +17,18 @@
       Experience ZingIt's annotation system with this interactive playground.
     </p>
 
-    <!-- Setup Instructions -->
-    <div class="setup-steps">
-      <div class="setup-step">
-        <div class="step-icon">1</div>
-        <div class="step-content">
-          <h3>Install an AI Agent</h3>
-          <p class="step-desc">You'll need one of these installed:</p>
-          <ul class="agent-list">
-            <li><a href="https://github.com/anthropics/claude-code" target="_blank" rel="noopener">Claude Code</a></li>
-            <li><a href="https://githubnext.com/projects/copilot-cli/" target="_blank" rel="noopener">GitHub Copilot CLI</a></li>
-            <li><a href="https://openai.com/blog/openai-codex" target="_blank" rel="noopener">OpenAI Codex</a></li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="setup-step">
-        <div class="step-icon">2</div>
-        <div class="step-content">
-          <h3>Start the Server</h3>
-          <div class="code-container">
-            <pre class="code-snippet">npx @codewithdan/zingit</pre>
-            <button class="copy-btn" onclick="copyCode(this, 'npx @codewithdan/zingit')" title="Copy to clipboard">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-              </svg>
-            </button>
-          </div>
-          <p class="step-note">Server runs on <code>ws://localhost:3000</code> by default</p>
-        </div>
-      </div>
-
-      <div class="setup-step">
-        <div class="step-icon">3</div>
-        <div class="step-content">
-          <h3>Start Annotating</h3>
-          <p class="step-desc">Press <kbd>Z</kbd> to toggle annotation mode, then click any element to annotate it.</p>
-          <p class="step-note">Tip: Add <code>?zingit</code> to any URL to auto-activate</p>
-        </div>
-      </div>
-
-      <div class="setup-step optional">
-        <div class="step-icon">4</div>
-        <div class="step-content">
-          <h3>Add to Your Page <span class="optional-badge">(Optional)</span></h3>
-          <div class="code-container">
-            <pre class="code-snippet">&lt;script src="https://cdn.jsdelivr.net/npm/@codewithdan/zingit@latest/dist/zingit-client.js"&gt;&lt;/script&gt;
-&lt;script&gt;ZingIt.connect('ws://localhost:3000');&lt;/script&gt;</pre>
-            <button class="copy-btn" onclick="copyCode(this, '<script src=&quot;https://cdn.jsdelivr.net/npm/@codewithdan/zingit@latest/dist/zingit-client.js&quot;></script>\n<script>ZingIt.connect(\'ws://localhost:3000\');</script>')" title="Copy to clipboard">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-              </svg>
-            </button>
-          </div>
-          <p class="step-note">For use on your own pages</p>
-        </div>
-      </div>
+    <!-- Setup Notice -->
+    <div class="setup-notice">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="16" x2="12" y2="12"></line>
+        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+      </svg>
+      <p>
+        New to ZingIt? Make sure you've completed the
+        <a href="/#setup">setup steps</a> before trying the demo.
+        Press <kbd>Z</kbd> to start annotating elements.
+      </p>
     </div>
 
     <div class="demo-hint">
