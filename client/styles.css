@@ -84,8 +84,8 @@ a:hover {
 /* Hero Section - Used on all pages */
 .hero {
   text-align: center;
-  padding: 120px 24px 100px;
-  background: linear-gradient(180deg, #0a0a0a 0%, #1a1a1a 100%);
+  padding: 60px 24px 50px;
+  background: linear-gradient(180deg, #0d1b2a 0%, #1b263b 100%);
   color: white;
 }
 
