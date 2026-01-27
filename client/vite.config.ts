@@ -44,8 +44,8 @@ export default defineConfig({
     lib: {
       entry: 'src/index.ts',
       name: 'ZingIt',
-      formats: ['es', 'iife'],
-      fileName: (format) => `zingit.${format}.js`
+      formats: ['iife'],
+      fileName: () => `zingit-client.js`
     },
     minify: 'terser',
     cssMinify: 'lightningcss',
@@ -53,7 +53,12 @@ export default defineConfig({
     target: 'es2022',
     rollupOptions: {
       output: {
-        inlineDynamicImports: true
+        inlineDynamicImports: true,
+        // Make ZingIt available as a global variable
+        extend: true,
+        globals: {
+          'ZingIt': 'ZingIt'
+        }
       }
     }
   }

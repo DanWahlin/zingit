@@ -1,0 +1,68 @@
+{
+  "name": "@codewithdan/zingit",
+  "version": "1.0.0",
+  "description": "AI-powered UI annotation tool - point, annotate, and let AI fix it",
+  "type": "module",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "bin": {
+    "zingit": "./bin/cli.js"
+  },
+  "files": [
+    "bin",
+    "server/dist",
+    "client/dist",
+    "README.md",
+    "AGENTS.md"
+  ],
+  "main": "client/dist/zingit-client.js",
+  "scripts": {
+    "build": "npm run build:client && npm run build:server",
+    "build:client": "cd client && npm run build",
+    "build:server": "cd server && npm run build",
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:server": "cd server && npm run dev",
+    "dev:client": "cd client && npm run dev",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "ui",
+    "annotation",
+    "ai",
+    "agent",
+    "claude",
+    "copilot",
+    "codex",
+    "development",
+    "tool"
+  ],
+  "author": "Dan Wahlin",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/danwahlin/zingit"
+  },
+  "bugs": {
+    "url": "https://github.com/danwahlin/zingit/issues"
+  },
+  "homepage": "https://github.com/danwahlin/zingit#readme",
+  "dependencies": {
+    "@anthropic-ai/claude-agent-sdk": "^0.2.17",
+    "@github/copilot-sdk": "^0.1.16",
+    "@openai/codex-sdk": "^0.89.0",
+    "diff": "^8.0.3",
+    "uuid": "^11.1.0",
+    "ws": "^8.19.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/diff": "^6.0.0",
+    "@types/node": "^25.0.10",
+    "@types/uuid": "^10.0.0",
+    "@types/ws": "^8.18.1",
+    "concurrently": "^9.1.2",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  }
+}

@@ -134,7 +134,7 @@ export class ZingHelp extends LitElement {
           <div class="shortcuts">
             <div class="shortcut">
               <span class="shortcut-desc">Toggle annotation mode</span>
-              <div class="shortcut-keys"><kbd>P</kbd></div>
+              <div class="shortcut-keys"><kbd>Z</kbd></div>
             </div>
             <div class="shortcut">
               <span class="shortcut-desc">Undo last annotation</span>

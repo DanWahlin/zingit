@@ -231,7 +231,7 @@ export class ZingSettingsPanel extends LitElement {
   @property({ type: String }) serverProjectDir = '';  // Server's default
   @property({ type: Array }) agents: AgentInfo[] = [];  // Available agents from server
   @property({ type: Object }) settings: ZingSettings = {
-    wsUrl: 'ws://localhost:8765',
+    wsUrl: 'ws://localhost:3000',
     highlightColor: '#fbbf24',
     markerColor: '#3b82f6',
     processingColor: '#ef4444',
@@ -279,7 +279,7 @@ export class ZingSettingsPanel extends LitElement {
                 id="wsUrl"
                 .value=${this.localSettings.wsUrl}
                 @input=${(e: Event) => this.updateSetting('wsUrl', (e.target as HTMLInputElement).value)}
-                placeholder="ws://localhost:8765"
+                placeholder="ws://localhost:3000"
               />
             </div>
 

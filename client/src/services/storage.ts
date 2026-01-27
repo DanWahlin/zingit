@@ -66,7 +66,7 @@ export function clearAnnotations(): void {
 }
 
 const defaultSettings: ZingSettings = {
-  wsUrl: 'ws://localhost:8765',
+  wsUrl: 'ws://localhost:3000',
   highlightColor: '#fbbf24',
   markerColor: '#3b82f6',       // Pending (blue)
   processingColor: '#ef4444',   // Processing (red)

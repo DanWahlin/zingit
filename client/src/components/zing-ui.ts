@@ -549,8 +549,8 @@ export class ZingUI extends LitElement {
       this.handleUndo();
     }
 
-    // "P" to toggle annotation mode
-    if (e.key === 'p' || e.key === 'P') {
+    // "Z" to toggle annotation mode
+    if (e.key === 'z' || e.key === 'Z') {
       this.handleToggle();
     }
 

@@ -12,15 +12,11 @@
 
   <!-- Hero Section -->
   <section class="hero">
-    <h1>Point • Annotate • <span class="highlight">Let AI Fix It.</span></h1>
+    <h1>Point • Annotate • <span class="highlight">Let AI Fix It</span></h1>
     <p>
       The open source UI annotation tool that lets you highlight elements,
       describe changes, and send them to AI agents for automated fixes.
     </p>
-    <div class="hero-actions">
-      <a href="https://github.com/danwahlin/zingit" class="btn-secondary">View on GitHub</a>
-      <a href="https://github.com/danwahlin/zingit#quick-start" class="btn-secondary">Quick Start Guide</a>
-    </div>
   </section>
 
   <!-- Features -->
@@ -31,7 +27,7 @@
         Click any element on your page to add notes about changes you want.
         Smart CSS selectors are automatically generated to target the exact element.
       </p>
-      <a href="#demo">Try it now &rarr;</a>
+      <a href="/demo.html">Try it now &rarr;</a>
     </div>
     <div class="feature-card">
       <h3>Multi-Agent Support</h3>
@@ -51,50 +47,105 @@
     </div>
   </section>
 
-  <!-- Demo Section -->
-  <section id="demo" class="demo-section">
-    <h2>Interactive Demo</h2>
+  <!-- Getting Started Section -->
+  <section class="content-section">
+    <h2>Use ZingIt on Your Own Projects</h2>
+    <div class="setup-steps">
+      <div class="setup-step">
+        <div class="step-icon">1</div>
+        <div class="step-content">
+          <h3>Install an AI Agent</h3>
+          <p class="step-desc">You'll need one of these installed:</p>
+          <ul class="agent-list">
+            <li><a href="https://github.com/anthropics/claude-code" target="_blank" rel="noopener">Claude Code</a></li>
+            <li><a href="https://githubnext.com/projects/copilot-cli/" target="_blank" rel="noopener">GitHub Copilot CLI</a></li>
+            <li><a href="https://openai.com/blog/openai-codex" target="_blank" rel="noopener">OpenAI Codex</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="setup-step">
+        <div class="step-icon">2</div>
+        <div class="step-content">
+          <h3>Start the Server</h3>
+          <div class="code-container">
+            <pre class="code-snippet">npx @codewithdan/zingit</pre>
+            <button class="copy-btn" onclick="copyCode(this, 'npx @codewithdan/zingit')" title="Copy to clipboard">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+            </button>
+          </div>
+          <p class="step-note">Server runs on <code>ws://localhost:3000</code> by default</p>
+        </div>
+      </div>
+
+      <div class="setup-step">
+        <div class="step-icon">3</div>
+        <div class="step-content">
+          <h3>Start Annotating</h3>
+          <p class="step-desc">Press <kbd>Z</kbd> to toggle annotation mode, then click any element to annotate it.</p>
+          <p class="step-note">Tip: Add <code>?zingit</code> to any URL to auto-activate</p>
+        </div>
+      </div>
+
+      <div class="setup-step optional">
+        <div class="step-icon">4</div>
+        <div class="step-content">
+          <h3>Add to Your Page <span class="optional-badge">(Optional)</span></h3>
+          <div class="code-container">
+            <pre class="code-snippet">&lt;script src="https://cdn.jsdelivr.net/npm/@codewithdan/zingit@latest/dist/zingit-client.js"&gt;&lt;/script&gt;
+&lt;script&gt;ZingIt.connect('ws://localhost:3000');&lt;/script&gt;</pre>
+            <button class="copy-btn" onclick="copyCode(this, '<script src=&quot;https://cdn.jsdelivr.net/npm/@codewithdan/zingit@latest/dist/zingit-client.js&quot;></script>\n<script>ZingIt.connect(\\'ws://localhost:3000\\');</script>')" title="Copy to clipboard">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+            </button>
+          </div>
+          <p class="step-note">For use on your own pages</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="cta-section">
+    <h2>Ready to Try It?</h2>
     <p>
-      ZingIt is now active! Click on any element below to add an annotation.
-      Press <strong>P</strong> to toggle annotation mode, or <strong>Escape</strong> to close dialogs.
+      Experience ZingIt in action with our interactive demo playground.
+      Annotate forms, tables, buttons, and more with real-time feedback.
     </p>
-
-    <div class="demo-content">
-      <div class="demo-card">
-        <h3>Sample Form</h3>
-        <p>Try clicking on form elements to annotate them. Describe changes like "make this field required" or "add email validation".</p>
-        <div class="form-group">
-          <label for="name">Full Name</label>
-          <input type="text" id="name" placeholder="Enter your name">
-        </div>
-        <div class="form-group">
-          <label for="email">Email Address</label>
-          <input type="email" id="email" placeholder="you@example.com">
-        </div>
-        <div class="form-group">
-          <label for="message">Message</label>
-          <textarea id="message" rows="4" placeholder="Your message..."></textarea>
-        </div>
-        <div class="demo-buttons">
-          <button class="btn-primary">Submit</button>
-          <button class="btn-secondary">Cancel</button>
-        </div>
-      </div>
-
-      <div class="demo-card">
-        <h3>Sample Card</h3>
-        <p>This card demonstrates various UI elements you can annotate. Try clicking on the heading, text, or buttons.</p>
-        <div class="demo-buttons">
-          <button class="btn-primary">Primary Action</button>
-          <button class="btn-secondary">Secondary Action</button>
-        </div>
-      </div>
+    <div class="cta-actions">
+      <a href="/demo.html" class="btn-primary btn-large">Launch Interactive Demo</a>
+      <p class="cta-note">Try it now in your browser • No signup required</p>
     </div>
   </section>
 
   <!-- Footer -->
   <site-footer></site-footer>
 
-  <script type="module" src="/src/index.ts"></script>
+  <script type="module" src="/src/index.ts" data-auto-init="true"></script>
+  <script>
+    async function copyCode(button, code) {
+      try {
+        await navigator.clipboard.writeText(code);
+
+        // Show success feedback
+        button.classList.add('copied');
+        const originalHTML = button.innerHTML;
+        button.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+
+        // Reset after 2 seconds
+        setTimeout(() => {
+          button.classList.remove('copied');
+          button.innerHTML = originalHTML;
+        }, 2000);
+      } catch (err) {
+        console.error('Failed to copy code:', err);
+      }
+    }
+  </script>
 </body>
 </html>

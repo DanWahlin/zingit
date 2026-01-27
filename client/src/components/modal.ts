@@ -2,7 +2,7 @@
 // Modal for adding annotation notes
 
 import { LitElement, html, css } from 'lit';
-import { customElement, property, query } from 'lit/decorators.js';
+import { customElement, property, query, state } from 'lit/decorators.js';
 
 @customElement('zing-modal')
 export class ZingModal extends LitElement {
@@ -221,6 +221,58 @@ export class ZingModal extends LitElement {
     .btn-save:hover {
       background: #2563eb;
     }
+
+    .confirmation-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+      z-index: 10;
+    }
+
+    .confirmation-dialog {
+      background: #1f2937;
+      border: 2px solid #fbbf24;
+      border-radius: 8px;
+      padding: 20px;
+      max-width: 320px;
+      margin: 16px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      text-align: center;
+    }
+
+    .confirmation-icon {
+      width: 48px;
+      height: 48px;
+      margin: 0 auto 16px;
+      color: #fbbf24;
+      display: block;
+    }
+
+    .confirmation-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: white;
+      margin: 0 0 8px 0;
+      text-align: center;
+    }
+
+    .confirmation-message {
+      font-size: 14px;
+      color: #d1d5db;
+      margin: 0 0 20px 0;
+      text-align: center;
+      line-height: 1.5;
+    }
+
+    .confirmation-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+    }
   `;
 
   @property({ type: Boolean }) open = false;
@@ -233,6 +285,8 @@ export class ZingModal extends LitElement {
   @property({ type: Boolean }) captureScreenshot = false;
   @property({ type: String }) screenshotPreview = '';  // Base64 preview image
   @property({ type: Boolean }) screenshotLoading = false;
+
+  @state() private showConfirmation = false;
 
   @query('textarea') private textarea!: HTMLTextAreaElement;
 
@@ -256,6 +310,8 @@ export class ZingModal extends LitElement {
 
   updated(changedProperties: Map<string, unknown>) {
     if (changedProperties.has('open') && this.open) {
+      // Reset confirmation state when modal opens
+      this.showConfirmation = false;
       // Note: Parent component now controls captureScreenshot and notes state
       // via property bindings, so no need to reset them here
       requestAnimationFrame(() => {
@@ -342,6 +398,28 @@ export class ZingModal extends LitElement {
               ${this.editMode ? 'Update' : 'Save'}
             </button>
           </div>
+
+          ${this.showConfirmation ? html`
+            <div class="confirmation-overlay" @click=${(e: Event) => e.stopPropagation()}>
+              <div class="confirmation-dialog">
+                <svg class="confirmation-icon" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2L1 21h22L12 2zm0 3.83L19.53 19H4.47L12 5.83zM11 16h2v2h-2v-2zm0-6h2v4h-2v-4z"/>
+                </svg>
+                <h3 class="confirmation-title">Empty Annotation?</h3>
+                <p class="confirmation-message">
+                  You haven't added any notes. The AI agent won't have instructions on what to change. Are you sure you want to continue?
+                </p>
+                <div class="confirmation-actions">
+                  <button class="btn-cancel" @click=${this.handleConfirmCancel}>
+                    Cancel
+                  </button>
+                  <button class="btn-save" @click=${this.handleConfirmProceed}>
+                    Continue Anyway
+                  </button>
+                </div>
+              </div>
+            </div>
+          ` : ''}
         </div>
       </div>
     `;
@@ -373,6 +451,30 @@ export class ZingModal extends LitElement {
   }
 
   private handleSave() {
+    // Check if notes is empty and not already showing confirmation
+    if (!this.notes.trim() && !this.showConfirmation) {
+      this.showConfirmation = true;
+      return;
+    }
+
+    // Proceed with save
+    this.proceedWithSave();
+  }
+
+  private handleConfirmCancel() {
+    this.showConfirmation = false;
+    // Refocus textarea
+    requestAnimationFrame(() => {
+      this.textarea?.focus();
+    });
+  }
+
+  private handleConfirmProceed() {
+    this.showConfirmation = false;
+    this.proceedWithSave();
+  }
+
+  private proceedWithSave() {
     this.dispatchEvent(new CustomEvent('save', {
       bubbles: true,
       composed: true,

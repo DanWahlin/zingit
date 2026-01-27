@@ -87,7 +87,7 @@ function validateBatchData(data: BatchData): ValidationResult {
   };
 }
 
-const PORT = parseInt(process.env.PORT || '8765', 10);
+const PORT = parseInt(process.env.PORT || '3000', 10);
 
 // Legacy support: still allow AGENT env var for backwards compatibility
 const DEFAULT_AGENT = process.env.AGENT || null;
