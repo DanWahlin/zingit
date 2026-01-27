@@ -127,6 +127,10 @@ a:hover {
   font-size: 16px;
 }
 
+#setup {
+  padding-top: 0;
+}
+
 /* Form Elements - Shared */
 .form-group {
   margin-bottom: 16px;
