@@ -371,7 +371,26 @@ async function main(): Promise<void> {
 
           case 'message':
             if (state.session && msg.content) {
-              await state.session.send({ prompt: msg.content });
+              try {
+                console.log(`[ZingIt] Sending follow-up message: "${msg.content.substring(0, 50)}..."`);
+                sendMessage(ws, { type: 'processing' });
+
+                // Add timeout to detect if SDK hangs
+                const timeoutMs = 120000; // 2 minutes
+                const sendPromise = state.session.send({ prompt: msg.content });
+                const timeoutPromise = new Promise((_, reject) =>
+                  setTimeout(() => reject(new Error('Agent response timeout')), timeoutMs)
+                );
+
+                await Promise.race([sendPromise, timeoutPromise]);
+                console.log('[ZingIt] Follow-up message sent to agent');
+              } catch (err) {
+                console.error('[ZingIt] Error sending follow-up message:', (err as Error).message);
+                sendMessage(ws, { type: 'error', message: `Failed to send message: ${(err as Error).message}` });
+              }
+            } else if (!state.session) {
+              console.warn('[ZingIt] No active session for follow-up message');
+              sendMessage(ws, { type: 'error', message: 'No active session. Please create annotations first.' });
             }
             break;
 
