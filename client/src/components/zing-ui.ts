@@ -796,6 +796,47 @@ export class ZingUI extends LitElement {
     this.modalScreenshotLoading = false;
   }
 
+  /**
+   * Compress screenshot to stay under server size limit (5MB)
+   * Tries JPEG with progressively lower quality, then resizes if needed
+   */
+  private compressScreenshot(canvas: HTMLCanvasElement): string {
+    const MAX_SIZE = 4800000; // Target 4.8MB to stay safely under 5MB server limit
+
+    // Try JPEG with different quality levels (start with full quality, then compress if needed)
+    const qualityLevels = [1.0, 0.9, 0.8, 0.6, 0.4];
+
+    for (const quality of qualityLevels) {
+      const dataUrl = canvas.toDataURL('image/jpeg', quality);
+      // Remove data:image/jpeg;base64, prefix to get actual base64 length
+      const base64Length = dataUrl.split(',')[1]?.length || 0;
+
+      if (base64Length <= MAX_SIZE) {
+        console.log(`ZingIt: Screenshot compressed to ${Math.round(base64Length / 1000)}KB (quality: ${quality})`);
+        return dataUrl;
+      }
+    }
+
+    // Still too large, resize canvas and try again
+    console.warn('ZingIt: Screenshot still too large, resizing...');
+    const scale = 0.7;
+    const resizedCanvas = document.createElement('canvas');
+    resizedCanvas.width = canvas.width * scale;
+    resizedCanvas.height = canvas.height * scale;
+    const ctx = resizedCanvas.getContext('2d');
+
+    if (ctx) {
+      ctx.drawImage(canvas, 0, 0, resizedCanvas.width, resizedCanvas.height);
+      const dataUrl = resizedCanvas.toDataURL('image/jpeg', 0.6);
+      const base64Length = dataUrl.split(',')[1]?.length || 0;
+      console.log(`ZingIt: Screenshot resized and compressed to ${Math.round(base64Length / 1000)}KB`);
+      return dataUrl;
+    }
+
+    // Fallback to low quality if resize fails
+    return canvas.toDataURL('image/jpeg', 0.3);
+  }
+
   private async handleScreenshotToggle(e: CustomEvent<{ enabled: boolean }>) {
     // Sync parent state with checkbox
     this.modalCaptureScreenshot = e.detail.enabled;
@@ -811,7 +852,8 @@ export class ZingUI extends LitElement {
           backgroundColor: null,
           scale: 1
         });
-        this.modalScreenshotPreview = canvas.toDataURL('image/png');
+        // Compress screenshot to stay under server size limit
+        this.modalScreenshotPreview = this.compressScreenshot(canvas);
       } catch (err) {
         console.warn('ZingIt: Failed to capture screenshot preview', err);
         this.modalScreenshotPreview = '';

@@ -16,7 +16,7 @@ const MAX_ANNOTATIONS = 50;
 const MAX_HTML_LENGTH = 50000;
 const MAX_NOTES_LENGTH = 5000;
 const MAX_SELECTOR_LENGTH = 1000;
-const MAX_SCREENSHOT_SIZE = 500000; // ~500KB base64
+const MAX_SCREENSHOT_SIZE = 5000000; // ~5MB base64 (matches Claude API limit)
 
 interface ValidationResult {
   valid: boolean;

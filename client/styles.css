@@ -89,15 +89,32 @@ a:hover {
   color: white;
 }
 
-.hero h1 {
-  font-size: 48px;
+.hero-problem {
+  font-size: 56px;
   font-weight: 700;
-  margin-bottom: 16px;
   line-height: 1.2;
+  max-width: 900px;
+  margin: 0 auto 32px;
+  color: white;
+}
+
+.hero h1 {
+  font-size: 36px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  line-height: 1.3;
 }
 
 .hero h1 .highlight {
   color: var(--color-accent);
+}
+
+.hero-description {
+  font-size: 18px;
+  line-height: 1.6;
+  max-width: 600px;
+  margin: 0 auto;
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .hero p {
@@ -1809,8 +1826,16 @@ a:hover {
 }
 
 @media (max-width: 768px) {
-  .hero h1 {
+  .hero-problem {
     font-size: 32px;
+  }
+
+  .hero h1 {
+    font-size: 24px;
+  }
+
+  .hero-description {
+    font-size: 16px;
   }
 
   .hero p {
