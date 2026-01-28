@@ -113,6 +113,7 @@ export class ZingUI extends LitElement {
   @state() private responseToolStatus = '';
   @state() private responseError = '';
   @state() private responseScreenshotCount = 0;
+  private isFollowUpMessage = false; // Track if current processing is a follow-up
 
   // Undo stack for annotations
   private undoStack: Annotation[] = [];
@@ -293,7 +294,10 @@ export class ZingUI extends LitElement {
       case 'processing':
         this.processing = true;
         this.responseOpen = true;
-        this.responseContent = '';
+        // Only clear content for new conversations, not follow-ups
+        if (!this.isFollowUpMessage) {
+          this.responseContent = '';
+        }
         this.responseError = '';
         this.startProcessingTimeout(); // Start timeout to detect hangs
         break;
@@ -319,6 +323,7 @@ export class ZingUI extends LitElement {
         this.clearProcessingTimeout(); // Clear timeout - processing completed successfully
         this.processing = false;
         this.responseToolStatus = '';
+        this.isFollowUpMessage = false; // Reset follow-up flag
         this.updateAnnotationStatuses('processing', 'completed');
         if (this.settings.playSoundOnComplete) {
           this.playCompletionSound();
@@ -341,6 +346,7 @@ export class ZingUI extends LitElement {
         this.responseError = msg.message || 'Unknown error';
         this.processing = false;
         this.responseToolStatus = '';
+        this.isFollowUpMessage = false; // Reset follow-up flag
         this.undoInProgress = false;  // Reset undo state on error
         this.pendingAnnotationRemovals.clear();  // Clear pending removals
         this.updateAnnotationStatuses('processing', 'pending');
@@ -1039,6 +1045,7 @@ export class ZingUI extends LitElement {
   private handleSend() {
     // Open the agent response panel
     this.responseOpen = true;
+    this.isFollowUpMessage = false; // This is a new conversation, not a follow-up
 
     if (!this.ws || !this.wsConnected || this.annotations.length === 0) return;
 
@@ -1259,6 +1266,9 @@ export class ZingUI extends LitElement {
   private handleFollowUp(e: CustomEvent<{ message: string }>) {
     if (!this.ws || !this.wsConnected) return;
 
+    // Mark as follow-up to preserve conversation history
+    this.isFollowUpMessage = true;
+
     // Show processing state and prepare for response
     this.processing = true;
     this.responseContent += `\n\n---\n**You:** ${e.detail.message}\n\n`;
@@ -1331,6 +1341,7 @@ export class ZingUI extends LitElement {
       // Reset processing state
       this.processing = false;
       this.responseToolStatus = '';
+      this.isFollowUpMessage = false; // Reset follow-up flag
 
       // Show helpful error message
       this.responseError = 'The AI agent took too long to respond. This can happen occasionally. Please try submitting your annotations again.';
