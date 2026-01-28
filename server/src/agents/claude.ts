@@ -91,7 +91,12 @@ export class ClaudeCodeAgent extends BaseAgent {
     const send = (data: WSOutgoingMessage): void => {
       const ws = wsRef.current;
       if (ws && ws.readyState === ws.OPEN) {
+        if (data.type === 'delta') {
+          console.log('[Claude Agent] Sending delta, content length:', (data.content || '').length);
+        }
         ws.send(JSON.stringify(data));
+      } else {
+        console.warn('[Claude Agent] Cannot send message, WebSocket not open. Type:', data.type, 'ReadyState:', ws?.readyState);
       }
     };
 
