@@ -85,7 +85,7 @@ a:hover {
 .hero {
   text-align: center;
   padding: 60px 24px 50px;
-  background: linear-gradient(135deg, #064e3b 0%, #047857 35%, #059669 65%, #10b981 100%);
+  background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 35%, #3b82f6 65%, #60a5fa 100%);
   color: #fff;
 }
 
@@ -336,18 +336,18 @@ a:hover {
 }
 
 .feature-card:nth-child(1) .feature-icon {
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(99, 102, 241, 0.1) 100%);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(99, 102, 241, 0.05) 100%);
   color: #3b82f6;
 }
 
 .feature-card:nth-child(2) .feature-icon {
-  background: linear-gradient(135deg, rgba(5, 150, 105, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%);
-  color: #059669;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(99, 102, 241, 0.05) 100%);
+  color: #3b82f6;
 }
 
 .feature-card:nth-child(3) .feature-icon {
-  background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(249, 115, 22, 0.1) 100%);
-  color: #f59e0b;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(99, 102, 241, 0.05) 100%);
+  color: #3b82f6;
 }
 
 .feature-card:hover .feature-icon {
@@ -360,11 +360,11 @@ a:hover {
 }
 
 .feature-card:nth-child(2):hover .feature-icon {
-  box-shadow: 0 8px 20px rgba(5, 150, 105, 0.3);
+  box-shadow: 0 8px 20px rgba(245, 158, 11, 0.3);
 }
 
 .feature-card:nth-child(3):hover .feature-icon {
-  box-shadow: 0 8px 20px rgba(245, 158, 11, 0.3);
+  box-shadow: 0 8px 20px rgba(5, 150, 105, 0.3);
 }
 
 .feature-card h3 {
