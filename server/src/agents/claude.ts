@@ -91,12 +91,7 @@ export class ClaudeCodeAgent extends BaseAgent {
     const send = (data: WSOutgoingMessage): void => {
       const ws = wsRef.current;
       if (ws && ws.readyState === ws.OPEN) {
-        if (data.type === 'delta') {
-          console.log('[Claude Agent] Sending delta, content length:', (data.content || '').length);
-        }
         ws.send(JSON.stringify(data));
-      } else {
-        console.warn('[Claude Agent] Cannot send message, WebSocket not open. Type:', data.type, 'ReadyState:', ws?.readyState);
       }
     };
 
@@ -151,10 +146,6 @@ Use screenshots to verify you're targeting the right element, but don't over-exp
 
           // Process streaming response
           for await (const message of response) {
-            // Log ALL message types for debugging
-            console.log('[Claude Agent] Message received:', message.type,
-              message.type === 'stream_event' ? `event: ${message.event?.type}` : '');
-
             switch (message.type) {
               case 'system':
                 // Capture session ID from init message for follow-up conversations
@@ -165,21 +156,17 @@ Use screenshots to verify you're targeting the right element, but don't over-exp
                 break;
 
               case 'assistant':
-                // Extract text content from assistant messages
-                // Content is nested in message.content, not directly in content
+                // Extract text content from assistant messages (content is nested in message.content)
                 if ('message' in message && message.message && 'content' in message.message) {
                   const content = message.message.content;
                   if (Array.isArray(content)) {
                     for (const block of content) {
                       if (block.type === 'text' && block.text) {
-                        // Use content hash to avoid sending duplicates (SDK may replay conversation history)
+                        // Deduplicate content (SDK may replay conversation history)
                         const contentHash = `${block.text.substring(0, 100)}_${block.text.length}`;
                         if (!sentContent.has(contentHash)) {
                           sentContent.add(contentHash);
-                          console.log('[Claude Agent] Sending assistant text, length:', block.text.length);
                           send({ type: 'delta', content: block.text });
-                        } else {
-                          console.log('[Claude Agent] Skipping duplicate assistant text');
                         }
                       }
                     }

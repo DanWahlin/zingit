@@ -196,9 +196,7 @@ export class ZingUI extends LitElement {
 
     // Restore response dialog state if it was saved before auto-refresh
     const savedResponseState = loadResponseState();
-    console.log('[ZingIt Client] Loading saved response state:', savedResponseState);
     if (savedResponseState && savedResponseState.content) {
-      console.log('[ZingIt Client] Restoring response content, length:', savedResponseState.content.length);
       this.responseOpen = true;  // Always show dialog if we have saved content
       this.responseContent = savedResponseState.content;
       this.responseError = savedResponseState.error;
@@ -207,8 +205,6 @@ export class ZingUI extends LitElement {
       clearResponseState();
       // Force re-render to ensure dialog appears
       this.requestUpdate();
-    } else {
-      console.log('[ZingIt Client] No saved response state to restore');
     }
 
     // Set up WebSocket
@@ -308,12 +304,10 @@ export class ZingUI extends LitElement {
         break;
 
       case 'delta':
-        console.log('[ZingIt Client] Delta received, length:', (msg.content || '').length, 'total content now:', this.responseContent.length);
         this.responseContent += msg.content || '';
         // Continuously save response state if autoRefresh is enabled
         // This ensures state persists even if Vite HMR triggers before our explicit reload
         if (this.settings.autoRefresh && this.responseContent) {
-          console.log('[ZingIt Client] Saving response state, content length:', this.responseContent.length);
           this.saveCurrentResponseState();
         }
         break;
@@ -327,7 +321,6 @@ export class ZingUI extends LitElement {
         break;
 
       case 'idle':
-        console.log('[ZingIt Client] Idle received, responseContent length:', this.responseContent.length);
         this.clearProcessingTimeout(); // Clear timeout - processing completed successfully
         this.processing = false;
         this.responseToolStatus = '';
@@ -343,7 +336,6 @@ export class ZingUI extends LitElement {
           }
         }, 500);
         if (this.settings.autoRefresh) {
-          console.log('[ZingIt Client] AutoRefresh enabled, saving state before reload. Content length:', this.responseContent.length);
           this.saveCurrentResponseState();
           this.toast.info('Refreshing page...');
           setTimeout(() => window.location.reload(), 1000);
