@@ -78,6 +78,24 @@ export class ZingToolbar extends LitElement {
       font-size: 12px;
       color: #d1d5db;
       min-width: 80px;
+      cursor: pointer;
+      padding: 4px 8px;
+      margin: -4px -8px;
+      border-radius: 4px;
+      transition: background 0.15s ease;
+    }
+
+    .count:hover {
+      background: #374151;
+    }
+
+    .count.disabled {
+      cursor: default;
+      opacity: 0.5;
+    }
+
+    .count.disabled:hover {
+      background: transparent;
     }
 
     button {
@@ -248,7 +266,11 @@ export class ZingToolbar extends LitElement {
 
         <div class="divider"></div>
 
-        <div class="count">
+        <div
+          class="count ${this.annotationCount === 0 ? 'disabled' : ''}"
+          title="${this.annotationCount > 0 ? 'Click to highlight annotations' : ''}"
+          @click=${this.handleCountClick}
+        >
           ${this.annotationCount} annotation${this.annotationCount !== 1 ? 's' : ''}
         </div>
 
@@ -401,6 +423,12 @@ export class ZingToolbar extends LitElement {
 
   private handleHistory() {
     this.dispatchEvent(new CustomEvent('toggle-history', { bubbles: true, composed: true }));
+  }
+
+  private handleCountClick() {
+    if (this.annotationCount > 0) {
+      this.dispatchEvent(new CustomEvent('highlight-annotations', { bubbles: true, composed: true }));
+    }
   }
 
   private handleAgentClick() {

@@ -8,7 +8,7 @@ import type { Annotation, ZingSettings, WSMessage, AgentInfo } from '../types/in
 import { WebSocketClient } from '../services/websocket.js';
 import { generateSelector, generateIdentifier, getElementHtml, getParentContext, getTextContent, getSiblingContext, getParentHtml, querySelector } from '../services/selector.js';
 import { saveAnnotations, loadAnnotations, clearAnnotations, saveSettings, loadSettings, saveAnnotationActive, loadAnnotationActive, saveToolbarPosition, loadToolbarPosition, clearToolbarPosition, saveResponseState, loadResponseState, clearResponseState, type ToolbarPosition } from '../services/storage.js';
-import { getElementViewportRect } from '../utils/geometry.js';
+import { getElementViewportRect, clipToViewport } from '../utils/geometry.js';
 import { formatAnnotationsMarkdown, copyToClipboard } from '../utils/markdown.js';
 
 import './toolbar.js';
@@ -24,6 +24,7 @@ import './history-panel.js';
 import './undo-bar.js';
 import type { ZingToast } from './toast.js';
 import type { ZingHistoryPanel } from './history-panel.js';
+import type { ZingMarkers } from './markers.js';
 import type { CheckpointInfo } from '../types/index.js';
 
 @customElement('zing-ui')
@@ -79,6 +80,7 @@ export class ZingUI extends LitElement {
 
   @query('zing-toast') private toast!: ZingToast;
   @query('zing-history-panel') private historyPanel!: ZingHistoryPanel;
+  @query('zing-markers') private markers!: ZingMarkers;
 
   // Highlight state
   @state() private highlightVisible = false;
@@ -521,8 +523,9 @@ export class ZingUI extends LitElement {
 
     // Show highlight
     // Use viewport coordinates since zing-ui is position: fixed
+    // Clip to viewport for large elements (like body)
     const rect = getElementViewportRect(target);
-    this.highlightRect = rect;
+    this.highlightRect = clipToViewport(rect);
     this.highlightLabel = generateIdentifier(target);
     this.highlightVisible = true;
   }
@@ -646,9 +649,9 @@ export class ZingUI extends LitElement {
         continue;
       }
 
-      // Stop at body/html - if we've reached here, nothing valid was found
+      // Stop at html - if we've reached here, nothing valid was found
       const tagName = node.tagName.toLowerCase();
-      if (tagName === 'body' || tagName === 'html') {
+      if (tagName === 'html') {
         break;
       }
 
@@ -661,9 +664,9 @@ export class ZingUI extends LitElement {
     // (e.g., when event target is document itself)
     const elements = document.elementsFromPoint(e.clientX, e.clientY);
     for (const el of elements) {
-      // Skip body/html in fallback too
+      // Skip html in fallback too
       const tagName = el.tagName.toLowerCase();
-      if (tagName === 'body' || tagName === 'html') {
+      if (tagName === 'html') {
         continue;
       }
 
@@ -724,6 +727,7 @@ export class ZingUI extends LitElement {
           @toggle-response=${() => this.responseOpen = !this.responseOpen}
           @toggle-history=${this.handleToggleHistory}
           @change-agent=${() => this.agentPickerOpen = true}
+          @highlight-annotations=${this.handleHighlightAnnotations}
           @drag-start=${this.handleToolbarDragStart}
           @drag-reset=${this.handleToolbarDragReset}
         ></zing-toolbar>
@@ -1223,6 +1227,12 @@ export class ZingUI extends LitElement {
     this.processing = false;
 
     this.toast.info('Annotations cleared');
+  }
+
+  private handleHighlightAnnotations() {
+    if (this.markers) {
+      this.markers.highlightMarkers();
+    }
   }
 
   private handleClose() {

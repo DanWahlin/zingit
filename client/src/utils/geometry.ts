@@ -88,6 +88,48 @@ export function getMarkerPosition(elementRect: Rect, viewport?: { width: number;
   return { top, left };
 }
 
+/**
+ * Clip a rect to viewport boundaries (for highlighting large elements like body)
+ * Only clips edges that extend beyond the viewport, preserving the element's actual size otherwise
+ */
+export function clipToViewport(rect: Rect): Rect {
+  // Add inset to ensure borders are visible
+  // Use larger inset for bottom/right to account for browser chrome and scrollbars
+  const topInset = 4;
+  const leftInset = 4;
+  const bottomInset = 8;   // Small inset to keep bottom border visible but close to edge
+  const rightInset = 20;   // Larger inset for scrollbar
+
+  const viewport = {
+    top: topInset,
+    left: leftInset,
+    bottom: window.innerHeight - bottomInset,
+    right: window.innerWidth - rightInset
+  };
+
+  // Clip edges that extend beyond viewport OR come very close to edges
+  // Force clipping if element is within 30px of viewport edge to ensure borders stay visible
+  const forceClipThreshold = 30;
+
+  const top = rect.top < viewport.top ? viewport.top : rect.top;
+  const left = rect.left < viewport.left ? viewport.left : rect.left;
+
+  // Force clip bottom if element extends close to or beyond viewport bottom
+  const bottom = rect.bottom > viewport.bottom - forceClipThreshold ? viewport.bottom : rect.bottom;
+
+  // Force clip right if element extends close to or beyond viewport right
+  const right = rect.right > viewport.right - forceClipThreshold ? viewport.right : rect.right;
+
+  return {
+    top,
+    left,
+    width: Math.max(0, right - left),
+    height: Math.max(0, bottom - top),
+    bottom,
+    right
+  };
+}
+
 export function getHighlightStyles(rect: Rect): Record<string, string> {
   return {
     top: `${rect.top}px`,

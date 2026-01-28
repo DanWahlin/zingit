@@ -16,26 +16,43 @@ export class ZingHighlight extends LitElement {
 
     .highlight {
       position: absolute;
-      border: 2px dashed var(--highlight-color, #fbbf24);
-      background: rgba(251, 191, 36, 0.1);
+      border: 3px dashed var(--highlight-color, #fbbf24);
+      background: rgba(251, 191, 36, 0.15);
       border-radius: 4px;
       transition: all 0.1s ease;
+      box-shadow: inset 0 0 0 1px rgba(251, 191, 36, 0.3);
     }
 
     .label {
       position: absolute;
-      top: -24px;
       padding: 2px 8px;
       background: var(--highlight-color, #fbbf24);
       color: #1f2937;
       font-size: 11px;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       font-weight: 500;
-      border-radius: 4px 4px 0 0;
       white-space: nowrap;
       max-width: 200px;
       overflow: hidden;
       text-overflow: ellipsis;
+    }
+
+    /* Default: label above element */
+    .label.position-top {
+      top: -24px;
+      border-radius: 4px 4px 0 0;
+    }
+
+    /* When element fills viewport: label inside at top */
+    .label.position-top.fills-viewport {
+      top: 4px;
+      border-radius: 4px;
+    }
+
+    /* When near top edge: label below element */
+    .label.position-bottom {
+      bottom: -24px;
+      border-radius: 0 0 4px 4px;
     }
 
     /* Default: label on the left */
@@ -57,6 +74,31 @@ export class ZingHighlight extends LitElement {
   @property({ type: Number }) height = 0;
   @property({ type: String }) label = '';
   @property({ type: Boolean }) visible = false;
+
+  /**
+   * Check if element fills most of the viewport (used for label positioning)
+   */
+  private get fillsViewport(): boolean {
+    return this.height > window.innerHeight - 100;
+  }
+
+  /**
+   * Determine if the label should be positioned above or below the element.
+   * If near the top of the viewport, position below to keep it visible.
+   * But if element fills most of viewport, keep label at top (inside the box).
+   */
+  private get labelVerticalPosition(): 'position-top' | 'position-bottom' {
+    // If element fills most of the viewport, always position at top (will be inside box)
+    if (this.fillsViewport) {
+      return 'position-top';
+    }
+
+    // If the highlight top is within 30px of the viewport top, position label below
+    if (this.top < 30) {
+      return 'position-bottom';
+    }
+    return 'position-top';
+  }
 
   /**
    * Determine if the label should be right-aligned to prevent overflow.
@@ -87,12 +129,18 @@ export class ZingHighlight extends LitElement {
       return html``;
     }
 
+    const labelClasses = [
+      this.labelVerticalPosition,
+      this.labelAlignment,
+      this.fillsViewport ? 'fills-viewport' : ''
+    ].filter(c => c).join(' ');
+
     return html`
       <div
         class="highlight"
         style="top: ${this.top}px; left: ${this.left}px; width: ${this.width}px; height: ${this.height}px;"
       >
-        ${this.label ? html`<span class="label ${this.labelAlignment}">${this.label}</span>` : ''}
+        ${this.label ? html`<span class="label ${labelClasses}">${this.label}</span>` : ''}
       </div>
     `;
   }

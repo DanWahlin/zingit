@@ -77,6 +77,25 @@ export class ZingMarkers extends LitElement {
       }
     }
 
+    .marker.highlight {
+      animation: highlight 2s ease-in-out;
+    }
+
+    @keyframes highlight {
+      0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      }
+      25%, 75% {
+        transform: scale(1.3);
+        box-shadow: 0 0 16px #3b82f6, 0 0 8px #3b82f6;
+      }
+      50% {
+        transform: scale(1.15);
+        box-shadow: 0 0 12px #3b82f6;
+      }
+    }
+
     .marker.completed {
       background: var(--completed-color, #22c55e);
     }
@@ -112,9 +131,11 @@ export class ZingMarkers extends LitElement {
 
   @property({ type: Array }) annotations: Annotation[] = [];
   @state() private positions: MarkerPosition[] = [];
+  @state() private highlighting = false;
 
   private scrollHandler: () => void;
   private resizeHandler: () => void;
+  private highlightTimeout?: number;
 
   constructor() {
     super();
@@ -180,7 +201,7 @@ export class ZingMarkers extends LitElement {
         .filter(pos => pos.visible)
         .map(pos => html`
           <div
-            class="marker ${pos.status}"
+            class="marker ${pos.status} ${this.highlighting ? 'highlight' : ''}"
             style="top: ${pos.top}px; left: ${pos.left}px;"
             @click=${() => this.handleMarkerClick(pos.id)}
           >
@@ -210,6 +231,24 @@ export class ZingMarkers extends LitElement {
       bubbles: true,
       composed: true
     }));
+  }
+
+  /**
+   * Trigger highlight animation on all markers
+   */
+  public highlightMarkers() {
+    // Clear any existing timeout
+    if (this.highlightTimeout) {
+      window.clearTimeout(this.highlightTimeout);
+    }
+
+    // Activate highlighting
+    this.highlighting = true;
+
+    // Deactivate after 2 seconds (animation duration)
+    this.highlightTimeout = window.setTimeout(() => {
+      this.highlighting = false;
+    }, 2000);
   }
 }
 
