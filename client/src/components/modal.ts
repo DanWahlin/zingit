@@ -288,6 +288,7 @@ export class ZingModal extends LitElement {
 
   @state() private showConfirmation = false;
   @state() private localNotes = '';  // Internal state for textarea
+  @state() private isSelecting = false;  // Track if user is actively selecting text
 
   @query('textarea') private textarea!: HTMLTextAreaElement;
 
@@ -299,14 +300,24 @@ export class ZingModal extends LitElement {
     }
   };
 
+  private handleGlobalMouseUp = () => {
+    // Reset selection flag when mouse is released anywhere
+    // This ensures the flag is cleared even if mouseup happens outside the textarea
+    setTimeout(() => {
+      this.isSelecting = false;
+    }, 50);
+  };
+
   connectedCallback() {
     super.connectedCallback();
     document.addEventListener('keydown', this.handleKeydown);
+    document.addEventListener('mouseup', this.handleGlobalMouseUp);
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
     document.removeEventListener('keydown', this.handleKeydown);
+    document.removeEventListener('mouseup', this.handleGlobalMouseUp);
   }
 
   updated(changedProperties: Map<string, unknown>) {
@@ -358,6 +369,8 @@ export class ZingModal extends LitElement {
                 id="notes"
                 .value=${this.localNotes}
                 @input=${this.handleNotesInput}
+                @mousedown=${this.handleTextareaMouseDown}
+                @mouseup=${this.handleTextareaMouseUp}
                 placeholder="Describe the issue or change you want to make..."
               ></textarea>
             </div>
@@ -427,12 +440,35 @@ export class ZingModal extends LitElement {
   }
 
   private handleOverlayClick() {
+    // Don't close if user is actively selecting text (prevents accidental close during text selection)
+    if (this.isSelecting) {
+      return;
+    }
+
+    // Don't close if there's an active text selection (user may have finished selecting)
+    const selection = window.getSelection();
+    if (selection && selection.toString().length > 0) {
+      return;
+    }
+
     this.handleCancel();
   }
 
   private handleNotesInput(e: Event) {
     const textarea = e.target as HTMLTextAreaElement;
     this.localNotes = textarea.value;
+  }
+
+  private handleTextareaMouseDown() {
+    // User started a potential text selection
+    this.isSelecting = true;
+  }
+
+  private handleTextareaMouseUp() {
+    // User finished the mouse action - delay reset to allow overlay click to check the flag
+    setTimeout(() => {
+      this.isSelecting = false;
+    }, 50);
   }
 
   private handleScreenshotChange(e: Event) {
