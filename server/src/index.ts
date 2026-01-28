@@ -124,6 +124,7 @@ async function main(): Promise<void> {
     gitManager,
     currentCheckpointId: null,
     sessionId: null,  // Preserved across reconnections for conversation continuity
+    wsRef: null,  // Will be created when first session is established
   };
 
   // Track cleanup timer to prevent race conditions
@@ -139,6 +140,12 @@ async function main(): Promise<void> {
       clearTimeout(sessionCleanupTimer);
       sessionCleanupTimer = null;
       console.log('Cancelled session cleanup - client reconnected');
+    }
+
+    // Update WebSocket reference if session exists (reconnection case)
+    if (state.wsRef) {
+      state.wsRef.current = ws;
+      console.log('Updated WebSocket reference for existing session');
     }
 
     // Heartbeat mechanism to detect dead connections
@@ -228,23 +235,30 @@ async function main(): Promise<void> {
       // Clean up heartbeat interval
       clearInterval(heartbeatInterval);
 
-      // Destroy session immediately on disconnect since it holds a stale WebSocket reference
-      // When client reconnects, a new session will be created with the new WebSocket
+      // Don't immediately destroy the session - it may still be processing
+      // Instead, schedule cleanup after a delay to allow for reconnection
+      // If client reconnects, the wsRef will be updated with the new WebSocket
       if (state.session) {
-        try {
-          await state.session.destroy();
-          console.log('Session destroyed due to client disconnect');
-        } catch (err) {
-          console.error('Error destroying session during disconnect:', (err as Error).message);
-        } finally {
-          state.session = null;
+        console.log('Scheduling session cleanup (allowing time for reconnection)');
+        // Clear any existing cleanup timer
+        if (sessionCleanupTimer) {
+          clearTimeout(sessionCleanupTimer);
         }
-      }
-
-      // Clear any existing cleanup timer
-      if (sessionCleanupTimer) {
-        clearTimeout(sessionCleanupTimer);
-        sessionCleanupTimer = null;
+        // Destroy session after 5 seconds if client doesn't reconnect
+        sessionCleanupTimer = setTimeout(async () => {
+          if (state.session) {
+            try {
+              await state.session.destroy();
+              console.log('Session destroyed after reconnection timeout');
+            } catch (err) {
+              console.error('Error destroying session during cleanup:', (err as Error).message);
+            } finally {
+              state.session = null;
+              state.wsRef = null;
+            }
+          }
+          sessionCleanupTimer = null;
+        }, 5000);
       }
     });
 

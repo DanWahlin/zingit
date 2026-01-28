@@ -1,7 +1,7 @@
 // server/src/agents/base.ts
 
 import type { WebSocket } from 'ws';
-import type { Agent, AgentSession, BatchData, ImageContent } from '../types.js';
+import type { Agent, AgentSession, BatchData, ImageContent, WebSocketRef } from '../types.js';
 
 // Maximum image size: 10MB (base64 encoded)
 const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
@@ -12,7 +12,7 @@ export abstract class BaseAgent implements Agent {
 
   abstract start(): Promise<void>;
   abstract stop(): Promise<void>;
-  abstract createSession(ws: WebSocket, projectDir: string): Promise<AgentSession>;
+  abstract createSession(wsRef: WebSocketRef, projectDir: string, resumeSessionId?: string): Promise<AgentSession>;
 
   /**
    * Format a prompt with image metadata for agents that don't support native multimodal.

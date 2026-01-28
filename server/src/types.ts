@@ -3,12 +3,19 @@
 import type { WebSocket } from 'ws';
 import type { CheckpointInfo } from './services/git-manager.js';
 
+/**
+ * Mutable WebSocket reference holder to support reconnection during agent processing
+ */
+export class WebSocketRef {
+  constructor(public current: WebSocket) {}
+}
+
 export interface Agent {
   name: string;
   model: string;
   start(): Promise<void>;
   stop(): Promise<void>;
-  createSession(ws: WebSocket, projectDir: string, resumeSessionId?: string): Promise<AgentSession>;
+  createSession(wsRef: WebSocketRef, projectDir: string, resumeSessionId?: string): Promise<AgentSession>;
   formatPrompt(data: BatchData, projectDir: string): string;
   extractImages(data: BatchData): ImageContent[];
 }

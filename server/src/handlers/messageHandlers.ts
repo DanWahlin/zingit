@@ -15,6 +15,7 @@ export interface ConnectionState {
   gitManager: GitManager | null;
   currentCheckpointId: string | null;
   sessionId: string | null;  // Preserved across reconnections for conversation continuity
+  wsRef: import('../types.js').WebSocketRef | null;  // Mutable WebSocket reference for reconnection support
 }
 
 export interface MessageHandlerDeps {
@@ -185,8 +186,16 @@ export async function handleBatch(
 
   console.log('[Batch] Creating session if needed...');
   if (!state.session) {
+    // Create or update WebSocket reference for reconnection support
+    if (!state.wsRef) {
+      const { WebSocketRef } = await import('../types.js');
+      state.wsRef = new WebSocketRef(ws);
+    } else {
+      // Update existing reference with new WebSocket (reconnection case)
+      state.wsRef.current = ws;
+    }
     // Pass the preserved sessionId to resume conversation history
-    state.session = await state.agent.createSession(ws, projectDir, state.sessionId || undefined);
+    state.session = await state.agent.createSession(state.wsRef, projectDir, state.sessionId || undefined);
     console.log('[Batch] New session created', state.sessionId ? '(resuming previous conversation)' : '(fresh start)');
 
     // Store the sessionId if the agent provides it
@@ -282,8 +291,16 @@ export async function handleMessage(
       return;
     }
     console.log('[ZingIt] Creating session for direct message', state.sessionId ? '(resuming conversation)' : '(fresh start)');
+    // Create or update WebSocket reference for reconnection support
+    if (!state.wsRef) {
+      const { WebSocketRef } = await import('../types.js');
+      state.wsRef = new WebSocketRef(ws);
+    } else {
+      // Update existing reference with new WebSocket (reconnection case)
+      state.wsRef.current = ws;
+    }
     // Pass the preserved sessionId to resume conversation history
-    state.session = await state.agent.createSession(ws, deps.projectDir, state.sessionId || undefined);
+    state.session = await state.agent.createSession(state.wsRef, deps.projectDir, state.sessionId || undefined);
 
     // Store the sessionId if the agent provides it
     if (state.session.getSessionId) {

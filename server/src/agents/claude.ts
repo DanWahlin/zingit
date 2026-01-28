@@ -87,9 +87,10 @@ export class ClaudeCodeAgent extends BaseAgent {
     };
   }
 
-  async createSession(ws: WebSocket, projectDir: string, resumeSessionId?: string): Promise<AgentSession> {
+  async createSession(wsRef: import('../types.js').WebSocketRef, projectDir: string, resumeSessionId?: string): Promise<AgentSession> {
     const send = (data: WSOutgoingMessage): void => {
-      if (ws.readyState === ws.OPEN) {
+      const ws = wsRef.current;
+      if (ws && ws.readyState === ws.OPEN) {
         ws.send(JSON.stringify(data));
       }
     };

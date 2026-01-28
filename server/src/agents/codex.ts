@@ -32,13 +32,14 @@ export class CodexAgent extends BaseAgent {
     this.codex = null;
   }
 
-  async createSession(ws: WebSocket, projectDir: string, resumeSessionId?: string): Promise<AgentSession> {
+  async createSession(wsRef: import('../types.js').WebSocketRef, projectDir: string, resumeSessionId?: string): Promise<AgentSession> {
     if (!this.codex) {
       throw new Error('Codex client not initialized');
     }
 
     const send = (data: WSOutgoingMessage): void => {
-      if (ws.readyState === ws.OPEN) {
+      const ws = wsRef.current;
+      if (ws && ws.readyState === ws.OPEN) {
         ws.send(JSON.stringify(data));
       }
     };
@@ -164,6 +165,7 @@ IMPORTANT: Format all responses using markdown:
 
               case 'turn.completed':
                 // Turn finished
+                console.log('[Codex Agent] Turn completed, sending idle');
                 send({ type: 'idle' });
                 break;
 
@@ -177,6 +179,7 @@ IMPORTANT: Format all responses using markdown:
                 break;
             }
           }
+          console.log('[Codex Agent] Event stream ended');
         } catch (err) {
           send({ type: 'error', message: (err as Error).message });
         }
