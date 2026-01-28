@@ -178,7 +178,7 @@ IMPORTANT: Format all responses using markdown:
               await fs.unlink(tempPath);
             } catch (cleanupErr) {
               // Ignore errors (file may already be deleted)
-              console.debug(`ZingIt: Failed to clean up temp file ${tempPath}:`, cleanupErr);
+              console.warn(`ZingIt: Failed to clean up temp file ${tempPath}:`, (cleanupErr as Error).message);
             }
           }
           sessionTempFiles.length = 0; // Clear the array

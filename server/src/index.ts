@@ -223,7 +223,7 @@ async function main(): Promise<void> {
       if (!isAlive) {
         console.log('Client failed to respond to ping - terminating connection');
         clearInterval(heartbeatInterval);
-        ws.terminate();
+        ws.terminate(); // This will trigger the 'close' event which handles cleanup
         return;
       }
       isAlive = false;
@@ -271,8 +271,13 @@ async function main(): Promise<void> {
 
             // Destroy existing session if switching agents
             if (state.session && state.agentName !== msg.agent) {
-              await state.session.destroy();
-              state.session = null;
+              try {
+                await state.session.destroy();
+              } catch (err) {
+                console.error('Error destroying session during agent switch:', (err as Error).message);
+              } finally {
+                state.session = null;
+              }
             }
 
             // Initialize the agent
@@ -427,8 +432,13 @@ async function main(): Promise<void> {
 
           case 'reset':
             if (state.session) {
-              await state.session.destroy();
-              state.session = null;
+              try {
+                await state.session.destroy();
+              } catch (err) {
+                console.error('Error destroying session during reset:', (err as Error).message);
+              } finally {
+                state.session = null;
+              }
             }
             sendMessage(ws, { type: 'reset_complete' });
             break;
@@ -437,8 +447,13 @@ async function main(): Promise<void> {
             // Stop current agent execution
             if (state.session) {
               console.log('Stopping agent execution...');
-              await state.session.destroy();
-              state.session = null;
+              try {
+                await state.session.destroy();
+              } catch (err) {
+                console.error('Error destroying session during stop:', (err as Error).message);
+              } finally {
+                state.session = null;
+              }
             }
             sendMessage(ws, { type: 'idle' });
             break;
@@ -561,9 +576,14 @@ async function main(): Promise<void> {
         sessionCleanupTimer = setTimeout(async () => {
           if (state.session && connections.size === 0) {
             console.log('Cleaning up stale session after 5 minutes of inactivity');
-            await state.session.destroy();
-            state.session = null;
-            sessionCleanupTimer = null;
+            try {
+              await state.session.destroy();
+            } catch (err) {
+              console.error('Error destroying session during cleanup:', (err as Error).message);
+            } finally {
+              state.session = null;
+              sessionCleanupTimer = null;
+            }
           }
         }, 300000); // 5 minutes
       }
@@ -588,10 +608,18 @@ async function main(): Promise<void> {
   process.on('SIGINT', async () => {
     console.log('\nShutting down...');
     if (globalState.session) {
-      await globalState.session.destroy();
+      try {
+        await globalState.session.destroy();
+      } catch (err) {
+        console.error('Error destroying session during shutdown:', (err as Error).message);
+      }
     }
     for (const agent of initializedAgents.values()) {
-      await agent.stop();
+      try {
+        await agent.stop();
+      } catch (err) {
+        console.error('Error stopping agent during shutdown:', (err as Error).message);
+      }
     }
     wss.close();
     process.exit(0);
