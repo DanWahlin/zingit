@@ -104,6 +104,9 @@ export class ClaudeCodeAgent extends BaseAgent {
     // Start with provided sessionId if resuming previous conversation
     let sessionId: string | undefined = resumeSessionId;
 
+    // Track sent content to avoid duplicates (in case SDK sends same message multiple times)
+    const sentContent = new Set<string>();
+
     return {
       send: async (msg: { prompt: string; images?: ImageContent[] }) => {
         try {
@@ -152,9 +155,25 @@ IMPORTANT: Format all responses using markdown:
                 break;
 
               case 'assistant':
-                // Skip - we handle streaming via stream_event instead
-                // (Full message sent at end would duplicate streaming content)
-                console.log('[Claude Agent] Assistant message received (skipping, handled via stream_event)');
+                // Extract text content from assistant messages
+                // Note: stream_event messages are not being emitted by the SDK, so we handle assistant messages directly
+                if ('content' in message && Array.isArray(message.content)) {
+                  for (const block of message.content) {
+                    if (block.type === 'text' && block.text) {
+                      // Use content hash to avoid sending duplicates (SDK may replay conversation history)
+                      const contentHash = `${block.text.substring(0, 100)}_${block.text.length}`;
+                      if (!sentContent.has(contentHash)) {
+                        sentContent.add(contentHash);
+                        console.log('[Claude Agent] Assistant text block, length:', block.text.length);
+                        send({ type: 'delta', content: block.text });
+                      } else {
+                        console.log('[Claude Agent] Duplicate assistant text detected, skipping');
+                      }
+                    }
+                  }
+                } else {
+                  console.log('[Claude Agent] Assistant message received (no content)');
+                }
                 break;
 
               case 'stream_event':
