@@ -77,6 +77,8 @@ export class ZingUI extends LitElement {
   @state() private agentPickerOpen = false;
   @state() private agentPickerLoading = false;
   @state() private agentPickerError = '';
+  @state() private isRemoteUrl = false;  // Whether editing a remote/published site
+  @state() private currentPageUrl = '';
 
   @query('zing-toast') private toast!: ZingToast;
   @query('zing-history-panel') private historyPanel!: ZingHistoryPanel;
@@ -212,6 +214,9 @@ export class ZingUI extends LitElement {
     // Set up WebSocket
     this.initWebSocket();
 
+    // Detect if editing a remote URL
+    this.detectRemoteUrl();
+
     // Add document event listeners
     document.addEventListener('click', this.clickHandler, true);
     document.addEventListener('mousemove', this.mouseMoveHandler, true);
@@ -286,12 +291,48 @@ export class ZingUI extends LitElement {
     this.ws.connect();
   }
 
+  private detectRemoteUrl() {
+    this.currentPageUrl = window.location.href;
+    const hostname = window.location.hostname;
+
+    // Consider non-localhost as remote
+    this.isRemoteUrl = !['localhost', '127.0.0.1', '::1'].includes(hostname)
+                       && !hostname.endsWith('.local')
+                       && hostname !== '';
+
+    // If remote, show immediate warning after a short delay to ensure toast is ready
+    if (this.isRemoteUrl) {
+      this.updateComplete.then(() => {
+        setTimeout(() => this.showRemoteUrlWarning(), 500);
+      });
+    }
+  }
+
+  private showRemoteUrlWarning() {
+    if (!this.toast) return;
+
+    const projectDir = this.settings.projectDir || this.serverProjectDir;
+
+    this.toast.show(
+      `⚠️ Editing Remote Site\n\n` +
+      `You're editing ${this.currentPageUrl}\n\n` +
+      `Changes will be saved locally to:\n${projectDir}\n\n` +
+      `To see changes, run the project locally or deploy.`,
+      'warning',
+      0 // Persistent until dismissed
+    );
+  }
+
   private handleWSMessage(msg: WSMessage) {
     switch (msg.type) {
       case 'connected':
         this.agentName = msg.agent || '';
         this.agentModel = msg.model || '';
         this.serverProjectDir = msg.projectDir || '';
+        // Re-detect URL now that we have serverProjectDir
+        if (this.isRemoteUrl && this.serverProjectDir) {
+          this.detectRemoteUrl();
+        }
         break;
 
       case 'processing':
@@ -330,6 +371,17 @@ export class ZingUI extends LitElement {
         this.updateAnnotationStatuses('processing', 'completed');
         if (this.settings.playSoundOnComplete) {
           this.playCompletionSound();
+        }
+        // Add remote URL guidance to response if editing a published site
+        if (this.isRemoteUrl) {
+          const projectDir = this.settings.projectDir || this.serverProjectDir;
+          this.responseContent += `\n\n---\n\n` +
+            `**💡 Important:** You're editing a published site.\n\n` +
+            `Changes have been saved locally to:\n\`${projectDir}\`\n\n` +
+            `**To see your changes:**\n` +
+            `1. Run your project locally, or\n` +
+            `2. Deploy the changes to your hosting service\n\n` +
+            `**Need help?** Check the settings panel for your project directory.`;
         }
         // Refresh history after a short delay to get finalized checkpoint data
         setTimeout(() => {
@@ -717,6 +769,7 @@ export class ZingUI extends LitElement {
           .model=${this.agentModel}
           .responseOpen=${this.responseOpen}
           .historyOpen=${this.historyOpen}
+          .isRemoteUrl=${this.isRemoteUrl}
           @toggle=${this.handleToggle}
           @send=${this.handleSend}
           @export=${this.handleExport}
@@ -755,6 +808,7 @@ export class ZingUI extends LitElement {
         .settings=${this.settings}
         .serverProjectDir=${this.serverProjectDir}
         .agents=${this.availableAgents}
+        .isRemoteUrl=${this.isRemoteUrl}
         @close=${() => this.settingsOpen = false}
         @save=${this.handleSettingsSave}
         @agent-change=${this.handleAgentChange}

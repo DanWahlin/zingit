@@ -169,6 +169,29 @@ export class ZingHelp extends LitElement {
               <div class="shortcut-keys"><kbd>Ctrl</kbd><kbd>Enter</kbd></div>
             </div>
           </div>
+
+          <div class="divider"></div>
+
+          <div class="section-title">📍 Local vs Remote Editing</div>
+          <div style="color: #d1d5db; font-size: 13px; line-height: 1.6;">
+            <div style="margin-bottom: 12px;">
+              <strong style="color: #10b981;">💻 Local Development</strong><br/>
+              <span style="font-size: 12px; color: #9ca3af;">
+                (e.g., http://localhost:5200)<br/>
+                ✅ Changes appear immediately on refresh<br/>
+                ✅ Files served from your project directory
+              </span>
+            </div>
+            <div>
+              <strong style="color: #f59338;">🌐 Remote/Published Sites</strong><br/>
+              <span style="font-size: 12px; color: #9ca3af;">
+                (e.g., https://yoursite.com)<br/>
+                ⚠️ Changes saved locally only<br/>
+                ⚠️ To see changes: run locally or deploy<br/>
+                💡 Use local development for best experience
+              </span>
+            </div>
+          </div>
         </div>
       </div>
     `;

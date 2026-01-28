@@ -225,11 +225,49 @@ export class ZingSettingsPanel extends LitElement {
     .btn-save:hover {
       background: #2563eb;
     }
+
+    .help-text {
+      margin-top: 8px;
+      font-size: 12px;
+      color: #9ca3af;
+      line-height: 1.5;
+    }
+
+    .help-text code {
+      background: #111827;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: 'Monaco', 'Courier New', monospace;
+      font-size: 11px;
+      color: #60a5fa;
+      word-break: break-all;
+    }
+
+    .help-text > div {
+      margin-top: 4px;
+    }
+
+    .warning-label {
+      color: #f59338;
+      font-size: 11px;
+      margin-left: 8px;
+    }
+
+    .warning-text {
+      color: #f59338;
+      background: #f5933820;
+      padding: 8px;
+      border-radius: 4px;
+      margin-top: 8px;
+      font-size: 12px;
+      line-height: 1.5;
+    }
   `;
 
   @property({ type: Boolean }) open = false;
   @property({ type: String }) serverProjectDir = '';  // Server's default
   @property({ type: Array }) agents: AgentInfo[] = [];  // Available agents from server
+  @property({ type: Boolean }) isRemoteUrl = false;  // Whether editing a remote site
   @property({ type: Object }) settings: ZingSettings = {
     wsUrl: 'ws://localhost:3000',
     highlightColor: '#fbbf24',
@@ -306,7 +344,12 @@ export class ZingSettingsPanel extends LitElement {
             </div>
 
             <div class="field">
-              <label for="projectDir">Project Directory</label>
+              <label for="projectDir">
+                Project Directory
+                ${this.isRemoteUrl ? html`
+                  <span class="warning-label">⚠️ Remote URL Detected</span>
+                ` : ''}
+              </label>
               <input
                 type="text"
                 id="projectDir"
@@ -314,6 +357,16 @@ export class ZingSettingsPanel extends LitElement {
                 @input=${(e: Event) => this.updateSetting('projectDir', (e.target as HTMLInputElement).value)}
                 placeholder="Enter project directory path"
               />
+              <div class="help-text">
+                <div>Current page: <code>${window.location.href}</code></div>
+                <div>Files saved to: <code>${this.localSettings.projectDir || this.serverProjectDir}</code></div>
+                ${this.isRemoteUrl ? html`
+                  <div class="warning-text">
+                    ⚠️ You're editing a published site. Changes are saved locally only.
+                    To see changes, run the project locally or deploy your changes.
+                  </div>
+                ` : ''}
+              </div>
             </div>
 
             <div class="field">

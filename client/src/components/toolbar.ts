@@ -203,6 +203,30 @@ export class ZingToolbar extends LitElement {
     .drag-handle:active {
       cursor: grabbing;
     }
+
+    .edit-mode-badge {
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .edit-mode-badge.local {
+      background: #10b98144;
+      color: #10b981;
+    }
+
+    .edit-mode-badge.remote {
+      background: #f5933844;
+      color: #f59338;
+      animation: pulse-badge 2s infinite;
+    }
+
+    @keyframes pulse-badge {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
   `;
 
   @property({ type: Boolean }) active = true;
@@ -214,6 +238,7 @@ export class ZingToolbar extends LitElement {
   @property({ type: String }) model = '';
   @property({ type: Boolean }) responseOpen = false;  // Whether the response panel is open
   @property({ type: Boolean }) historyOpen = false;   // Whether the history panel is open
+  @property({ type: Boolean }) isRemoteUrl = false;   // Whether editing a remote/published site
 
   render() {
     const statusClass = this.maxAttemptsReached
@@ -252,6 +277,15 @@ export class ZingToolbar extends LitElement {
         >
           ${this.active ? 'ON' : 'OFF'}
         </button>
+
+        <div class="divider"></div>
+
+        <div
+          class="edit-mode-badge ${this.isRemoteUrl ? 'remote' : 'local'}"
+          title="${this.isRemoteUrl ? 'Changes saved locally - deploy to see on this URL' : 'Local development - changes appear on refresh'}"
+        >
+          ${this.isRemoteUrl ? '🌐 Remote' : '💻 Local'}
+        </div>
 
         <div class="divider"></div>
 
