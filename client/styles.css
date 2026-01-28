@@ -1062,14 +1062,14 @@ a:hover {
 
 .setup-notice p {
   margin: 0;
-  color: var(--color-gray-900);
+  color: #000;
   font-size: 15px;
   line-height: 1.6;
   text-align: left;
 }
 
 .setup-notice a {
-  color: var(--color-primary-dark);
+  color: #000;
   font-weight: 600;
   text-decoration: underline;
 }
@@ -1081,7 +1081,7 @@ a:hover {
 }
 
 .setup-notice ol li {
-  color: var(--color-gray-900);
+  color: #000;
   text-align: left;
 }
 
@@ -1093,7 +1093,7 @@ a:hover {
   font-family: 'SF Mono', Monaco, Consolas, monospace;
   font-size: 13px;
   font-weight: 600;
-  color: var(--color-gray-700);
+  color: #000;
 }
 
 .demo-hint {
