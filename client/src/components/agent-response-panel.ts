@@ -223,6 +223,16 @@ export class ZingAgentResponsePanel extends LitElement {
       line-height: 1.5;
     }
 
+    .action-step strong {
+      font-weight: 600;
+      color: #f3f4f6;
+    }
+
+    .action-step em {
+      font-style: italic;
+      color: #e5e7eb;
+    }
+
     .action-step.check {
       background: rgba(251, 191, 36, 0.1);
       border-left-color: #fbbf24;
@@ -484,37 +494,36 @@ export class ZingAgentResponsePanel extends LitElement {
   }
 
   private _renderTextAsSteps(text: string) {
-    // Don't split if the text contains:
-    // - Markdown lists (numbered or bulleted options)
-    // - Backticks (inline code)
-    // - Questions (ends with ?)
-    // - Multiple newlines (already formatted)
-    const hasMarkdownList = /\d+\.\s+\*\*|^[-*]\s+/m.test(text);
-    const hasInlineCode = /`[^`]+`/.test(text);
-    const isQuestion = text.trim().endsWith('?');
-    const hasMultipleNewlines = /\n\s*\n/.test(text);
-
-    if (hasMarkdownList || hasInlineCode || isQuestion || hasMultipleNewlines) {
-      // Render as plain text with preserved formatting
-      return html`<div class="text-block">${text}</div>`;
-    }
-
-    // Only split on clear action sentence boundaries
-    // Look for: period followed by space and capital letter starting an action phrase
+    // Split on clear sentence boundaries or markdown headers
+    // Look for: period/newline followed by space and capital letter, or markdown ## headers
     const steps = text
-      .split(/(?<=\.)\s+(?=[A-Z][a-z])/)
+      .split(/(?<=\.)\s+(?=[A-Z][a-z])|(?=\n##\s)/)
       .map(s => s.trim())
       .filter(s => s.length > 0);
 
-    if (steps.length <= 1) {
-      // If we can't split meaningfully, render as plain text
-      return html`<div class="text-block">${text}</div>`;
+    if (steps.length === 0) {
+      return html``;
     }
 
+    // Always render as styled action steps for consistency (preserve Image #3 blockquote styling)
     return steps.map(step => {
       const stepClass = this._classifyStep(step);
-      return html`<div class="action-step ${stepClass}">${step}</div>`;
+      // Parse markdown formatting (bold, italic, code) for proper display
+      const formatted = this._parseMarkdown(step);
+      return html`<div class="action-step ${stepClass}" .innerHTML=${formatted}></div>`;
     });
+  }
+
+  private _parseMarkdown(text: string): string {
+    return text
+      // Bold: **text** → <strong>text</strong>
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      // Italic: *text* → <em>text</em>
+      .replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, '<em>$1</em>')
+      // Inline code: `text` → <code>text</code>
+      .replace(/`([^`]+)`/g, '<code style="background: rgba(59, 130, 246, 0.15); padding: 2px 6px; border-radius: 3px; font-family: monospace;">$1</code>')
+      // Preserve newlines
+      .replace(/\n/g, '<br>');
   }
 
   private _classifyStep(step: string): string {
