@@ -1022,7 +1022,7 @@ a:hover {
 /* Demo Header */
 .demo-header {
   text-align: center;
-  padding: 60px 24px 50px;
+  padding: 40px 24px 30px;
   background: linear-gradient(135deg, #064e3b 0%, #047857 35%, #059669 65%, #10b981 100%);
   color: white;
 }

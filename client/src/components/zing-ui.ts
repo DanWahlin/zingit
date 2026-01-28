@@ -1215,6 +1215,14 @@ export class ZingUI extends LitElement {
     this.undoStack = [];
     clearAnnotations();
     this.ws?.sendReset();
+
+    // Reset response panel state
+    this.responseContent = '';
+    this.responseError = '';
+    this.responseToolStatus = '';
+    this.responseScreenshotCount = 0;
+    this.processing = false;
+
     this.toast.info('Annotations cleared');
   }
 
