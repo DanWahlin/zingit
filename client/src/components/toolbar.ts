@@ -192,7 +192,6 @@ export class ZingToolbar extends LitElement {
   @property({ type: Boolean }) processing = false;
   @property({ type: Boolean }) maxAttemptsReached = false;
   @property({ type: Number }) annotationCount = 0;
-  @property({ type: Boolean }) canUndo = false;
   @property({ type: String }) agent = '';
   @property({ type: String }) model = '';
   @property({ type: Boolean }) responseOpen = false;  // Whether the response panel is open
@@ -285,18 +284,6 @@ export class ZingToolbar extends LitElement {
         }
 
         <div class="divider"></div>
-
-        <button
-          class="btn-icon"
-          ?disabled=${!this.canUndo}
-          title="Undo (Ctrl+Z)"
-          @click=${this.handleUndo}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M3 7v6h6"/>
-            <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6.36 2.64L3 13"/>
-          </svg>
-        </button>
 
         <button
           class="btn-icon ${this.historyOpen ? 'active' : ''}"
@@ -410,10 +397,6 @@ export class ZingToolbar extends LitElement {
 
   private handleToggle() {
     this.dispatchEvent(new CustomEvent('toggle', { bubbles: true, composed: true }));
-  }
-
-  private handleUndo() {
-    this.dispatchEvent(new CustomEvent('undo', { bubbles: true, composed: true }));
   }
 
   private handleHistory() {

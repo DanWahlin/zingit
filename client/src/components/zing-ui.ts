@@ -45,7 +45,7 @@ export class ZingUI extends LitElement {
     .toolbar-container {
       position: fixed;
       pointer-events: auto;
-      z-index: 2147483646;
+      z-index: 2147483644;
     }
 
     .toolbar-container.default-position {
@@ -709,14 +709,12 @@ export class ZingUI extends LitElement {
           .processing=${this.processing}
           .maxAttemptsReached=${this.wsMaxAttemptsReached}
           .annotationCount=${this.annotations.length}
-          .canUndo=${this.undoStack.length > 0 || this.historyCheckpoints.some(c => c.canUndo)}
           .agent=${this.agentName}
           .model=${this.agentModel}
           .responseOpen=${this.responseOpen}
           .historyOpen=${this.historyOpen}
           @toggle=${this.handleToggle}
           @send=${this.handleSend}
-          @undo=${this.handleUndo}
           @export=${this.handleExport}
           @clear=${this.handleClear}
           @help=${() => this.helpOpen = true}
