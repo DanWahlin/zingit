@@ -360,11 +360,11 @@ a:hover {
 }
 
 .feature-card:nth-child(2):hover .feature-icon {
-  box-shadow: 0 8px 20px rgba(5, 150, 105, 0.3);
+  box-shadow: 0 8px 20px rgba(245, 158, 11, 0.3);
 }
 
 .feature-card:nth-child(3):hover .feature-icon {
-  box-shadow: 0 8px 20px rgba(245, 158, 11, 0.3);
+  box-shadow: 0 8px 20px rgba(5, 150, 105, 0.3);
 }
 
 .feature-card h3 {
