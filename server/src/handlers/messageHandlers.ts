@@ -148,6 +148,8 @@ export async function handleBatch(
   // Use client-specified projectDir, or fall back to server default
   const projectDir = batchData.projectDir || deps.projectDir;
 
+  console.log('[Batch] ===== Request started =====');
+
   // Create a checkpoint before AI modifications (if git manager available)
   if (state.gitManager) {
     try {
@@ -241,6 +243,8 @@ export async function handleMessage(
   if (!msg.content) {
     return;
   }
+
+  console.log('[Message] ===== Request started =====');
 
   // Create session if it doesn't exist (allows direct messaging without annotations)
   if (!state.session) {
