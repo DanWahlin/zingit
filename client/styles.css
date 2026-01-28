@@ -1023,7 +1023,7 @@ a:hover {
 .demo-header {
   text-align: center;
   padding: 48px 24px;
-  background: var(--bg-hero);
+  background: linear-gradient(135deg, #064e3b 0%, #047857 35%, #059669 65%, #10b981 100%);
   color: white;
 }
 
