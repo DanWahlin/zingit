@@ -1044,7 +1044,7 @@ a:hover {
   display: flex;
   align-items: flex-start;
   gap: 16px;
-  background: var(--color-primary-light);
+  background: transparent;
   border-left: 4px solid var(--color-primary);
   border-radius: 8px;
   padding: 20px;
@@ -1062,14 +1062,14 @@ a:hover {
 
 .setup-notice p {
   margin: 0;
-  color: #000;
+  color: #fff;
   font-size: 15px;
   line-height: 1.6;
   text-align: left;
 }
 
 .setup-notice a {
-  color: #000;
+  color: #fff;
   font-weight: 600;
   text-decoration: underline;
 }
@@ -1081,7 +1081,7 @@ a:hover {
 }
 
 .setup-notice ol li {
-  color: #000;
+  color: #fff;
   text-align: left;
 }
 
@@ -1093,7 +1093,8 @@ a:hover {
   font-family: 'SF Mono', Monaco, Consolas, monospace;
   font-size: 13px;
   font-weight: 600;
-  color: #000;
+  color: #fff;
+  background: transparent;
 }
 
 .demo-hint {
