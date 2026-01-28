@@ -303,6 +303,7 @@ export class ZingAgentResponsePanel extends LitElement {
   @property({ type: String }) toolStatus = '';
   @property({ type: String }) error = '';
   @property({ type: Number }) screenshotCount = 0;
+  @property({ type: String }) agentName = '';
 
   @state() private followUpMessage = '';
   @query('.content') private contentEl!: HTMLElement;
@@ -440,7 +441,8 @@ export class ZingAgentResponsePanel extends LitElement {
   private _renderContent() {
     if (!this.content) {
       if (this.processing) {
-        return html`<div class="text-block">Waiting for response...</div>`;
+        const agentDisplay = this.agentName ? ` from ${this.agentName}` : '';
+        return html`<div class="text-block">Waiting for response${agentDisplay}...</div>`;
       }
       return html`<div class="text-block" style="color: #6b7280;">Add annotations and click the agent button to send them.</div>`;
     }

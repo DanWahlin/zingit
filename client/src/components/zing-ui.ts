@@ -775,6 +775,7 @@ export class ZingUI extends LitElement {
         .toolStatus=${this.responseToolStatus}
         .error=${this.responseError}
         .screenshotCount=${this.responseScreenshotCount}
+        .agentName=${this.agentDisplayName}
         @close=${() => this.responseOpen = false}
         @stop=${this.handleStop}
         @followup=${this.handleFollowUp}
@@ -1328,6 +1329,13 @@ export class ZingUI extends LitElement {
   // ============================================
   // Helper methods for common operations
   // ============================================
+
+  /** Get the display name for the currently selected agent */
+  private get agentDisplayName(): string {
+    if (!this.agentName) return '';
+    const agent = this.availableAgents.find(a => a.name === this.agentName);
+    return agent?.displayName || this.agentName;
+  }
 
   /** Start processing timeout - shows helpful message if agent hangs */
   private startProcessingTimeout() {
