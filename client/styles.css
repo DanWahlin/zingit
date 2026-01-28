@@ -1062,7 +1062,7 @@ a:hover {
 
 .setup-notice p {
   margin: 0;
-  color: var(--color-gray-700);
+  color: var(--color-gray-900);
   font-size: 15px;
   line-height: 1.6;
   text-align: left;
@@ -1072,6 +1072,17 @@ a:hover {
   color: var(--color-primary-dark);
   font-weight: 600;
   text-decoration: underline;
+}
+
+.setup-notice ol {
+  margin: 8px 0 0 0;
+  padding-left: 20px;
+  text-align: left;
+}
+
+.setup-notice ol li {
+  color: var(--color-gray-900);
+  text-align: left;
 }
 
 .setup-notice kbd {
