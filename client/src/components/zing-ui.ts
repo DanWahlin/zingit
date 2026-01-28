@@ -136,6 +136,10 @@ export class ZingUI extends LitElement {
   private recentlyDeletedAnnotation: Annotation | null = null;
   private deleteUndoTimeout: ReturnType<typeof setTimeout> | null = null;
 
+  // Processing timeout to detect when agent hangs
+  private processingTimeout: ReturnType<typeof setTimeout> | null = null;
+  private readonly PROCESSING_TIMEOUT_MS = 180000; // 3 minutes
+
   // Toolbar position and drag state
   @state() private toolbarPosition: ToolbarPosition | null = loadToolbarPosition();
   @state() private isDragging = false;
@@ -225,6 +229,12 @@ export class ZingUI extends LitElement {
       this.deleteUndoTimeout = null;
     }
 
+    // Clean up processing timeout
+    if (this.processingTimeout) {
+      clearTimeout(this.processingTimeout);
+      this.processingTimeout = null;
+    }
+
     // Remove document event listeners
     document.removeEventListener('click', this.clickHandler, true);
     document.removeEventListener('mousemove', this.mouseMoveHandler, true);
@@ -285,6 +295,7 @@ export class ZingUI extends LitElement {
         this.responseOpen = true;
         this.responseContent = '';
         this.responseError = '';
+        this.startProcessingTimeout(); // Start timeout to detect hangs
         break;
 
       case 'delta':
@@ -305,6 +316,7 @@ export class ZingUI extends LitElement {
         break;
 
       case 'idle':
+        this.clearProcessingTimeout(); // Clear timeout - processing completed successfully
         this.processing = false;
         this.responseToolStatus = '';
         this.updateAnnotationStatuses('processing', 'completed');
@@ -325,6 +337,7 @@ export class ZingUI extends LitElement {
         break;
 
       case 'error':
+        this.clearProcessingTimeout(); // Clear timeout - processing failed with error
         this.responseError = msg.message || 'Unknown error';
         this.processing = false;
         this.responseToolStatus = '';
@@ -1251,12 +1264,14 @@ export class ZingUI extends LitElement {
     this.responseContent += `\n\n---\n**You:** ${e.detail.message}\n\n`;
     this.responseError = '';
     this.responseToolStatus = '';
+    this.startProcessingTimeout(); // Start timeout for follow-up message
 
     this.ws.sendMessage(e.detail.message);
   }
 
   private handleStop() {
     if (!this.ws || !this.wsConnected) return;
+    this.clearProcessingTimeout(); // Clear timeout - user manually stopped
     this.ws.sendStop();
     this.processing = false;
     this.responseToolStatus = '';
@@ -1303,6 +1318,38 @@ export class ZingUI extends LitElement {
   // ============================================
   // Helper methods for common operations
   // ============================================
+
+  /** Start processing timeout - shows helpful message if agent hangs */
+  private startProcessingTimeout() {
+    // Clear any existing timeout
+    this.clearProcessingTimeout();
+
+    // Start new timeout
+    this.processingTimeout = setTimeout(() => {
+      console.warn('[ZingIt] Processing timeout - agent may have hung');
+
+      // Reset processing state
+      this.processing = false;
+      this.responseToolStatus = '';
+
+      // Show helpful error message
+      this.responseError = 'The AI agent took too long to respond. This can happen occasionally. Please try submitting your annotations again.';
+
+      // Revert annotations to pending so they can be re-sent
+      this.updateAnnotationStatuses('processing', 'pending');
+
+      // Show toast notification
+      this.toast.error('Request timed out - please try again');
+    }, this.PROCESSING_TIMEOUT_MS);
+  }
+
+  /** Clear processing timeout */
+  private clearProcessingTimeout() {
+    if (this.processingTimeout) {
+      clearTimeout(this.processingTimeout);
+      this.processingTimeout = null;
+    }
+  }
 
   /** Save current response state to storage (for persistence across refresh) */
   private saveCurrentResponseState() {
