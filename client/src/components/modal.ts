@@ -287,6 +287,7 @@ export class ZingModal extends LitElement {
   @property({ type: Boolean }) screenshotLoading = false;
 
   @state() private showConfirmation = false;
+  @state() private localNotes = '';  // Internal state for textarea
 
   @query('textarea') private textarea!: HTMLTextAreaElement;
 
@@ -312,8 +313,8 @@ export class ZingModal extends LitElement {
     if (changedProperties.has('open') && this.open) {
       // Reset confirmation state when modal opens
       this.showConfirmation = false;
-      // Note: Parent component now controls captureScreenshot and notes state
-      // via property bindings, so no need to reset them here
+      // Initialize local state from parent's notes property
+      this.localNotes = this.notes;
       requestAnimationFrame(() => {
         this.textarea?.focus();
       });
@@ -355,7 +356,7 @@ export class ZingModal extends LitElement {
               <label for="notes">Notes</label>
               <textarea
                 id="notes"
-                .value=${this.notes}
+                .value=${this.localNotes}
                 @input=${this.handleNotesInput}
                 placeholder="Describe the issue or change you want to make..."
               ></textarea>
@@ -431,7 +432,7 @@ export class ZingModal extends LitElement {
 
   private handleNotesInput(e: Event) {
     const textarea = e.target as HTMLTextAreaElement;
-    this.notes = textarea.value;
+    this.localNotes = textarea.value;
   }
 
   private handleScreenshotChange(e: Event) {
@@ -452,7 +453,7 @@ export class ZingModal extends LitElement {
 
   private handleSave() {
     // Check if notes is empty and not already showing confirmation
-    if (!this.notes.trim() && !this.showConfirmation) {
+    if (!this.localNotes.trim() && !this.showConfirmation) {
       this.showConfirmation = true;
       return;
     }
@@ -479,7 +480,7 @@ export class ZingModal extends LitElement {
       bubbles: true,
       composed: true,
       detail: {
-        notes: this.notes,
+        notes: this.localNotes,
         editMode: this.editMode,
         annotationId: this.annotationId,
         captureScreenshot: this.captureScreenshot
