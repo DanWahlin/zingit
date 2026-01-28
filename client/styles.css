@@ -1141,8 +1141,7 @@ a:hover {
   display: flex;
   align-items: flex-start;
   gap: 16px;
-  background: transparent;
-  border-left: 4px solid var(--color-primary);
+  background: rgba(255, 255, 255, 0.05);
   border-radius: 8px;
   padding: 20px;
   margin: 24px 0;
