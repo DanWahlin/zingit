@@ -16,6 +16,7 @@ export interface ConnectionState {
   currentCheckpointId: string | null;
   sessionId: string | null;  // Preserved across reconnections for conversation continuity
   wsRef: import('../types.js').WebSocketRef | null;  // Mutable WebSocket reference for reconnection support
+  messageBuffer: Array<import('../types.js').WSOutgoingMessage>;  // Buffer messages during disconnection
 }
 
 export interface MessageHandlerDeps {
