@@ -138,6 +138,10 @@ IMPORTANT: Format all responses using markdown:
 
           // Process streaming response
           for await (const message of response) {
+            // Log ALL message types for debugging
+            console.log('[Claude Agent] Message received:', message.type,
+              message.type === 'stream_event' ? `event: ${message.event?.type}` : '');
+
             switch (message.type) {
               case 'system':
                 // Capture session ID from init message for follow-up conversations
@@ -150,6 +154,7 @@ IMPORTANT: Format all responses using markdown:
               case 'assistant':
                 // Skip - we handle streaming via stream_event instead
                 // (Full message sent at end would duplicate streaming content)
+                console.log('[Claude Agent] Assistant message received (skipping, handled via stream_event)');
                 break;
 
               case 'stream_event':
@@ -157,6 +162,7 @@ IMPORTANT: Format all responses using markdown:
                 if (message.event?.type === 'content_block_delta') {
                   const delta = message.event.delta;
                   if (delta && 'text' in delta) {
+                    console.log('[Claude Agent] Content block delta, text length:', delta.text.length);
                     send({ type: 'delta', content: delta.text });
                   }
                 } else if (message.event?.type === 'content_block_stop') {
