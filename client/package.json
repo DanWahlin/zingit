@@ -13,7 +13,8 @@
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
     "typecheck": "tsc --noEmit",
-    "typecheck:watch": "tsc --noEmit --watch"
+    "typecheck:watch": "tsc --noEmit --watch",
+    "deploy": "node scripts/prepare-deploy.js && gh-pages -d deploy"
   },
   "dependencies": {
     "html2canvas": "^1.4.1",
@@ -21,6 +22,7 @@
   },
   "devDependencies": {
     "@vitest/ui": "^2.1.8",
+    "gh-pages": "^6.3.0",
     "happy-dom": "^15.11.7",
     "terser": "^5.46.0",
     "typescript": "^5.9.3",

@@ -2,6 +2,8 @@
 
 A browser-based annotation tool that lets you highlight and comment on UI elements, then send those annotations to an AI agent for automated fixes.
 
+Visit https://danwahlin.github.io/zingit and try it out!
+
 ## Features
 
 - **Visual Annotations**: Click any element to add notes about changes you want

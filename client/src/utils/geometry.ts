@@ -89,6 +89,20 @@ export function getMarkerPosition(elementRect: Rect, viewport?: { width: number;
 }
 
 /**
+ * Add padding around a rect (for highlight breathing room)
+ */
+export function addPadding(rect: Rect, padding: number): Rect {
+  return {
+    top: rect.top - padding,
+    left: rect.left - padding,
+    width: rect.width + (padding * 2),
+    height: rect.height + (padding * 2),
+    bottom: rect.bottom + padding,
+    right: rect.right + padding
+  };
+}
+
+/**
  * Clip a rect to viewport boundaries (for highlighting large elements like body)
  * Only clips edges that extend beyond the viewport, preserving the element's actual size otherwise
  */

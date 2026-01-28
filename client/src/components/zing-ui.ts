@@ -8,7 +8,7 @@ import type { Annotation, ZingSettings, WSMessage, AgentInfo } from '../types/in
 import { WebSocketClient } from '../services/websocket.js';
 import { generateSelector, generateIdentifier, getElementHtml, getParentContext, getTextContent, getSiblingContext, getParentHtml, querySelector } from '../services/selector.js';
 import { saveAnnotations, loadAnnotations, clearAnnotations, saveSettings, loadSettings, saveAnnotationActive, loadAnnotationActive, saveToolbarPosition, loadToolbarPosition, clearToolbarPosition, saveResponseState, loadResponseState, clearResponseState, type ToolbarPosition } from '../services/storage.js';
-import { getElementViewportRect, clipToViewport } from '../utils/geometry.js';
+import { getElementViewportRect, clipToViewport, addPadding } from '../utils/geometry.js';
 import { formatAnnotationsMarkdown, copyToClipboard } from '../utils/markdown.js';
 
 import './toolbar.js';
@@ -523,9 +523,10 @@ export class ZingUI extends LitElement {
 
     // Show highlight
     // Use viewport coordinates since zing-ui is position: fixed
-    // Clip to viewport for large elements (like body)
+    // Add padding for visual breathing room, then clip to viewport for large elements
     const rect = getElementViewportRect(target);
-    this.highlightRect = clipToViewport(rect);
+    const paddedRect = addPadding(rect, 4);
+    this.highlightRect = clipToViewport(paddedRect);
     this.highlightLabel = generateIdentifier(target);
     this.highlightVisible = true;
   }
