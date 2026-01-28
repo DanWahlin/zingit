@@ -190,13 +190,21 @@ export async function handleBatch(
     console.log('[Batch] Reusing existing session');
   }
 
+  // Log user's annotations before formatting
+  console.log('[Batch] Annotation count:', batchData.annotations?.length || 0);
+  if (batchData.annotations && batchData.annotations.length > 0) {
+    batchData.annotations.forEach((ann, idx) => {
+      const notePreview = ann.notes?.substring(0, 200) || '(no notes)';
+      console.log(`[Batch] Annotation ${idx + 1}: ${notePreview}`);
+    });
+  }
+  if (batchData.pageUrl) {
+    console.log('[Batch] Page URL:', batchData.pageUrl);
+  }
+
   console.log('[Batch] Formatting prompt and extracting images...');
   const prompt = state.agent.formatPrompt(batchData, projectDir);
   const images = state.agent.extractImages(batchData);
-
-  // Log first 150 chars of prompt to identify the request
-  const promptPreview = prompt.length > 150 ? prompt.substring(0, 150) + '...' : prompt;
-  console.log('[Batch] Prompt preview:', promptPreview);
   console.log('[Batch] Image count:', images.length);
 
   console.log('[Batch] Sending processing message to client');
@@ -258,8 +266,8 @@ export async function handleMessage(
   }
 
   try {
-    const messagePreview = msg.content.length > 150 ? msg.content.substring(0, 150) + '...' : msg.content;
-    console.log('[Message] Prompt preview:', messagePreview);
+    const messagePreview = msg.content.length > 500 ? msg.content.substring(0, 500) + '...' : msg.content;
+    console.log('[Message] User message:', messagePreview);
     sendMessage(ws, { type: 'processing' });
 
     // Add timeout to detect if SDK hangs
