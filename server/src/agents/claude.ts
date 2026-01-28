@@ -155,33 +155,25 @@ IMPORTANT: Format all responses using markdown:
                 break;
 
               case 'assistant':
-                // DEBUG LOGGING - DO NOT UNDO
-                console.log('[Claude Agent] ASSISTANT MSG - Keys:', Object.keys(message).join(', '));
-                console.log('[Claude Agent] ASSISTANT MSG - Has content?', 'content' in message);
-
-                if ('content' in message) {
-                  console.log('[Claude Agent] ASSISTANT MSG - Content is array?', Array.isArray(message.content));
-                  if (Array.isArray(message.content)) {
-                    console.log('[Claude Agent] ASSISTANT MSG - Content array length:', message.content.length);
-                    for (let i = 0; i < message.content.length; i++) {
-                      const block = message.content[i];
-                      console.log('[Claude Agent] ASSISTANT MSG - Block', i, 'type:', block.type, 'keys:', Object.keys(block).join(', '));
+                // Extract text content from assistant messages
+                // Content is nested in message.content, not directly in content
+                if ('message' in message && message.message && 'content' in message.message) {
+                  const content = message.message.content;
+                  if (Array.isArray(content)) {
+                    for (const block of content) {
                       if (block.type === 'text' && block.text) {
+                        // Use content hash to avoid sending duplicates (SDK may replay conversation history)
                         const contentHash = `${block.text.substring(0, 100)}_${block.text.length}`;
                         if (!sentContent.has(contentHash)) {
                           sentContent.add(contentHash);
-                          console.log('[Claude Agent] SENDING TEXT, length:', block.text.length);
+                          console.log('[Claude Agent] Sending assistant text, length:', block.text.length);
                           send({ type: 'delta', content: block.text });
                         } else {
-                          console.log('[Claude Agent] Skipping duplicate text');
+                          console.log('[Claude Agent] Skipping duplicate assistant text');
                         }
                       }
                     }
-                  } else {
-                    console.log('[Claude Agent] Content exists but is NOT an array');
                   }
-                } else {
-                  console.log('[Claude Agent] NO CONTENT FIELD in message');
                 }
                 break;
 
