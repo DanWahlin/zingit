@@ -31,6 +31,28 @@ function getShadowHost(element: Element): Element | null {
   return null;
 }
 
+/**
+ * Generate a unique CSS selector for a DOM element, including Shadow DOM support.
+ *
+ * For elements inside Shadow DOM, the selector uses a special notation:
+ * `host-selector >>> shadow-selector`
+ *
+ * The `>>>` separator indicates Shadow DOM piercing. For example:
+ * - `zing-ui >>> .toolbar` - selects .toolbar inside zing-ui's shadow root
+ * - `my-app >>> nested-component >>> .button` - traverses multiple shadow boundaries
+ *
+ * Important: This notation is specific to ZingIt and must be parsed by the
+ * querySelector() function in this module. It is NOT valid CSS. The `>>>` syntax
+ * was used in older Shadow DOM specs but was deprecated. We use it here as a
+ * convenient notation for our annotation system.
+ *
+ * The selector prioritizes:
+ * 1. Element ID (most specific)
+ * 2. Combination of tag name, classes, and nth-child position
+ *
+ * @param element - The DOM element to generate a selector for
+ * @returns A CSS selector string, potentially with >>> for shadow DOM piercing
+ */
 export function generateSelector(element: Element): string {
   // Check if element is inside Shadow DOM
   const shadowHost = getShadowHost(element);
@@ -274,10 +296,34 @@ export function getElementHtml(element: Element, maxLength = 500): string {
 
 /**
  * Query an element using a selector that may contain shadow DOM piercing (>>>)
- * @param selector - CSS selector, potentially with >>> for shadow DOM
+ *
+ * For elements inside Shadow DOM, the selector uses a special notation:
+ * `host-selector >>> shadow-selector`
+ *
+ * The `>>>` separator indicates Shadow DOM piercing. For example:
+ * - `zing-ui >>> .toolbar` - selects .toolbar inside zing-ui's shadow root
+ * - `my-app >>> nested-component >>> .button` - traverses multiple shadow boundaries
+ *
+ * Important: This notation is specific to ZingIt and must be parsed by this function.
+ * It is NOT valid CSS. The `>>>` syntax was used in older Shadow DOM specs but was
+ * deprecated. We use it here as a convenient notation for our annotation system.
+ *
+ * @param selector - CSS selector, potentially with >>> for shadow DOM piercing
  * @returns The matching element or null
  */
 export function querySelector(selector: string): Element | null {
+  // Validate input
+  if (!selector || typeof selector !== 'string') {
+    console.warn('querySelector: Invalid selector provided');
+    return null;
+  }
+
+  // Trim whitespace to prevent parsing issues
+  selector = selector.trim();
+  if (selector.length === 0) {
+    return null;
+  }
+
   // Check if selector contains shadow DOM piercing
   if (!selector.includes('>>>')) {
     // Regular selector - use standard querySelector
@@ -286,6 +332,13 @@ export function querySelector(selector: string): Element | null {
 
   // Split on >>> and traverse shadow DOM
   const parts = selector.split('>>>').map(s => s.trim());
+
+  // Validate that all parts are non-empty
+  if (parts.some(part => part.length === 0)) {
+    console.warn('querySelector: Selector contains empty parts after splitting on >>>');
+    return null;
+  }
+
   let current: Document | ShadowRoot = document;
 
   for (let i = 0; i < parts.length; i++) {

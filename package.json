@@ -25,6 +25,9 @@
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "dev:server": "cd server && npm run dev",
     "dev:client": "cd client && npm run dev",
+    "test": "cd client && npm run test",
+    "test:watch": "cd client && npm run test:watch",
+    "test:ui": "cd client && npm run test:ui",
     "release": "npm version minor && npm run build && npm publish --access public"
   },
   "keywords": [

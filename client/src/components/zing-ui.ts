@@ -174,8 +174,9 @@ export class ZingUI extends LitElement {
         try {
           const element = querySelector(ann.selector);
           return element !== null;
-        } catch {
+        } catch (error) {
           // Invalid selector - treat as orphaned
+          console.warn(`[ZingIt] Invalid selector "${ann.selector}":`, error);
           return false;
         }
       });
