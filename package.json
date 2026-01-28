@@ -1,10 +1,10 @@
 {
   "name": "@codewithdan/zingit",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "AI-powered UI annotation tool - point, annotate, and let AI fix it",
   "type": "module",
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=22.0.0"
   },
   "bin": {
     "zingit": "./bin/cli.js"
@@ -24,7 +24,8 @@
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "dev:server": "cd server && npm run dev",
     "dev:client": "cd client && npm run dev",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "publish": "npm run build && npm publish"
   },
   "keywords": [
     "ui",
