@@ -46,6 +46,9 @@
   <site-header></site-header>
 
   <h1>Testing @codewithdan/zingit@latest from CDN</h1>
+  <p style="text-align: center; color: #6b7280; margin-top: -10px;">
+    <strong>Version:</strong> <span id="version-display">Loading...</span>
+  </p>
 
   <div class="test-card">
     <h2>Test Button</h2>
@@ -66,18 +69,16 @@
   <!-- Footer -->
   <site-footer></site-footer>
 
-  <!-- Load site components -->
-  <script type="module" src="/src/components/site-header.ts"></script>
-  <script type="module" src="/src/components/site-footer.ts"></script>
-
-  <!-- Load ZingIt from jsDelivr CDN -->
+  <!-- Load ZingIt from jsDelivr CDN (includes site-header and site-footer components) -->
   <script src="https://cdn.jsdelivr.net/npm/@codewithdan/zingit@latest/client/dist/zingit-client.js"></script>
   <script>
     // Connect to local WebSocket server
     ZingIt.connect('ws://localhost:3000');
 
-    // Update status
-    document.getElementById('status').textContent = 'ZingIt loaded! Select an agent to start annotating.';
+    // Display version and status
+    const version = ZingIt.version || 'unknown';
+    document.getElementById('version-display').textContent = `v${version}`;
+    document.getElementById('status').textContent = `ZingIt v${version} loaded from CDN! Select an agent to start annotating.`;
 
     // Add click handler to test button
     document.getElementById('test-btn').addEventListener('click', () => {

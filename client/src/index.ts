@@ -7,7 +7,11 @@ import './components/site-footer.js';
 import type { ZingSettings } from './types/index.js';
 import { saveSettings, loadSettings } from './services/storage.js';
 
+// Version (updated during build from package.json)
+const VERSION = '0.9.0';
+
 interface ZingItAPI {
+  version: string;
   init(options?: Partial<ZingSettings>): void;
   connect(wsUrl: string): void;
   destroy(): void;
@@ -65,6 +69,7 @@ function isActive(): boolean {
 
 // Create the global ZingIt API
 const ZingItAPI: ZingItAPI = {
+  version: VERSION,
   init,
   connect,
   destroy,
@@ -92,4 +97,4 @@ if (shouldAutoInject) {
 
 // Export for ES module usage
 export default ZingItAPI;
-export { init, connect, destroy, isActive };
+export { VERSION as version, init, connect, destroy, isActive };
