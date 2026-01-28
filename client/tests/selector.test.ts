@@ -1,8 +1,8 @@
-// client/src/services/selector.test.ts
+// client/tests/selector.test.ts
 // Unit tests for querySelector function with Shadow DOM support
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { querySelector } from './selector.js';
+import { querySelector } from '../src/services/selector.js';
 
 describe('querySelector', () => {
   beforeEach(() => {

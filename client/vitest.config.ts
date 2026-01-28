@@ -4,14 +4,14 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'happy-dom',
-    include: ['src/**/*.test.ts', 'src/**/*.spec.ts'],
+    include: ['tests/**/*.test.ts', 'tests/**/*.spec.ts'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
       exclude: [
         'node_modules/',
-        'src/**/*.test.ts',
-        'src/**/*.spec.ts',
+        'tests/**/*.test.ts',
+        'tests/**/*.spec.ts',
       ]
     }
   }
