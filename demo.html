@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interactive Demo - ZingIt</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <!-- Navigation -->
+  <site-header></site-header>
+
+  <!-- Demo Header -->
+  <section class="demo-header">
+    <h1>Interactive Demo Playground</h1>
+    <!-- Setup Notice -->
+    <div class="setup-notice">
+      <div>
+        <p><strong>New to ZingIt?</strong></p>
+        <ol>
+          <li>Make sure you've completed the <a href="/#setup">setup steps</a> before trying the demo.</li>
+          <li>Select an element in the page to annotate it.</li>
+          <li>Once ready, send the annotation to the agent by clicking the <svg width="16" height="16" viewBox="0 0 24 24" fill="#fbbf24" stroke="none" style="vertical-align: middle; display: inline-block;"><path d="M12 1L14 9L22 11L14 13L12 21L10 13L2 11L10 9L12 1Z"/><path d="M19 3L19.7 6L22.5 6.7L19.7 7.4L19 10L18.3 7.4L15.5 6.7L18.3 6L19 3Z"/><path d="M5 14L5.7 17L8.5 17.7L5.7 18.4L5 21L4.3 18.4L1.5 17.7L4.3 17L5 14Z"/></svg> icon in the toolbar.</li>
+          <li>Press <kbd>Z</kbd> to start or stop annotation elements or select the On button in the toolbar to enable/disable.</li>
+        </ol>
+      </div>
+    </div>
+
+
+  </section>
+
+  <!-- Demo Grid -->
+  <div class="demo-grid">
+
+    <!-- Scenario 1: Login Form -->
+    <section class="demo-scenario">
+      <h2 class="scenario-title">Login Form</h2>
+      <div class="demo-card">
+        <h3>Sign In</h3>
+        <p class="form-description">Welcome back! Please login to your account.</p>
+        <div class="form-group">
+          <label for="login-email">Email</label>
+          <input type="email" id="login-email" placeholder="you@example.com">
+        </div>
+        <div class="form-group">
+          <label for="login-password">Password</label>
+          <input type="password" id="login-password" placeholder="Enter your password">
+        </div>
+        <div class="form-checkbox">
+          <input type="checkbox" id="remember">
+          <label for="remember">Remember me</label>
+        </div>
+        <button class="btn-primary btn-full">Sign In</button>
+        <a href="#" class="link-secondary">Forgot password?</a>
+      </div>
+    </section>
+
+    <!-- Scenario 2: Contact Form with States -->
+    <section class="demo-scenario">
+      <h2 class="scenario-title">Contact Form</h2>
+      <div class="demo-card">
+        <h3>Get in Touch</h3>
+        <div class="form-group">
+          <label for="contact-name">Full Name</label>
+          <input type="text" id="contact-name" placeholder="John Doe" value="John Doe" required minlength="2">
+          <span class="error-message" style="display: none;">Please enter a valid name (at least 2 characters)</span>
+        </div>
+        <div class="form-group error">
+          <label for="contact-email">Email Address</label>
+          <input type="email" id="contact-email" placeholder="you@example.com" value="invalid-email">
+          <span class="error-message">Please enter a valid email address</span>
+        </div>
+        <div class="form-group">
+          <label for="contact-subject">Subject</label>
+          <select id="contact-subject">
+            <option>General Inquiry</option>
+            <option>Technical Support</option>
+            <option>Sales</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="contact-message">Message</label>
+          <textarea id="contact-message" rows="4" placeholder="How can we help?"></textarea>
+        </div>
+        <div class="demo-buttons">
+          <button class="btn-primary">Send Message</button>
+          <button class="btn-secondary">Clear</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Scenario 3: Pricing Table -->
+    <section class="demo-scenario full-width">
+      <h2 class="scenario-title">Pricing Plans</h2>
+      <div class="pricing-grid">
+        <div class="pricing-card">
+          <div class="pricing-header">
+            <h3>Starter</h3>
+            <div class="price">$9<span class="period">/month</span></div>
+          </div>
+          <ul class="pricing-features">
+            <li>Up to 5 projects</li>
+            <li>Basic annotations</li>
+            <li>Email support</li>
+            <li>1 GB storage</li>
+          </ul>
+          <button class="btn-secondary btn-full">Get Started</button>
+        </div>
+        <div class="pricing-card featured">
+          <div class="badge">Popular</div>
+          <div class="pricing-header">
+            <h3>Professional</h3>
+            <div class="price">$29<span class="period">/month</span></div>
+          </div>
+          <ul class="pricing-features">
+            <li>Unlimited projects</li>
+            <li>Advanced annotations</li>
+            <li>Priority support</li>
+            <li>10 GB storage</li>
+            <li>Team collaboration</li>
+          </ul>
+          <button class="btn-primary btn-full">Get Started</button>
+        </div>
+        <div class="pricing-card">
+          <div class="pricing-header">
+            <h3>Enterprise</h3>
+            <div class="price">$99<span class="period">/month</span></div>
+          </div>
+          <ul class="pricing-features">
+            <li>Unlimited everything</li>
+            <li>Custom AI models</li>
+            <li>24/7 support</li>
+            <li>Unlimited storage</li>
+            <li>Advanced security</li>
+          </ul>
+          <button class="btn-secondary btn-full">Contact Sales</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Scenario 4: Navigation Tabs -->
+    <section class="demo-scenario full-width">
+      <h2 class="scenario-title">Tab Navigation</h2>
+      <div class="demo-card">
+        <div class="tabs">
+          <button class="tab active">Overview</button>
+          <button class="tab">Features</button>
+          <button class="tab">Pricing</button>
+          <button class="tab">FAQ</button>
+        </div>
+        <div class="tab-content">
+          <h3>Product Overview</h3>
+          <p>ZingIt is a powerful tool that bridges the gap between design feedback and implementation. Simply point to any element, describe what you want changed, and let AI do the work.</p>
+          <p>Perfect for designers, product managers, and developers who want to streamline their workflow.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Scenario 5: Data Table -->
+    <section class="demo-scenario full-width">
+      <h2 class="scenario-title">Data Table</h2>
+      <div class="demo-card">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Project Name</th>
+              <th>Status</th>
+              <th>Annotations</th>
+              <th>Last Updated</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Homepage Redesign</td>
+              <td><span class="status-badge active">Active</span></td>
+              <td>12</td>
+              <td>2 hours ago</td>
+              <td><button class="btn-text">View</button></td>
+            </tr>
+            <tr>
+              <td>Mobile App UI</td>
+              <td><span class="status-badge pending">Pending</span></td>
+              <td>8</td>
+              <td>1 day ago</td>
+              <td><button class="btn-text">View</button></td>
+            </tr>
+            <tr>
+              <td>Dashboard Analytics</td>
+              <td><span class="status-badge completed">Completed</span></td>
+              <td>24</td>
+              <td>3 days ago</td>
+              <td><button class="btn-text">View</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Scenario 6: Content Cards Grid -->
+    <section class="demo-scenario full-width">
+      <h2 class="scenario-title">Blog Cards</h2>
+      <div class="cards-grid">
+        <article class="blog-card">
+          <div class="card-image">
+            <div class="placeholder-image">📝</div>
+          </div>
+          <div class="card-content">
+            <span class="card-tag">Tutorial</span>
+            <h3>Getting Started with ZingIt</h3>
+            <p>Learn how to annotate your first webpage and send changes to AI agents in under 5 minutes.</p>
+            <div class="card-meta">
+              <span>5 min read</span>
+              <span>•</span>
+              <span>Jan 15, 2026</span>
+            </div>
+          </div>
+        </article>
+        <article class="blog-card">
+          <div class="card-image">
+            <div class="placeholder-image">🚀</div>
+          </div>
+          <div class="card-content">
+            <span class="card-tag">Feature</span>
+            <h3>Multi-Agent Support</h3>
+            <p>Now supports Claude Code, GitHub Copilot CLI, and OpenAI Codex. Choose your favorite AI assistant.</p>
+            <div class="card-meta">
+              <span>3 min read</span>
+              <span>•</span>
+              <span>Jan 20, 2026</span>
+            </div>
+          </div>
+        </article>
+        <article class="blog-card">
+          <div class="card-image">
+            <div class="placeholder-image">⚡</div>
+          </div>
+          <div class="card-content">
+            <span class="card-tag">Tips</span>
+            <h3>Best Annotation Practices</h3>
+            <p>Write better annotations that help AI agents understand exactly what changes you want to make.</p>
+            <div class="card-meta">
+              <span>7 min read</span>
+              <span>•</span>
+              <span>Jan 25, 2026</span>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- Scenario 7: Alert States -->
+    <section class="demo-scenario full-width">
+      <h2 class="scenario-title">Notification States</h2>
+      <div class="alerts-stack">
+        <div class="alert alert-success">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+          </svg>
+          <div class="alert-content">
+            <strong>Success!</strong> Your changes have been saved and sent to the AI agent.
+          </div>
+        </div>
+        <div class="alert alert-warning">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2L1 21h22L12 2zm0 3.83L19.53 19H4.47L12 5.83zM11 16h2v2h-2v-2zm0-6h2v4h-2v-4z"/>
+          </svg>
+          <div class="alert-content">
+            <strong>Warning:</strong> Some annotations don't have detailed descriptions.
+          </div>
+        </div>
+        <div class="alert alert-error">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+          </svg>
+          <div class="alert-content">
+            <strong>Error:</strong> Failed to connect to AI agent. Please check your settings.
+          </div>
+        </div>
+        <div class="alert alert-info">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+          </svg>
+          <div class="alert-content">
+            <strong>Info:</strong> Press Z to toggle annotation mode on/off.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Scenario 8: Button Variations -->
+    <section class="demo-scenario">
+      <h2 class="scenario-title">Button Styles</h2>
+      <div class="demo-card">
+        <div class="button-group">
+          <h4>Primary Buttons</h4>
+          <div class="demo-buttons">
+            <button class="btn-primary">Default</button>
+            <button class="btn-primary" disabled>Disabled</button>
+          </div>
+        </div>
+        <div class="button-group">
+          <h4>Secondary Buttons</h4>
+          <div class="demo-buttons">
+            <button class="btn-secondary">Default</button>
+            <button class="btn-secondary" disabled>Disabled</button>
+          </div>
+        </div>
+        <div class="button-group">
+          <h4>Danger Buttons</h4>
+          <div class="demo-buttons">
+            <button class="btn-danger">Delete</button>
+            <button class="btn-danger" disabled>Disabled</button>
+          </div>
+        </div>
+        <div class="button-group">
+          <h4>Text Buttons</h4>
+          <div class="demo-buttons">
+            <button class="btn-text">Learn More</button>
+            <button class="btn-text" disabled>Disabled</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Scenario 9: Lists -->
+    <section class="demo-scenario">
+      <h2 class="scenario-title">List Variations</h2>
+      <div class="demo-card">
+        <h4>Features List</h4>
+        <ul class="feature-list">
+          <li>Visual annotation system</li>
+          <li>Multi-agent AI support</li>
+          <li>Real-time collaboration</li>
+          <li>Version history tracking</li>
+          <li>Shadow DOM isolation</li>
+        </ul>
+        <h4>Ordered Steps</h4>
+        <ol class="steps-list">
+          <li>Click any element to annotate</li>
+          <li>Describe the changes you want</li>
+          <li>Select your AI agent</li>
+          <li>Watch AI implement changes</li>
+        </ol>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Footer -->
+  <site-footer></site-footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@codewithdan/zingit@0.10.0/client/dist/zingit-client.js"></script>
+  <script>
+    // Automatically add ?zingit to demo page URL if not present
+    if (!window.location.search.includes('zingit')) {
+      const url = new URL(window.location);
+      url.searchParams.set('zingit', '');
+      window.history.replaceState({}, '', url);
+    }
+
+    async function copyCode(button, code) {
+      try {
+        await navigator.clipboard.writeText(code);
+
+        // Show success feedback
+        button.classList.add('copied');
+        const originalHTML = button.innerHTML;
+        button.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+
+        // Reset after 2 seconds
+        setTimeout(() => {
+          button.classList.remove('copied');
+          button.innerHTML = originalHTML;
+        }, 2000);
+      } catch (err) {
+        console.error('Failed to copy code:', err);
+      }
+    }
+  </script>
+</body>
+</html>

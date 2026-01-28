@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ZingIt - AI-Powered UI Annotation Tool</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <!-- Navigation -->
+  <site-header></site-header>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <h1 class="hero-headline">Streamline how you share UI changes with your AI assistant</h1>
+    <p class="hero-tagline"><span class="highlight">Select</span> → Annotate → <span class="highlight">Send to AI</span></p>
+    <!-- <p class="hero-description">
+      The open source annotation tool that turns visual feedback into automated code changes.
+    </p> -->
+  </section>
+
+  <!-- Features -->
+  <section id="features" class="features">
+    <div class="feature-card">
+      <div class="feature-icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/>
+          <path d="m21 21-4.35-4.35"/>
+          <circle cx="11" cy="11" r="3"/>
+        </svg>
+      </div>
+      <h3>Visual Annotations</h3>
+      <p>
+        Click any element on your page to add notes about changes you want.
+        Smart CSS selectors are automatically generated to target the exact element.
+      </p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="#fbbf24" stroke="none">
+          <!-- AI Sparkle Icon -->
+          <!-- Large center sparkle -->
+          <path d="M12 1L14 9L22 11L14 13L12 21L10 13L2 11L10 9L12 1Z"/>
+          <!-- Small top-right sparkle -->
+          <path d="M19 3L19.7 6L22.5 6.7L19.7 7.4L19 10L18.3 7.4L15.5 6.7L18.3 6L19 3Z"/>
+          <!-- Small bottom-left sparkle -->
+          <path d="M5 14L5.7 17L8.5 17.7L5.7 18.4L5 21L4.3 18.4L1.5 17.7L4.3 17L5 14Z"/>
+        </svg>
+      </div>
+      <h3>Multi-Agent Support</h3>
+      <p>
+        Works with Claude Code, GitHub Copilot CLI, and OpenAI Codex.
+        Choose your preferred AI assistant and watch it work in real-time.
+      </p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+          <circle cx="12" cy="13" r="4"/>
+        </svg>
+      </div>
+      <h3>Screenshot Capture</h3>
+      <p>
+        Automatically captures screenshots of annotated elements to provide visual context to AI agents.
+        No more manual screenshot taking! ZingIt generates them for you with perfect element targeting.
+      </p>
+    </div>
+  </section>
+
+  <!-- Getting Started Section -->
+  <section id="setup" class="content-section">
+    <h2>Try ZingIt</h2>
+    <div class="setup-steps-vertical">
+      <div class="setup-step-item">
+        <div class="step-number">1</div>
+        <div class="step-details">
+          <h3>Install an AI Agent</h3>
+          <p class="step-desc">You'll need one of these installed:</p>
+          <ul class="agent-list">
+            <li><a href="https://github.com/anthropics/claude-code" target="_blank" rel="noopener">Claude Code</a></li>
+            <li><a href="https://githubnext.com/projects/copilot-cli/" target="_blank" rel="noopener">GitHub Copilot CLI</a></li>
+            <li><a href="https://openai.com/blog/openai-codex" target="_blank" rel="noopener">OpenAI Codex</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="setup-step-item">
+        <div class="step-number">2</div>
+        <div class="step-details">
+          <h3>Start the Server</h3>
+          <div class="code-container">
+            <pre class="code-snippet">PROJECT_DIR=/path/to/your/project npx @codewithdan/zingit</pre>
+            <button class="copy-btn" onclick="copyCode(this, 'PROJECT_DIR=/path/to/your/project npx @codewithdan/zingit')" title="Copy to clipboard">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+            </button>
+          </div>
+          <p class="step-note">Replace <code>/path/to/your/project</code> with your project path. Server runs on <code>ws://localhost:3000</code></p>
+        </div>
+      </div>
+
+      <div class="setup-step-item">
+        <div class="step-number">3</div>
+        <div class="step-details">
+          <h3>Ready to Try It?</h3>
+          <p>Experience ZingIt in action with our interactive demo playground. Annotate forms, tables, buttons, and more with real-time feedback.</p>
+          <a href="/demo.html" class="btn-primary">Launch Interactive Demo</a>
+        </div>
+      </div>
+
+      <div class="setup-step-item">
+        <div class="step-number">4</div>
+        <div class="step-details">
+          <h3>Start Annotating</h3>
+          <p class="step-desc">Press <kbd>Z</kbd> to toggle annotation mode, then click any element to annotate it.</p>
+          <p class="step-note">Tip: Add <code>?zingit</code> to any URL to auto-activate</p>
+        </div>
+      </div>
+
+      <div class="setup-step-item optional">
+        <div class="step-number">5</div>
+        <div class="step-details">
+          <h3>Add to Your Page <span class="optional-badge">(Optional)</span></h3>
+          <div class="code-container">
+            <pre class="code-snippet">&lt;script src="https://cdn.jsdelivr.net/npm/@codewithdan/zingit@latest/dist/zingit-client.js"&gt;&lt;/script&gt;
+&lt;script&gt;ZingIt.connect('ws://localhost:3000');&lt;/script&gt;</pre>
+            <button class="copy-btn" onclick="copyCode(this, '<script src=&quot;https://cdn.jsdelivr.net/npm/@codewithdan/zingit@latest/dist/zingit-client.js&quot;></script>\n<script>ZingIt.connect(\\'ws://localhost:3000\\');</script>')" title="Copy to clipboard">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+            </button>
+          </div>
+          <p class="step-note">For use on your own pages</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <site-footer></site-footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@codewithdan/zingit@0.10.0/client/dist/zingit-client.js"></script>
+  <script>
+    async function copyCode(button, code) {
+      try {
+        await navigator.clipboard.writeText(code);
+
+        // Show success feedback
+        button.classList.add('copied');
+        const originalHTML = button.innerHTML;
+        button.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+
+        // Reset after 2 seconds
+        setTimeout(() => {
+          button.classList.remove('copied');
+          button.innerHTML = originalHTML;
+        }, 2000);
+      } catch (err) {
+        console.error('Failed to copy code:', err);
+      }
+    }
+  </script>
+</body>
+</html>

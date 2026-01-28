@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About - ZingIt</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <!-- Navigation -->
+  <site-header active-page="about"></site-header>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <h1 class="hero-headline">About ZingIt</h1>
+    <p class="hero-tagline">The open source tool that bridges the gap between visual feedback and AI-powered code changes.</p>
+  </section>
+
+  <!-- What is ZingIt -->
+  <section class="content-section" style="margin-top: 32px;">
+    <h2>What is ZingIt?</h2>
+    <p>ZingIt is an open source UI annotation tool created by <a href="https://x.com/danwahlin" target="_blank" rel="noopener">Dan Wahlin</a> that lets developers and designers point at elements on a webpage, describe what changes they want, and send those instructions directly to AI coding agents for automated implementation.</p>
+    <p>Instead of writing detailed prompts about UI elements to change, creating screenshots, and pasting all of the details into an agent, you simply click on what you want to change and describe the fix concisely. ZingIt will even generate a screenshot for you to send to the agent automatically!</p>
+  </section>
+
+  <!-- How It Works -->
+  <section class="content-section">
+    <h2>How It Works</h2>
+    <div class="values">
+      <div class="value">
+        <h3>1. Point</h3>
+        <p>Click on any element in your webpage. ZingIt automatically captures the element's CSS selector, HTML structure, and visual context.</p>
+      </div>
+      <div class="value">
+        <h3>2. Annotate</h3>
+        <p>Describe the change you want in plain English. "Make this button blue", "Add form validation", "Fix the spacing here".</p>
+      </div>
+      <div class="value">
+        <h3>3. Let AI Fix It</h3>
+        <p>Send your annotations to an AI agent (Claude, Copilot, or Codex) which finds the corresponding code and makes the changes automatically.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="content-section">
+    <h2>Key Features</h2>
+    <div class="values">
+      <div class="value">
+        <h3>Multi-Agent Support</h3>
+        <p>Works with Claude Code, GitHub Copilot CLI, and OpenAI Codex. Use whichever AI assistant you prefer.</p>
+      </div>
+      <div class="value">
+        <h3>Change History</h3>
+        <p>Every AI modification is tracked with git-based checkpoints. Review what changed and undo with a single click.</p>
+      </div>
+      <div class="value">
+        <h3>Screenshot Capture</h3>
+        <p>Optionally capture screenshots of annotated elements to give the AI visual context about what needs to change.</p>
+      </div>
+      <div class="value">
+        <h3>Bookmarklet Ready</h3>
+        <p>Inject ZingIt into any webpage with a single click. Shadow DOM isolation ensures no style conflicts.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Use Cases -->
+  <section class="content-section">
+    <h2>Use Cases</h2>
+    <div class="timeline">
+      <div class="timeline-item">
+        <div class="timeline-year">Bug Fixes</div>
+        <p>Click on the broken element, describe the issue, let AI find and fix the code.</p>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-year">UI Tweaks</div>
+        <p>Quickly adjust colors, spacing, fonts, and layouts without hunting through CSS files.</p>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-year">Design Reviews</div>
+        <p>Designers can annotate elements during review and developers get actionable AI-ready instructions.</p>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-year">Prototyping</div>
+        <p>Rapidly iterate on UI changes by describing what you want and seeing it implemented instantly.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Open Source -->
+  <section class="content-section">
+    <h2>Open Source</h2>
+    <p>ZingIt is fully open source and available on GitHub. Contributions, bug reports, and feature requests are welcome!</p>
+    <p>
+      <a href="https://github.com/danwahlin/zingit" class="btn-secondary" style="display: inline-block; margin-top: 1rem;">View on GitHub</a>
+    </p>
+  </section>
+
+  <!-- Footer -->
+  <site-footer></site-footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@codewithdan/zingit@0.10.0/client/dist/zingit-client.js"></script>
+</body>
+</html>
