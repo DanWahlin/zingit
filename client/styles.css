@@ -331,7 +331,7 @@ a:hover {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 24px;
+  margin: 0 auto 24px auto;
   color: var(--color-primary);
   transition: all 0.3s ease;
 }
