@@ -49,6 +49,8 @@ npm run dev
 
 ### Option 3: Add to Your Page
 
+Follow the step above to start the server, then add this script to your page:
+
 ```html
 <script src="https://cdn.jsdelivr.net/npm/@codewithdan/zingit@latest/client/dist/zingit-client.js"></script>
 <script>ZingIt.connect('ws://localhost:3000');</script>
