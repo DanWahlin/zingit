@@ -151,6 +151,7 @@ export async function handleBatch(
   // Create a checkpoint before AI modifications (if git manager available)
   if (state.gitManager) {
     try {
+      console.log('[Batch] Creating checkpoint...');
       const checkpoint = await state.gitManager.createCheckpoint({
         annotations: batchData.annotations,
         pageUrl: batchData.pageUrl,
@@ -158,6 +159,7 @@ export async function handleBatch(
         agentName: state.agentName,
       });
       state.currentCheckpointId = checkpoint.id;
+      console.log('[Batch] Checkpoint created, sending to client');
       sendMessage(ws, {
         type: 'checkpoint_created',
         checkpoint: {
@@ -178,14 +180,22 @@ export async function handleBatch(
     }
   }
 
+  console.log('[Batch] Creating session if needed...');
   if (!state.session) {
     state.session = await state.agent.createSession(ws, projectDir);
+    console.log('[Batch] New session created');
+  } else {
+    console.log('[Batch] Reusing existing session');
   }
 
+  console.log('[Batch] Formatting prompt and extracting images...');
   const prompt = state.agent.formatPrompt(batchData, projectDir);
   const images = state.agent.extractImages(batchData);
+  console.log('[Batch] Sending processing message to client');
   sendMessage(ws, { type: 'processing' });
+  console.log('[Batch] Starting agent session.send()...');
   await state.session.send({ prompt, images: images.length > 0 ? images : undefined });
+  console.log('[Batch] Agent session.send() completed');
 
   // Finalize checkpoint after processing
   if (state.gitManager && state.currentCheckpointId) {

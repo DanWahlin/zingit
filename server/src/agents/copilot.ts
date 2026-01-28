@@ -101,21 +101,26 @@ IMPORTANT: Format all responses using markdown:
 
         case 'assistant.message':
           // Final message (we already sent deltas, so just log)
+          console.log('[Copilot Agent] Assistant message complete');
           break;
 
         case 'tool.execution_start':
+          console.log('[Copilot Agent] Tool executing:', event.data.toolName);
           send({ type: 'tool_start', tool: event.data.toolName });
           break;
 
         case 'tool.execution_complete':
+          console.log('[Copilot Agent] Tool complete:', event.data.toolCallId);
           send({ type: 'tool_end', tool: event.data.toolCallId });
           break;
 
         case 'session.idle':
+          console.log('[Copilot Agent] Session idle, sending idle message');
           send({ type: 'idle' });
           break;
 
         case 'session.error':
+          console.error('[Copilot Agent] Session error:', event.data.message);
           send({ type: 'error', message: event.data.message });
           break;
       }
@@ -124,6 +129,7 @@ IMPORTANT: Format all responses using markdown:
     return {
       send: async (msg: { prompt: string; images?: ImageContent[] }) => {
         try {
+          console.log('[Copilot Agent] send() called, processing request...');
           // If images are provided, save them as temp files and attach them
           // Copilot SDK supports file attachments for images
           const attachments: Array<{ type: 'file'; path: string; displayName?: string }> = [];
@@ -158,11 +164,14 @@ IMPORTANT: Format all responses using markdown:
             }
           }
 
+          console.log('[Copilot Agent] Calling session.sendAndWait...');
           await session.sendAndWait({
             prompt: msg.prompt,
             attachments: attachments.length > 0 ? attachments : undefined
           });
+          console.log('[Copilot Agent] session.sendAndWait completed');
         } catch (err) {
+          console.error('[Copilot Agent] Error in send():', (err as Error).message);
           send({ type: 'error', message: (err as Error).message });
         }
         // Note: Temp files cleaned up on session destroy to avoid race condition
