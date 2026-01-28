@@ -5,6 +5,7 @@ import { LitElement, html, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import type { Annotation, AnnotationStatus } from '../types/index.js';
 import { getElementViewportRect, getViewportRect, getMarkerPosition } from '../utils/geometry.js';
+import { querySelector } from '../services/selector.js';
 
 interface MarkerPosition {
   id: string;
@@ -143,7 +144,7 @@ export class ZingMarkers extends LitElement {
     const viewport = getViewportRect();
 
     this.positions = this.annotations.map((ann, index) => {
-      const element = document.querySelector(ann.selector);
+      const element = querySelector(ann.selector);
       if (!element) {
         return {
           id: ann.id,

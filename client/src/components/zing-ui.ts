@@ -6,7 +6,7 @@ import { customElement, state, query } from 'lit/decorators.js';
 import html2canvas from 'html2canvas';
 import type { Annotation, ZingSettings, WSMessage, AgentInfo } from '../types/index.js';
 import { WebSocketClient } from '../services/websocket.js';
-import { generateSelector, generateIdentifier, getElementHtml, getParentContext, getTextContent, getSiblingContext, getParentHtml } from '../services/selector.js';
+import { generateSelector, generateIdentifier, getElementHtml, getParentContext, getTextContent, getSiblingContext, getParentHtml, querySelector } from '../services/selector.js';
 import { saveAnnotations, loadAnnotations, clearAnnotations, saveSettings, loadSettings, saveAnnotationActive, loadAnnotationActive, saveToolbarPosition, loadToolbarPosition, clearToolbarPosition, saveResponseState, loadResponseState, clearResponseState, type ToolbarPosition } from '../services/storage.js';
 import { getElementViewportRect } from '../utils/geometry.js';
 import { formatAnnotationsMarkdown, copyToClipboard } from '../utils/markdown.js';
@@ -172,7 +172,7 @@ export class ZingUI extends LitElement {
     try {
       const validAnnotations = this.annotations.filter(ann => {
         try {
-          const element = document.querySelector(ann.selector);
+          const element = querySelector(ann.selector);
           return element !== null;
         } catch {
           // Invalid selector - treat as orphaned
@@ -978,7 +978,7 @@ export class ZingUI extends LitElement {
         this.modalCaptureScreenshot = !!annotation.screenshot;
         this.modalScreenshotPreview = annotation.screenshot || '';
 
-        this.pendingElement = document.querySelector(annotation.selector);
+        this.pendingElement = querySelector(annotation.selector);
         if (!this.pendingElement) {
           this.toast.info('Element no longer exists on page');
         }

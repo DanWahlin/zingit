@@ -271,3 +271,47 @@ export function getElementHtml(element: Element, maxLength = 500): string {
 
   return html;
 }
+
+/**
+ * Query an element using a selector that may contain shadow DOM piercing (>>>)
+ * @param selector - CSS selector, potentially with >>> for shadow DOM
+ * @returns The matching element or null
+ */
+export function querySelector(selector: string): Element | null {
+  // Check if selector contains shadow DOM piercing
+  if (!selector.includes('>>>')) {
+    // Regular selector - use standard querySelector
+    return document.querySelector(selector);
+  }
+
+  // Split on >>> and traverse shadow DOM
+  const parts = selector.split('>>>').map(s => s.trim());
+  let current: Document | ShadowRoot = document;
+
+  for (let i = 0; i < parts.length; i++) {
+    const part = parts[i];
+
+    // Query within current root (document or shadow root)
+    const element: Element | null = current.querySelector(part);
+
+    if (!element) {
+      return null;
+    }
+
+    // If this is the last part, return the element
+    if (i === parts.length - 1) {
+      return element;
+    }
+
+    // Otherwise, descend into shadow root for next part
+    if (!element.shadowRoot) {
+      // Expected shadow DOM but element doesn't have shadowRoot
+      console.warn(`Element ${part} expected to have shadowRoot but doesn't`);
+      return null;
+    }
+
+    current = element.shadowRoot;
+  }
+
+  return null;
+}
