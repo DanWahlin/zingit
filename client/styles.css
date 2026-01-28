@@ -346,8 +346,8 @@ a:hover {
 }
 
 .feature-card:nth-child(3) .feature-icon {
-  background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(249, 115, 22, 0.1) 100%);
-  color: #f59e0b;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(99, 102, 241, 0.1) 100%);
+  color: #3b82f6;
 }
 
 .feature-card:hover .feature-icon {
