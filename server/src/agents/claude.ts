@@ -87,7 +87,7 @@ export class ClaudeCodeAgent extends BaseAgent {
     };
   }
 
-  async createSession(ws: WebSocket, projectDir: string): Promise<AgentSession> {
+  async createSession(ws: WebSocket, projectDir: string, resumeSessionId?: string): Promise<AgentSession> {
     const send = (data: WSOutgoingMessage): void => {
       if (ws.readyState === ws.OPEN) {
         ws.send(JSON.stringify(data));
@@ -95,7 +95,8 @@ export class ClaudeCodeAgent extends BaseAgent {
     };
 
     // Track session ID for conversation continuity (stable V1 resume feature)
-    let sessionId: string | undefined;
+    // Start with provided sessionId if resuming previous conversation
+    let sessionId: string | undefined = resumeSessionId;
 
     return {
       send: async (msg: { prompt: string; images?: ImageContent[] }) => {
@@ -179,7 +180,8 @@ IMPORTANT: Format all responses using markdown:
       },
       destroy: async () => {
         // SDK handles session cleanup automatically
-      }
+      },
+      getSessionId: () => sessionId || null
     };
   }
 }

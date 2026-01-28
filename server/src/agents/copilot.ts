@@ -38,7 +38,7 @@ export class CopilotAgent extends BaseAgent {
     }
   }
 
-  async createSession(ws: WebSocket, projectDir: string): Promise<AgentSession> {
+  async createSession(ws: WebSocket, projectDir: string, resumeSessionId?: string): Promise<AgentSession> {
     if (!this.client) {
       throw new Error('Copilot client not initialized');
     }
@@ -48,6 +48,9 @@ export class CopilotAgent extends BaseAgent {
         ws.send(JSON.stringify(data));
       }
     };
+
+    // Note: Copilot SDK doesn't currently support session resumption
+    // resumeSessionId parameter is accepted for interface compatibility
 
     // Create a Copilot session with streaming enabled
     // Note: Copilot SDK doesn't support cwd in session config, so we include it in the system message

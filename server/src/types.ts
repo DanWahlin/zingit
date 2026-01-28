@@ -8,7 +8,7 @@ export interface Agent {
   model: string;
   start(): Promise<void>;
   stop(): Promise<void>;
-  createSession(ws: WebSocket, projectDir: string): Promise<AgentSession>;
+  createSession(ws: WebSocket, projectDir: string, resumeSessionId?: string): Promise<AgentSession>;
   formatPrompt(data: BatchData, projectDir: string): string;
   extractImages(data: BatchData): ImageContent[];
 }
@@ -22,6 +22,7 @@ export interface ImageContent {
 export interface AgentSession {
   send(msg: { prompt: string; images?: ImageContent[] }): Promise<void>;
   destroy(): Promise<void>;
+  getSessionId?(): string | null;  // Optional: get session ID for resumption
 }
 
 export interface Annotation {

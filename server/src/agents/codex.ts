@@ -32,7 +32,7 @@ export class CodexAgent extends BaseAgent {
     this.codex = null;
   }
 
-  async createSession(ws: WebSocket, projectDir: string): Promise<AgentSession> {
+  async createSession(ws: WebSocket, projectDir: string, resumeSessionId?: string): Promise<AgentSession> {
     if (!this.codex) {
       throw new Error('Codex client not initialized');
     }
@@ -42,6 +42,9 @@ export class CodexAgent extends BaseAgent {
         ws.send(JSON.stringify(data));
       }
     };
+
+    // Note: Codex SDK doesn't currently support session resumption
+    // resumeSessionId parameter is accepted for interface compatibility
 
     // Start a Codex thread with the project directory
     const thread = this.codex.startThread({

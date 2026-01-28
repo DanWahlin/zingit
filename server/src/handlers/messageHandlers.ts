@@ -14,6 +14,7 @@ export interface ConnectionState {
   agent: Agent | null;
   gitManager: GitManager | null;
   currentCheckpointId: string | null;
+  sessionId: string | null;  // Preserved across reconnections for conversation continuity
 }
 
 export interface MessageHandlerDeps {
@@ -184,8 +185,18 @@ export async function handleBatch(
 
   console.log('[Batch] Creating session if needed...');
   if (!state.session) {
-    state.session = await state.agent.createSession(ws, projectDir);
-    console.log('[Batch] New session created');
+    // Pass the preserved sessionId to resume conversation history
+    state.session = await state.agent.createSession(ws, projectDir, state.sessionId || undefined);
+    console.log('[Batch] New session created', state.sessionId ? '(resuming previous conversation)' : '(fresh start)');
+
+    // Store the sessionId if the agent provides it
+    if (state.session.getSessionId) {
+      const newSessionId = state.session.getSessionId();
+      if (newSessionId && newSessionId !== state.sessionId) {
+        state.sessionId = newSessionId;
+        console.log('[Batch] Session ID captured for future resumption');
+      }
+    }
   } else {
     console.log('[Batch] Reusing existing session');
   }
@@ -212,6 +223,15 @@ export async function handleBatch(
   console.log('[Batch] Starting agent session.send()...');
   await state.session.send({ prompt, images: images.length > 0 ? images : undefined });
   console.log('[Batch] Agent session.send() completed');
+
+  // Update sessionId after send (it may be assigned during the first message)
+  if (state.session.getSessionId) {
+    const currentSessionId = state.session.getSessionId();
+    if (currentSessionId && currentSessionId !== state.sessionId) {
+      state.sessionId = currentSessionId;
+      console.log('[Batch] Session ID updated after message');
+    }
+  }
 
   // Finalize checkpoint after processing
   if (state.gitManager && state.currentCheckpointId) {
@@ -261,8 +281,18 @@ export async function handleMessage(
       sendMessage(ws, { type: 'error', message: 'No agent selected. Please select an agent first.' });
       return;
     }
-    console.log('[ZingIt] Creating session for direct message');
-    state.session = await state.agent.createSession(ws, deps.projectDir);
+    console.log('[ZingIt] Creating session for direct message', state.sessionId ? '(resuming conversation)' : '(fresh start)');
+    // Pass the preserved sessionId to resume conversation history
+    state.session = await state.agent.createSession(ws, deps.projectDir, state.sessionId || undefined);
+
+    // Store the sessionId if the agent provides it
+    if (state.session.getSessionId) {
+      const newSessionId = state.session.getSessionId();
+      if (newSessionId && newSessionId !== state.sessionId) {
+        state.sessionId = newSessionId;
+        console.log('[Message] Session ID captured for future resumption');
+      }
+    }
   }
 
   try {
@@ -279,6 +309,16 @@ export async function handleMessage(
 
     await Promise.race([sendPromise, timeoutPromise]);
     console.log('[Message] Agent processing completed');
+
+    // Update sessionId after send (it may be assigned during the first message)
+    if (state.session && state.session.getSessionId) {
+      const currentSessionId = state.session.getSessionId();
+      if (currentSessionId && currentSessionId !== state.sessionId) {
+        state.sessionId = currentSessionId;
+        console.log('[Message] Session ID updated after message');
+      }
+    }
+
     console.log('[Message] ===== Request completed =====');
   } catch (err) {
     console.error('[Message] Error sending message:', (err as Error).message);

@@ -123,6 +123,7 @@ async function main(): Promise<void> {
     agent: DEFAULT_AGENT ? initializedAgents.get(DEFAULT_AGENT) || null : null,
     gitManager,
     currentCheckpointId: null,
+    sessionId: null,  // Preserved across reconnections for conversation continuity
   };
 
   // Track cleanup timer to prevent race conditions
