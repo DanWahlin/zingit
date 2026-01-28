@@ -227,28 +227,23 @@ async function main(): Promise<void> {
       // Clean up heartbeat interval
       clearInterval(heartbeatInterval);
 
-      // Don't destroy session immediately - keep it alive for reconnection (page reload)
-      // Clear any existing cleanup timer to prevent race conditions
+      // Destroy session immediately on disconnect since it holds a stale WebSocket reference
+      // When client reconnects, a new session will be created with the new WebSocket
+      if (state.session) {
+        try {
+          await state.session.destroy();
+          console.log('Session destroyed due to client disconnect');
+        } catch (err) {
+          console.error('Error destroying session during disconnect:', (err as Error).message);
+        } finally {
+          state.session = null;
+        }
+      }
+
+      // Clear any existing cleanup timer
       if (sessionCleanupTimer) {
         clearTimeout(sessionCleanupTimer);
         sessionCleanupTimer = null;
-      }
-
-      // Set new cleanup timer only if no connections remain
-      if (connections.size === 0) {
-        sessionCleanupTimer = setTimeout(async () => {
-          if (state.session && connections.size === 0) {
-            console.log('Cleaning up stale session after 5 minutes of inactivity');
-            try {
-              await state.session.destroy();
-            } catch (err) {
-              console.error('Error destroying session during cleanup:', (err as Error).message);
-            } finally {
-              state.session = null;
-              sessionCleanupTimer = null;
-            }
-          }
-        }, 300000); // 5 minutes
       }
     });
 
