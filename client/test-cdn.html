@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test ZingIt from CDN</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+    }
+    .test-card {
+      background: white;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 24px;
+      margin: 20px 0;
+    }
+    button {
+      background: #3b82f6;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button:hover {
+      background: #2563eb;
+    }
+    .status {
+      margin-top: 20px;
+      padding: 12px;
+      background: #f3f4f6;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Testing @codewithdan/zingit@0.7.0 from CDN</h1>
+
+  <div class="test-card">
+    <h2>Test Button</h2>
+    <p>Press <kbd>Z</kbd> to activate ZingIt, then click this button to annotate it.</p>
+    <button id="test-btn">Click Me to Test</button>
+  </div>
+
+  <div class="test-card">
+    <h3>Test Input</h3>
+    <label for="test-input">Name:</label>
+    <input type="text" id="test-input" placeholder="Try annotating this input" style="width: 100%; padding: 8px; margin-top: 8px;">
+  </div>
+
+  <div class="status">
+    <strong>Status:</strong> <span id="status">Loading ZingIt from CDN...</span>
+  </div>
+
+  <!-- Load ZingIt from jsDelivr CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@codewithdan/zingit@0.7.0/client/dist/zingit-client.js"></script>
+  <script>
+    // Connect to local WebSocket server
+    ZingIt.connect('ws://localhost:3000');
+
+    // Update status
+    document.getElementById('status').textContent = 'ZingIt loaded! Press Z to activate.';
+
+    // Add click handler to test button
+    document.getElementById('test-btn').addEventListener('click', () => {
+      alert('Button clicked! Now try annotating it with ZingIt.');
+    });
+  </script>
+</body>
+</html>
