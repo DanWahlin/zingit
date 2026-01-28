@@ -1289,9 +1289,14 @@ export class ZingUI extends LitElement {
     this.toast.info('Agent stopped');
   }
 
-  private playCompletionSound() {
+  private async playCompletionSound() {
     try {
       const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+
+      // Resume audio context if suspended (required for browser autoplay policies)
+      if (audioContext.state === 'suspended') {
+        await audioContext.resume();
+      }
 
       // Create a pleasant two-tone ding
       const playTone = (frequency: number, startTime: number, duration: number) => {
@@ -1322,6 +1327,7 @@ export class ZingUI extends LitElement {
       setTimeout(() => audioContext.close(), 500);
     } catch (err) {
       console.warn('ZingIt: Could not play completion sound', err);
+      console.warn('ZingIt: This may be due to browser autoplay restrictions');
     }
   }
 

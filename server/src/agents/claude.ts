@@ -136,18 +136,13 @@ IMPORTANT: Format all responses using markdown:
                 // Capture session ID from init message for follow-up conversations
                 if ('subtype' in message && message.subtype === 'init') {
                   sessionId = message.session_id;
+                  console.log('[Claude Agent] Session initialized:', sessionId);
                 }
                 break;
 
               case 'assistant':
-                // Handle assistant message - extract text from BetaMessage content
-                if (message.message?.content) {
-                  for (const block of message.message.content) {
-                    if (block.type === 'text') {
-                      send({ type: 'delta', content: block.text });
-                    }
-                  }
-                }
+                // Skip - we handle streaming via stream_event instead
+                // (Full message sent at end would duplicate streaming content)
                 break;
 
               case 'stream_event':
@@ -157,20 +152,27 @@ IMPORTANT: Format all responses using markdown:
                   if (delta && 'text' in delta) {
                     send({ type: 'delta', content: delta.text });
                   }
+                } else if (message.event?.type === 'content_block_stop') {
+                  console.log('[Claude Agent] Content block stopped');
+                } else if (message.event?.type === 'message_stop') {
+                  console.log('[Claude Agent] Message stopped');
                 }
                 break;
 
               case 'tool_progress':
                 // Tool is being executed
+                console.log('[Claude Agent] Tool executing:', message.tool_name);
                 send({ type: 'tool_start', tool: message.tool_name });
                 break;
 
               case 'result':
                 // Query completed
+                console.log('[Claude Agent] Query completed, sending idle');
                 send({ type: 'idle' });
                 break;
             }
           }
+          console.log('[Claude Agent] Response stream ended');
         } catch (err) {
           send({ type: 'error', message: (err as Error).message });
         }
