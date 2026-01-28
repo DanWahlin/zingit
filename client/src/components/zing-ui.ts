@@ -138,7 +138,7 @@ export class ZingUI extends LitElement {
 
   // Processing timeout to detect when agent hangs
   private processingTimeout: ReturnType<typeof setTimeout> | null = null;
-  private readonly PROCESSING_TIMEOUT_MS = 180000; // 3 minutes
+  private readonly PROCESSING_TIMEOUT_MS = 60000; // 1 minute
 
   // Toolbar position and drag state
   @state() private toolbarPosition: ToolbarPosition | null = loadToolbarPosition();
