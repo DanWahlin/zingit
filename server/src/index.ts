@@ -6,86 +6,21 @@ import { ClaudeCodeAgent } from './agents/claude.js';
 import { CodexAgent } from './agents/codex.js';
 import { detectAgents } from './utils/agent-detection.js';
 import { GitManager, GitManagerError } from './services/git-manager.js';
-import type { Agent, AgentSession, WSIncomingMessage, WSOutgoingMessage, BatchData, Annotation } from './types.js';
-
-// ============================================
-// Payload Validation
-// ============================================
-
-const MAX_ANNOTATIONS = 50;
-const MAX_HTML_LENGTH = 50000;
-const MAX_NOTES_LENGTH = 5000;
-const MAX_SELECTOR_LENGTH = 1000;
-const MAX_SCREENSHOT_SIZE = 5000000; // ~5MB base64 (matches Claude API limit)
-
-interface ValidationResult {
-  valid: boolean;
-  error?: string;
-  sanitizedData?: BatchData;
-}
-
-const VALID_STATUSES = ['pending', 'processing', 'completed'];
-
-function validateAnnotation(annotation: Annotation, index: number): { valid: boolean; error?: string } {
-  if (!annotation.id || typeof annotation.id !== 'string') {
-    return { valid: false, error: `Annotation ${index}: missing or invalid id` };
-  }
-  if (!annotation.identifier || typeof annotation.identifier !== 'string') {
-    return { valid: false, error: `Annotation ${index}: missing or invalid identifier` };
-  }
-  if (annotation.status && !VALID_STATUSES.includes(annotation.status)) {
-    return { valid: false, error: `Annotation ${index}: invalid status '${annotation.status}'` };
-  }
-  if (annotation.selector && annotation.selector.length > MAX_SELECTOR_LENGTH) {
-    return { valid: false, error: `Annotation ${index}: selector too long (max ${MAX_SELECTOR_LENGTH})` };
-  }
-  if (annotation.html && annotation.html.length > MAX_HTML_LENGTH) {
-    return { valid: false, error: `Annotation ${index}: html too long (max ${MAX_HTML_LENGTH})` };
-  }
-  if (annotation.notes && annotation.notes.length > MAX_NOTES_LENGTH) {
-    return { valid: false, error: `Annotation ${index}: notes too long (max ${MAX_NOTES_LENGTH})` };
-  }
-  if (annotation.screenshot && annotation.screenshot.length > MAX_SCREENSHOT_SIZE) {
-    return { valid: false, error: `Annotation ${index}: screenshot too large (max ${MAX_SCREENSHOT_SIZE / 1000}KB)` };
-  }
-  return { valid: true };
-}
-
-function validateBatchData(data: BatchData): ValidationResult {
-  if (!data) {
-    return { valid: false, error: 'Missing batch data' };
-  }
-
-  if (!data.annotations || !Array.isArray(data.annotations)) {
-    return { valid: false, error: 'Missing or invalid annotations array' };
-  }
-
-  if (data.annotations.length === 0) {
-    return { valid: false, error: 'No annotations provided' };
-  }
-
-  if (data.annotations.length > MAX_ANNOTATIONS) {
-    return { valid: false, error: `Too many annotations (max ${MAX_ANNOTATIONS})` };
-  }
-
-  // Validate each annotation
-  for (let i = 0; i < data.annotations.length; i++) {
-    const result = validateAnnotation(data.annotations[i], i);
-    if (!result.valid) {
-      return { valid: false, error: result.error };
-    }
-  }
-
-  // Sanitize and return
-  return {
-    valid: true,
-    sanitizedData: {
-      ...data,
-      pageUrl: data.pageUrl ? data.pageUrl.slice(0, 2000) : data.pageUrl,
-      pageTitle: data.pageTitle ? data.pageTitle.slice(0, 500) : data.pageTitle,
-    }
-  };
-}
+import type { Agent, WSIncomingMessage, WSOutgoingMessage } from './types.js';
+import type { ConnectionState, MessageHandlerDeps } from './handlers/messageHandlers.js';
+import {
+  sendMessage,
+  handleGetAgents,
+  handleSelectAgent,
+  handleBatch,
+  handleMessage,
+  handleReset,
+  handleStop,
+  handleGetHistory,
+  handleUndo,
+  handleRevertTo,
+  handleClearHistory
+} from './handlers/messageHandlers.js';
 
 const PORT = parseInt(process.env.PORT || '3000', 10);
 
@@ -132,15 +67,7 @@ async function getAgent(agentName: string): Promise<Agent> {
   return agent;
 }
 
-// Connection state
-interface ConnectionState {
-  session: AgentSession | null;
-  agentName: string | null;
-  agent: Agent | null;
-  // History/Undo feature
-  gitManager: GitManager | null;
-  currentCheckpointId: string | null;
-}
+// ConnectionState is now defined in handlers/messageHandlers.ts
 
 async function main(): Promise<void> {
   // Detect available agents on startup
@@ -230,6 +157,13 @@ async function main(): Promise<void> {
       ws.ping();
     }, 30000); // Ping every 30 seconds
 
+    // Create dependencies object for handlers
+    const deps: MessageHandlerDeps = {
+      projectDir: PROJECT_DIR,
+      detectAgents,
+      getAgent
+    };
+
     ws.on('message', async (data: Buffer) => {
       let msg: WSIncomingMessage;
       try {
@@ -241,316 +175,45 @@ async function main(): Promise<void> {
 
       try {
         switch (msg.type) {
-          case 'get_agents': {
-            // Return fresh agent availability info
-            const agents = await detectAgents();
-            sendMessage(ws, { type: 'agents', agents });
+          case 'get_agents':
+            await handleGetAgents(ws, deps);
             break;
-          }
 
-          case 'select_agent': {
-            if (!msg.agent) {
-              sendMessage(ws, { type: 'agent_error', message: 'No agent specified' });
-              break;
-            }
-
-            // Check if agent is available
-            const agentInfo = (await detectAgents()).find(a => a.name === msg.agent);
-            if (!agentInfo) {
-              sendMessage(ws, { type: 'agent_error', message: `Unknown agent: ${msg.agent}` });
-              break;
-            }
-            if (!agentInfo.available) {
-              sendMessage(ws, {
-                type: 'agent_error',
-                message: agentInfo.reason || `Agent ${msg.agent} is not available`,
-                agent: msg.agent
-              });
-              break;
-            }
-
-            // Destroy existing session if switching agents
-            if (state.session && state.agentName !== msg.agent) {
-              try {
-                await state.session.destroy();
-              } catch (err) {
-                console.error('Error destroying session during agent switch:', (err as Error).message);
-              } finally {
-                state.session = null;
-              }
-            }
-
-            // Initialize the agent
-            try {
-              state.agent = await getAgent(msg.agent);
-              state.agentName = msg.agent;
-              sendMessage(ws, {
-                type: 'agent_selected',
-                agent: msg.agent,
-                model: state.agent.model,
-                projectDir: PROJECT_DIR
-              });
-            } catch (err) {
-              sendMessage(ws, {
-                type: 'agent_error',
-                message: `Failed to initialize ${msg.agent}: ${(err as Error).message}`,
-                agent: msg.agent
-              });
-            }
+          case 'select_agent':
+            await handleSelectAgent(ws, state, msg, deps);
             break;
-          }
 
-          case 'batch': {
-            if (!msg.data) break;
-
-            // Validate batch data
-            const validation = validateBatchData(msg.data);
-            if (!validation.valid) {
-              sendMessage(ws, { type: 'error', message: validation.error || 'Invalid batch data' });
-              break;
-            }
-
-            // Use sanitized data
-            const batchData = validation.sanitizedData!;
-
-            // Check if agent is selected
-            if (!state.agentName || !state.agent) {
-              // If agent specified in batch message, try to select it
-              if (msg.agent) {
-                const agentInfo = (await detectAgents()).find(a => a.name === msg.agent);
-                if (!agentInfo?.available) {
-                  sendMessage(ws, {
-                    type: 'agent_error',
-                    message: `Agent ${msg.agent} is not available. Please select a different agent.`
-                  });
-                  break;
-                }
-                try {
-                  state.agent = await getAgent(msg.agent);
-                  state.agentName = msg.agent;
-                } catch (err) {
-                  sendMessage(ws, { type: 'error', message: (err as Error).message });
-                  break;
-                }
-              } else {
-                sendMessage(ws, { type: 'error', message: 'No agent selected. Please select an agent first.' });
-                break;
-              }
-            }
-
-            // Use client-specified projectDir, or fall back to server default
-            const projectDir = batchData.projectDir || PROJECT_DIR;
-
-            // Create a checkpoint before AI modifications (if git manager available)
-            if (state.gitManager) {
-              try {
-                const checkpoint = await state.gitManager.createCheckpoint({
-                  annotations: batchData.annotations,
-                  pageUrl: batchData.pageUrl,
-                  pageTitle: batchData.pageTitle,
-                  agentName: state.agentName,
-                });
-                state.currentCheckpointId = checkpoint.id;
-                sendMessage(ws, {
-                  type: 'checkpoint_created',
-                  checkpoint: {
-                    id: checkpoint.id,
-                    timestamp: checkpoint.timestamp,
-                    annotations: checkpoint.annotations,
-                    filesModified: 0,
-                    linesChanged: 0,
-                    agentName: checkpoint.agentName,
-                    pageUrl: checkpoint.pageUrl,
-                    status: 'pending',
-                    canUndo: false,
-                  },
-                });
-              } catch (err) {
-                // Log but don't block - checkpoint is optional
-                console.warn('Failed to create checkpoint:', (err as Error).message);
-              }
-            }
-
-            if (!state.session) {
-              state.session = await state.agent.createSession(ws, projectDir);
-            }
-
-            const prompt = state.agent.formatPrompt(batchData, projectDir);
-            const images = state.agent.extractImages(batchData);
-            sendMessage(ws, { type: 'processing' });
-            await state.session.send({ prompt, images: images.length > 0 ? images : undefined });
-
-            // Finalize checkpoint after processing
-            if (state.gitManager && state.currentCheckpointId) {
-              try {
-                await state.gitManager.finalizeCheckpoint(
-                  state.currentCheckpointId
-                );
-                // Send updated checkpoint info
-                const checkpoints = await state.gitManager.getHistory();
-                const updatedCheckpoint = checkpoints.find(
-                  (c) => c.id === state.currentCheckpointId
-                );
-                if (updatedCheckpoint) {
-                  sendMessage(ws, {
-                    type: 'checkpoint_created',
-                    checkpoint: updatedCheckpoint,
-                  });
-                }
-              } catch (err) {
-                console.warn('Failed to finalize checkpoint:', (err as Error).message);
-              }
-              state.currentCheckpointId = null;
-            }
+          case 'batch':
+            await handleBatch(ws, state, msg, deps);
             break;
-          }
 
           case 'message':
-            if (state.session && msg.content) {
-              try {
-                console.log(`[ZingIt] Sending follow-up message: "${msg.content.substring(0, 50)}..."`);
-                sendMessage(ws, { type: 'processing' });
-
-                // Add timeout to detect if SDK hangs
-                const timeoutMs = 120000; // 2 minutes
-                const sendPromise = state.session.send({ prompt: msg.content });
-                const timeoutPromise = new Promise((_, reject) =>
-                  setTimeout(() => reject(new Error('Agent response timeout')), timeoutMs)
-                );
-
-                await Promise.race([sendPromise, timeoutPromise]);
-                console.log('[ZingIt] Follow-up message sent to agent');
-              } catch (err) {
-                console.error('[ZingIt] Error sending follow-up message:', (err as Error).message);
-                sendMessage(ws, { type: 'error', message: `Failed to send message: ${(err as Error).message}` });
-              }
-            } else if (!state.session) {
-              console.warn('[ZingIt] No active session for follow-up message');
-              sendMessage(ws, { type: 'error', message: 'No active session. Please create annotations first.' });
-            }
+            await handleMessage(ws, state, msg);
             break;
 
           case 'reset':
-            if (state.session) {
-              try {
-                await state.session.destroy();
-              } catch (err) {
-                console.error('Error destroying session during reset:', (err as Error).message);
-              } finally {
-                state.session = null;
-              }
-            }
-            sendMessage(ws, { type: 'reset_complete' });
+            await handleReset(ws, state);
             break;
 
           case 'stop':
-            // Stop current agent execution
-            if (state.session) {
-              console.log('Stopping agent execution...');
-              try {
-                await state.session.destroy();
-              } catch (err) {
-                console.error('Error destroying session during stop:', (err as Error).message);
-              } finally {
-                state.session = null;
-              }
-            }
-            sendMessage(ws, { type: 'idle' });
+            await handleStop(ws, state);
             break;
 
-          // ============================================
-          // History/Undo Feature Handlers
-          // ============================================
-
-          case 'get_history': {
-            if (!state.gitManager) {
-              sendMessage(ws, { type: 'error', message: 'Git manager not initialized' });
-              break;
-            }
-            try {
-              const checkpoints = await state.gitManager.getHistory();
-              sendMessage(ws, { type: 'history', checkpoints });
-            } catch (err) {
-              sendMessage(ws, {
-                type: 'error',
-                message: `Failed to get history: ${(err as Error).message}`,
-              });
-            }
+          case 'get_history':
+            await handleGetHistory(ws, state);
             break;
-          }
 
-          case 'undo': {
-            if (!state.gitManager) {
-              sendMessage(ws, { type: 'error', message: 'Git manager not initialized' });
-              break;
-            }
-            try {
-              const result = await state.gitManager.undoLastCheckpoint();
-              state.currentCheckpointId = null;
-              sendMessage(ws, {
-                type: 'undo_complete',
-                checkpointId: result.checkpointId,
-                filesReverted: result.filesReverted,
-              });
-            } catch (err) {
-              if (err instanceof GitManagerError) {
-                sendMessage(ws, { type: 'error', message: err.message });
-              } else {
-                sendMessage(ws, {
-                  type: 'error',
-                  message: `Undo failed: ${(err as Error).message}`,
-                });
-              }
-            }
+          case 'undo':
+            await handleUndo(ws, state, GitManagerError);
             break;
-          }
 
-          case 'revert_to': {
-            if (!state.gitManager) {
-              sendMessage(ws, { type: 'error', message: 'Git manager not initialized' });
-              break;
-            }
-            if (!msg.checkpointId) {
-              sendMessage(ws, { type: 'error', message: 'No checkpoint ID specified' });
-              break;
-            }
-            try {
-              const result = await state.gitManager.revertToCheckpoint(msg.checkpointId);
-              sendMessage(ws, {
-                type: 'revert_complete',
-                checkpointId: msg.checkpointId,
-                filesReverted: result.filesReverted,
-              });
-            } catch (err) {
-              if (err instanceof GitManagerError) {
-                sendMessage(ws, { type: 'error', message: err.message });
-              } else {
-                sendMessage(ws, {
-                  type: 'error',
-                  message: `Revert failed: ${(err as Error).message}`,
-                });
-              }
-            }
+          case 'revert_to':
+            await handleRevertTo(ws, state, msg, GitManagerError);
             break;
-          }
 
-          case 'clear_history': {
-            if (!state.gitManager) {
-              sendMessage(ws, { type: 'error', message: 'Git manager not initialized' });
-              break;
-            }
-            try {
-              await state.gitManager.clearHistory();
-              sendMessage(ws, { type: 'history_cleared' });
-            } catch (err) {
-              sendMessage(ws, {
-                type: 'error',
-                message: `Failed to clear history: ${(err as Error).message}`,
-              });
-            }
+          case 'clear_history':
+            await handleClearHistory(ws, state);
             break;
-          }
-
         }
       } catch (err) {
         sendMessage(ws, { type: 'error', message: (err as Error).message });
@@ -624,12 +287,6 @@ async function main(): Promise<void> {
     wss.close();
     process.exit(0);
   });
-}
-
-function sendMessage(ws: WebSocket, msg: WSOutgoingMessage): void {
-  if (ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify(msg));
-  }
 }
 
 main().catch(console.error);

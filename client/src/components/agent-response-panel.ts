@@ -28,16 +28,16 @@ export class ZingAgentResponsePanel extends LitElement {
       background: #1f2937;
       border-left: 1px solid #374151;
       transform: translateX(100%);
-      transition: transform 0.3s ease;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
       z-index: 2147483645;
       display: flex;
       flex-direction: column;
-      box-shadow: -4px 0 20px rgba(0, 0, 0, 0.3);
       pointer-events: auto;
     }
 
     .panel.open {
       transform: translateX(0);
+      box-shadow: -4px 0 20px rgba(0, 0, 0, 0.3);
     }
 
     .header {
