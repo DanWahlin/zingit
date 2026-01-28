@@ -95,8 +95,23 @@ export class CodexAgent extends BaseAgent {
             }
           }
 
-          // Add the main prompt text
-          input.push({ type: 'text', text: msg.prompt });
+          // Add system instructions and main prompt
+          const systemInstructions = `You are a UI debugging assistant. When given annotations about UI elements, search for the corresponding code using the selectors and HTML context provided, then make the requested changes.
+
+When screenshots are provided, use them to:
+- Better understand the visual context and styling of the elements
+- Identify the exact appearance that needs to be changed
+- Verify you're targeting the correct element based on its visual representation
+
+IMPORTANT: Format all responses using markdown:
+- Use **bold** for emphasis on important points
+- Use numbered lists for sequential steps (1. 2. 3.)
+- Use bullet points for non-sequential items
+- Use code blocks with \`\`\`language syntax for code examples
+- Use inline \`code\` for file paths, selectors, and technical terms
+
+`;
+          input.push({ type: 'text', text: systemInstructions + msg.prompt });
 
           // Use runStreamed with structured input for real-time progress
           const { events } = await thread.runStreamed(input);
@@ -163,20 +178,25 @@ export class CodexAgent extends BaseAgent {
         // Note: Temp files cleaned up on session destroy to avoid race condition
       },
       destroy: async () => {
-        // Abort any ongoing operation
-        if (abortController) {
-          abortController.abort();
-          abortController = null;
+        try {
+          // Abort any ongoing operation
+          if (abortController) {
+            abortController.abort();
+            abortController = null;
+          }
+          // Thread cleanup happens automatically
+        } finally {
+          // Clean up all temp files even if abort fails
+          for (const tempPath of sessionTempFiles) {
+            try {
+              await fs.unlink(tempPath);
+            } catch (cleanupErr) {
+              // Ignore errors (file may already be deleted)
+              console.debug(`ZingIt: Failed to clean up temp file ${tempPath}:`, cleanupErr);
+            }
+          }
+          sessionTempFiles.length = 0; // Clear the array
         }
-        // Thread cleanup happens automatically
-
-        // Clean up all temp files after session is fully destroyed
-        for (const tempPath of sessionTempFiles) {
-          fs.unlink(tempPath).catch((cleanupErr) => {
-            console.debug(`ZingIt: Failed to clean up temp file ${tempPath}:`, cleanupErr);
-          });
-        }
-        sessionTempFiles.length = 0; // Clear the array
       }
     };
   }

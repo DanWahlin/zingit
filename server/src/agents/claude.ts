@@ -118,7 +118,14 @@ then make the requested changes. Be thorough in finding the right files and maki
 When screenshots are provided, use them to:
 - Better understand the visual context and styling of the elements
 - Identify the exact appearance that needs to be changed
-- Verify you're targeting the correct element based on its visual representation`
+- Verify you're targeting the correct element based on its visual representation
+
+IMPORTANT: Format all responses using markdown:
+- Use **bold** for emphasis on important points
+- Use numbered lists for sequential steps (1. 2. 3.)
+- Use bullet points for non-sequential items
+- Use code blocks with \`\`\`language syntax for code examples
+- Use inline \`code\` for file paths, selectors, and technical terms`
             }
           });
 

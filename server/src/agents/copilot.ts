@@ -64,6 +64,18 @@ When given annotations about UI elements:
 1. Search for the corresponding code using the selectors and HTML context provided
 2. Make the requested changes in the project at ${projectDir}
 3. Be thorough in finding the right files and making precise edits
+
+When screenshots are provided, use them to:
+- Better understand the visual context and styling of the elements
+- Identify the exact appearance that needs to be changed
+- Verify you're targeting the correct element based on its visual representation
+
+IMPORTANT: Format all responses using markdown:
+- Use **bold** for emphasis on important points
+- Use numbered lists for sequential steps (1. 2. 3.)
+- Use bullet points for non-sequential items
+- Use code blocks with \`\`\`language syntax for code examples
+- Use inline \`code\` for file paths, selectors, and technical terms
 </context>
 `
       },
@@ -156,16 +168,21 @@ When given annotations about UI elements:
         // Note: Temp files cleaned up on session destroy to avoid race condition
       },
       destroy: async () => {
-        unsubscribe();
-        await session.destroy();
-
-        // Clean up all temp files after session is fully destroyed
-        for (const tempPath of sessionTempFiles) {
-          fs.unlink(tempPath).catch((cleanupErr) => {
-            console.debug(`ZingIt: Failed to clean up temp file ${tempPath}:`, cleanupErr);
-          });
+        try {
+          unsubscribe();
+          await session.destroy();
+        } finally {
+          // Clean up all temp files even if destroy() fails
+          for (const tempPath of sessionTempFiles) {
+            try {
+              await fs.unlink(tempPath);
+            } catch (cleanupErr) {
+              // Ignore errors (file may already be deleted)
+              console.debug(`ZingIt: Failed to clean up temp file ${tempPath}:`, cleanupErr);
+            }
+          }
+          sessionTempFiles.length = 0; // Clear the array
         }
-        sessionTempFiles.length = 0; // Clear the array
       }
     };
   }

@@ -4,7 +4,7 @@ import { WebSocketServer, WebSocket } from 'ws';
 import { CopilotAgent } from './agents/copilot.js';
 import { ClaudeCodeAgent } from './agents/claude.js';
 import { CodexAgent } from './agents/codex.js';
-import { detectAgents, type AgentInfo } from './utils/agent-detection.js';
+import { detectAgents } from './utils/agent-detection.js';
 import { GitManager, GitManagerError } from './services/git-manager.js';
 import type { Agent, AgentSession, WSIncomingMessage, WSOutgoingMessage, BatchData, Annotation } from './types.js';
 
@@ -166,8 +166,11 @@ async function main(): Promise<void> {
     }
   }
 
-  // WebSocket server
-  const wss = new WebSocketServer({ port: PORT });
+  // WebSocket server with payload limit to prevent accidental memory issues
+  const wss = new WebSocketServer({
+    port: PORT,
+    maxPayload: 10 * 1024 * 1024  // 10MB limit (prevents accidental memory exhaustion)
+  });
   console.log(`✓ ZingIt server running on ws://localhost:${PORT}`);
   console.log(`✓ Project directory: ${PROJECT_DIR}`);
   if (DEFAULT_AGENT) {
@@ -176,28 +179,56 @@ async function main(): Promise<void> {
     console.log('✓ Dynamic agent selection enabled (client chooses agent)');
   }
 
-  // Track connection states
-  const connections = new Map<WebSocket, ConnectionState>();
+  // Track connections and use shared global state for session persistence
+  const connections = new Set<WebSocket>();
+
+  // Global state that persists across WebSocket reconnections
+  // NOTE: This is designed for single-user local development.
+  // Multiple simultaneous clients will share the same agent session.
+  const gitManager = new GitManager(PROJECT_DIR);
+  gitManager.initialize().catch((err) => {
+    console.warn('Failed to initialize GitManager:', err.message);
+  });
+
+  const globalState: ConnectionState = {
+    session: null,
+    agentName: DEFAULT_AGENT,  // Use default if set
+    agent: DEFAULT_AGENT ? initializedAgents.get(DEFAULT_AGENT) || null : null,
+    gitManager,
+    currentCheckpointId: null,
+  };
+
+  // Track cleanup timer to prevent race conditions
+  let sessionCleanupTimer: NodeJS.Timeout | null = null;
 
   wss.on('connection', (ws: WebSocket) => {
     console.log('Client connected');
+    connections.add(ws);
+    const state = globalState; // Use shared state
 
-    // Initialize connection state
-    const gitManager = new GitManager(PROJECT_DIR);
+    // Clear any pending cleanup timer since we have an active connection
+    if (sessionCleanupTimer) {
+      clearTimeout(sessionCleanupTimer);
+      sessionCleanupTimer = null;
+      console.log('Cancelled session cleanup - client reconnected');
+    }
 
-    // Initialize git manager (async but don't block connection)
-    gitManager.initialize().catch((err) => {
-      console.warn('Failed to initialize GitManager:', err.message);
+    // Heartbeat mechanism to detect dead connections
+    let isAlive = true;
+    ws.on('pong', () => {
+      isAlive = true;
     });
 
-    const state: ConnectionState = {
-      session: null,
-      agentName: DEFAULT_AGENT,  // Use default if set
-      agent: DEFAULT_AGENT ? initializedAgents.get(DEFAULT_AGENT) || null : null,
-      gitManager,
-      currentCheckpointId: null,
-    };
-    connections.set(ws, state);
+    const heartbeatInterval = setInterval(() => {
+      if (!isAlive) {
+        console.log('Client failed to respond to ping - terminating connection');
+        clearInterval(heartbeatInterval);
+        ws.terminate();
+        return;
+      }
+      isAlive = false;
+      ws.ping();
+    }, 30000); // Ping every 30 seconds
 
     ws.on('message', async (data: Buffer) => {
       let msg: WSIncomingMessage;
@@ -513,14 +544,35 @@ async function main(): Promise<void> {
 
     ws.on('close', async () => {
       console.log('Client disconnected');
-      if (state.session) {
-        await state.session.destroy();
-      }
       connections.delete(ws);
+
+      // Clean up heartbeat interval
+      clearInterval(heartbeatInterval);
+
+      // Don't destroy session immediately - keep it alive for reconnection (page reload)
+      // Clear any existing cleanup timer to prevent race conditions
+      if (sessionCleanupTimer) {
+        clearTimeout(sessionCleanupTimer);
+        sessionCleanupTimer = null;
+      }
+
+      // Set new cleanup timer only if no connections remain
+      if (connections.size === 0) {
+        sessionCleanupTimer = setTimeout(async () => {
+          if (state.session && connections.size === 0) {
+            console.log('Cleaning up stale session after 5 minutes of inactivity');
+            await state.session.destroy();
+            state.session = null;
+            sessionCleanupTimer = null;
+          }
+        }, 300000); // 5 minutes
+      }
     });
 
     ws.on('error', (err) => {
       console.error('WebSocket error:', err.message);
+      // Clean up heartbeat interval on error
+      clearInterval(heartbeatInterval);
     });
 
     // Send connected message with current state
@@ -535,10 +587,8 @@ async function main(): Promise<void> {
   // Graceful shutdown
   process.on('SIGINT', async () => {
     console.log('\nShutting down...');
-    for (const state of connections.values()) {
-      if (state.session) {
-        await state.session.destroy();
-      }
+    if (globalState.session) {
+      await globalState.session.destroy();
     }
     for (const agent of initializedAgents.values()) {
       await agent.stop();
