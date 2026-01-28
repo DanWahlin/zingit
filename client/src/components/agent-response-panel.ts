@@ -193,6 +193,26 @@ export class ZingAgentResponsePanel extends LitElement {
       word-break: break-word;
     }
 
+    .loading-container {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 8px 0;
+    }
+
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid #374151;
+      border-top-color: #3b82f6;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
     .action-step {
       padding: 10px 12px;
       background: rgba(59, 130, 246, 0.1);
@@ -442,7 +462,12 @@ export class ZingAgentResponsePanel extends LitElement {
     if (!this.content) {
       if (this.processing) {
         const agentDisplay = this.agentName ? ` from ${this.agentName}` : '';
-        return html`<div class="text-block">Waiting for response${agentDisplay}...</div>`;
+        return html`
+          <div class="loading-container">
+            <div class="spinner"></div>
+            <div>Waiting for response${agentDisplay}...</div>
+          </div>
+        `;
       }
       return html`<div class="text-block" style="color: #6b7280;">Add annotations and click the agent button to send them.</div>`;
     }

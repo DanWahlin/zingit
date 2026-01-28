@@ -86,7 +86,6 @@ export class SiteHeader extends LitElement {
         <div class="nav-links">
           <a href="/demo.html" class=${this.activePage === 'demo' ? 'active' : ''}>Demo</a>
           <a href="/about.html" class=${this.activePage === 'about' ? 'active' : ''}>About</a>
-          <a href="/contact.html" class=${this.activePage === 'contact' ? 'active' : ''}>Contribute</a>
         </div>
         <div class="nav-actions">
           <a href="https://github.com/danwahlin/zingit" target="_blank" title="GitHub">
