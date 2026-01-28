@@ -7,14 +7,15 @@
     "node": ">=22.0.0"
   },
   "bin": {
-    "zingit": "./bin/cli.js"
+    "zingit": "bin/cli.js"
   },
   "files": [
     "bin",
     "server/dist",
     "client/dist",
     "README.md",
-    "AGENTS.md"
+    "AGENTS.md",
+    "LICENSE"
   ],
   "main": "client/dist/zingit-client.js",
   "scripts": {
@@ -24,8 +25,7 @@
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "dev:server": "cd server && npm run dev",
     "dev:client": "cd client && npm run dev",
-    "prepublishOnly": "npm run build",
-    "publish": "npm version minor && npm run build && npm publish --access public"
+    "release": "npm version minor && npm run build && npm publish --access public"
   },
   "keywords": [
     "ui",
