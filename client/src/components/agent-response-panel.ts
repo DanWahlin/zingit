@@ -381,7 +381,7 @@ export class ZingAgentResponsePanel extends LitElement {
           <div class="input-row">
             <input
               type="text"
-              placeholder="Follow-up message..."
+              placeholder="Send agent message..."
               .value=${this.followUpMessage}
               @input=${this._handleInputChange}
               @keydown=${this._handleInputKeydown}

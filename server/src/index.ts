@@ -188,7 +188,7 @@ async function main(): Promise<void> {
             break;
 
           case 'message':
-            await handleMessage(ws, state, msg);
+            await handleMessage(ws, state, msg, deps);
             break;
 
           case 'reset':
