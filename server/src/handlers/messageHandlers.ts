@@ -298,11 +298,20 @@ export async function handleMessage(
   try {
     const messagePreview = msg.content.length > 500 ? msg.content.substring(0, 500) + '...' : msg.content;
     console.log('[Message] User message:', messagePreview);
+    if (msg.pageUrl) {
+      console.log('[Message] Page URL:', msg.pageUrl);
+    }
     sendMessage(ws, { type: 'processing' });
+
+    // Prepend page URL context if provided
+    let prompt = msg.content;
+    if (msg.pageUrl) {
+      prompt = `[Context: User is currently on page: ${msg.pageUrl}]\n\n${msg.content}`;
+    }
 
     // Add timeout to detect if SDK hangs
     const timeoutMs = 120000; // 2 minutes
-    const sendPromise = state.session.send({ prompt: msg.content });
+    const sendPromise = state.session.send({ prompt });
     const timeoutPromise = new Promise((_, reject) =>
       setTimeout(() => reject(new Error('Agent response timeout')), timeoutMs)
     );

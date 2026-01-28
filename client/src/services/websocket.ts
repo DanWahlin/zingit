@@ -198,8 +198,8 @@ export class WebSocketClient {
     return this.send(message, { retry: true, maxRetries: 3, onFail });
   }
 
-  sendMessage(content: string): void {
-    this.send({ type: 'message', content });
+  sendMessage(content: string, pageUrl?: string): void {
+    this.send({ type: 'message', content, pageUrl });
   }
 
   sendReset(): void {

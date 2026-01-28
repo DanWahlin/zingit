@@ -64,6 +64,7 @@ export interface WSIncomingMessage {
   type: WSIncomingType;
   data?: BatchData;
   content?: string;
+  pageUrl?: string;  // Current page URL for direct messages
   agent?: string;  // For select_agent and batch messages
   // History/Undo feature
   checkpointId?: string;  // For revert_to

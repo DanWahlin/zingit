@@ -49,16 +49,12 @@ export class CopilotAgent extends BaseAgent {
       }
     };
 
-    // Note: Copilot SDK doesn't currently support session resumption
-    // resumeSessionId parameter is accepted for interface compatibility
-
-    // Create a Copilot session with streaming enabled
-    // Note: Copilot SDK doesn't support cwd in session config, so we include it in the system message
-    const session = await this.client.createSession({
+    // System message and permission config for both new and resumed sessions
+    const sessionConfig = {
       model: this.model,
       streaming: true,
       systemMessage: {
-        mode: 'append',
+        mode: 'append' as const,
         content: `
 <context>
 You are a UI debugging assistant working in the project directory: ${projectDir}
@@ -82,14 +78,19 @@ IMPORTANT: Format all responses using markdown:
 </context>
 `
       },
-      onPermissionRequest: async (request) => {
+      onPermissionRequest: async (request: any) => {
         // Auto-approve read/write operations for file edits
         if (request.kind === 'read' || request.kind === 'write') {
-          return { kind: 'approved' };
+          return { kind: 'approved' as const };
         }
-        return { kind: 'approved' };
+        return { kind: 'approved' as const };
       },
-    });
+    };
+
+    // Resume existing session if we have a sessionId, otherwise create new session
+    const session = resumeSessionId
+      ? await this.client.resumeSession(resumeSessionId, sessionConfig)
+      : await this.client.createSession(sessionConfig);
 
     // Track temp files for cleanup on session destroy (prevents race condition)
     const sessionTempFiles: string[] = [];
@@ -195,7 +196,8 @@ IMPORTANT: Format all responses using markdown:
           }
           sessionTempFiles.length = 0; // Clear the array
         }
-      }
+      },
+      getSessionId: () => session.sessionId
     };
   }
 }

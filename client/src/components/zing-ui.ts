@@ -1277,7 +1277,7 @@ export class ZingUI extends LitElement {
     this.responseToolStatus = '';
     this.startProcessingTimeout(); // Start timeout for follow-up message
 
-    this.ws.sendMessage(e.detail.message);
+    this.ws.sendMessage(e.detail.message, window.location.href);
   }
 
   private handleStop() {

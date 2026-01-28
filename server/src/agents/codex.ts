@@ -43,13 +43,15 @@ export class CodexAgent extends BaseAgent {
       }
     };
 
-    // Note: Codex SDK doesn't currently support session resumption
-    // resumeSessionId parameter is accepted for interface compatibility
-
-    // Start a Codex thread with the project directory
-    const thread = this.codex.startThread({
+    // Thread options for both new and resumed threads
+    const threadOptions = {
       workingDirectory: projectDir,
-    });
+    };
+
+    // Resume existing thread if we have a thread ID, otherwise start new thread
+    const thread = resumeSessionId
+      ? this.codex.resumeThread(resumeSessionId, threadOptions)
+      : this.codex.startThread(threadOptions);
 
     let abortController: AbortController | null = null;
 
@@ -200,7 +202,8 @@ IMPORTANT: Format all responses using markdown:
           }
           sessionTempFiles.length = 0; // Clear the array
         }
-      }
+      },
+      getSessionId: () => thread.id
     };
   }
 }
