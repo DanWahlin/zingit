@@ -191,6 +191,12 @@ export async function handleBatch(
   console.log('[Batch] Formatting prompt and extracting images...');
   const prompt = state.agent.formatPrompt(batchData, projectDir);
   const images = state.agent.extractImages(batchData);
+
+  // Log first 150 chars of prompt to identify the request
+  const promptPreview = prompt.length > 150 ? prompt.substring(0, 150) + '...' : prompt;
+  console.log('[Batch] Prompt preview:', promptPreview);
+  console.log('[Batch] Image count:', images.length);
+
   console.log('[Batch] Sending processing message to client');
   sendMessage(ws, { type: 'processing' });
   console.log('[Batch] Starting agent session.send()...');
@@ -219,6 +225,8 @@ export async function handleBatch(
     }
     state.currentCheckpointId = null;
   }
+
+  console.log('[Batch] ===== Request completed =====');
 }
 
 /**
@@ -246,7 +254,8 @@ export async function handleMessage(
   }
 
   try {
-    console.log(`[ZingIt] Sending message: "${msg.content.substring(0, 50)}..."`);
+    const messagePreview = msg.content.length > 150 ? msg.content.substring(0, 150) + '...' : msg.content;
+    console.log('[Message] Prompt preview:', messagePreview);
     sendMessage(ws, { type: 'processing' });
 
     // Add timeout to detect if SDK hangs
@@ -257,9 +266,10 @@ export async function handleMessage(
     );
 
     await Promise.race([sendPromise, timeoutPromise]);
-    console.log('[ZingIt] Message sent to agent');
+    console.log('[Message] Agent processing completed');
+    console.log('[Message] ===== Request completed =====');
   } catch (err) {
-    console.error('[ZingIt] Error sending message:', (err as Error).message);
+    console.error('[Message] Error sending message:', (err as Error).message);
     sendMessage(ws, { type: 'error', message: `Failed to send message: ${(err as Error).message}` });
   }
 }
