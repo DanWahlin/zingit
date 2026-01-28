@@ -100,7 +100,7 @@ a:hover {
 }
 
 .hero-tagline {
-  font-size: clamp(18px, 2.5vw, 24px);
+  font-size: clamp(24px, 4vw, 36px);
   font-weight: 500;
   letter-spacing: 0.02em;
   margin: 0 auto 32px;
@@ -108,7 +108,7 @@ a:hover {
 }
 
 .hero-tagline .point-annotate {
-  color: #7C3AED;
+  color: white;
   font-weight: 600;
 }
 
