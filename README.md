@@ -43,7 +43,7 @@ cd client
 npm run dev
 ```
 
-5. Visit `http://localhost:5200/index.html?zingit` to load ZingIt.
+5. Visit [http://localhost:5200/index.html?zingit](http://localhost:5200/index.html?zingit) to load ZingIt.
 
 6. Select the agent to use and start annotating!
 
