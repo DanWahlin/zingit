@@ -15,6 +15,7 @@
     "client/dist",
     "README.md",
     "AGENTS.md",
+    "CHANGELOG.md",
     "LICENSE"
   ],
   "main": "client/dist/zingit-client.js",
@@ -29,7 +30,7 @@
     "test": "cd client && npm run test",
     "test:watch": "cd client && npm run test:watch",
     "test:ui": "cd client && npm run test:ui",
-    "release": "npm version minor && npm run build && npm publish --access public"
+    "release": "standard-version && npm run build && npm publish --access public"
   },
   "keywords": [
     "ui",
@@ -69,6 +70,7 @@
     "@types/ws": "^8.18.1",
     "concurrently": "^9.1.2",
     "gh-pages": "^6.3.0",
+    "standard-version": "^9.5.0",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3"
   }

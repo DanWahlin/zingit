@@ -4,11 +4,23 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: 'Release type (auto reads from commits, or force patch/minor/major)'
+        required: false
+        default: 'auto'
+        type: choice
+        options:
+          - auto
+          - patch
+          - minor
+          - major
 
 jobs:
   release:
-    # Only run if commit message starts with "release: "
-    if: startsWith(github.event.head_commit.message, 'release:')
+    # Only run if commit message starts with "release: " OR manually triggered
+    if: startsWith(github.event.head_commit.message, 'release:') || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
 
     permissions:
@@ -42,7 +54,14 @@ jobs:
           git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
 
       - name: Run release
-        run: npm run release
+        run: |
+          if [ "${{ github.event.inputs.release_type }}" = "auto" ] || [ -z "${{ github.event.inputs.release_type }}" ]; then
+            npm run release
+          else
+            npx standard-version --release-as ${{ github.event.inputs.release_type }}
+            npm run build
+            npm publish --access public
+          fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
