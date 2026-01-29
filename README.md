@@ -3,6 +3,9 @@
 
 
 # ZingIt
+
+[Features](#features) | [Quick Start](#quick-start) | [Usage](#usage) | [Configuration](#configuration) | [Troubleshooting](#troubleshooting)
+
 </div>
 
 #### Point-and-click UI feedback that gets automatically implemented by AI

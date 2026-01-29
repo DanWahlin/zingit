@@ -1,0 +1,135 @@
+name: Bug Report
+description: Report a bug or issue with ZingIt
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report this bug! Please fill out the information below to help us investigate.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of what the bug is.
+      placeholder: What happened?
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: Steps to reproduce the issue
+      placeholder: |
+        1. Start ZingIt server with '...'
+        2. Navigate to '...'
+        3. Click on '...'
+        4. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+      placeholder: I expected...
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: What actually happened?
+      placeholder: Instead, I saw...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: ai-agent
+    attributes:
+      label: AI Agent
+      description: Which AI agent were you using?
+      options:
+        - Claude Code
+        - GitHub Copilot CLI
+        - OpenAI Codex
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: zingit-version
+    attributes:
+      label: ZingIt Version
+      description: What version of ZingIt are you using?
+      placeholder: "e.g., 0.17.1 (check package.json or npm list @codewithdan/zingit)"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: browser
+    attributes:
+      label: Browser
+      description: Which browser are you using?
+      options:
+        - Chrome
+        - Firefox
+        - Safari
+        - Edge
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: Operating System
+      description: What OS are you running?
+      placeholder: "e.g., macOS 14.2, Windows 11, Ubuntu 22.04"
+    validations:
+      required: true
+
+  - type: input
+    id: node-version
+    attributes:
+      label: Node.js Version
+      description: What version of Node.js are you using?
+      placeholder: "e.g., 22.1.0 (run: node --version)"
+    validations:
+      required: true
+
+  - type: textarea
+    id: console-errors
+    attributes:
+      label: Browser Console Errors
+      description: Any errors from the browser console? (Right-click > Inspect > Console tab)
+      placeholder: |
+        Paste any error messages here
+      render: shell
+
+  - type: textarea
+    id: server-logs
+    attributes:
+      label: Server Logs
+      description: Any errors from the ZingIt server terminal?
+      placeholder: |
+        Paste any error messages from the server terminal
+      render: shell
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: If applicable, add screenshots to help explain the problem
+      placeholder: Drag and drop images here
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Add any other context about the problem here
+      placeholder: Any other relevant information...
