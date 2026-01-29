@@ -25,9 +25,26 @@ mkdirSync(deployDir, { recursive: true });
 console.log('Copying static files...');
 cpSync(join(rootDir, 'styles.css'), join(deployDir, 'styles.css'));
 
+// Copy images folder
+try {
+  cpSync(join(rootDir, 'images'), join(deployDir, 'images'), { recursive: true });
+  console.log('  ✓ images folder');
+} catch (err) {
+  console.log('  ⚠ images folder not found, skipping');
+}
+
+// Copy dist folder
+try {
+  cpSync(join(rootDir, 'dist'), join(deployDir, 'dist'), { recursive: true });
+  console.log('  ✓ dist folder');
+} catch (err) {
+  console.log('  ⚠ dist folder not found, skipping');
+}
+
 // Copy public folder if it exists
 try {
   cpSync(join(rootDir, 'public'), join(deployDir, 'public'), { recursive: true });
+  console.log('  ✓ public folder');
 } catch (err) {
   console.log('  (no public folder, skipping)');
 }
@@ -38,8 +55,8 @@ const htmlFiles = ['index.html', 'demo.html', 'about.html', 'contact.html', 'tes
 // Pattern to find local script tag
 const localScriptPattern = /<script type="module" src="\/src\/index\.ts" data-auto-init="true"><\/script>/g;
 
-// CDN script replacement
-const cdnScript = `<script src="https://cdn.jsdelivr.net/npm/@codewithdan/zingit@${version}/client/dist/zingit-client.js"></script>`;
+// Local dist script for GitHub Pages
+const localScript = `<script src="./dist/zingit-client.js"></script>`;
 
 console.log('Processing HTML files...');
 htmlFiles.forEach(file => {
@@ -47,8 +64,8 @@ htmlFiles.forEach(file => {
     const filePath = join(rootDir, file);
     const content = readFileSync(filePath, 'utf-8');
 
-    // Replace local script with CDN script
-    const updated = content.replace(localScriptPattern, cdnScript);
+    // Replace local script with local dist script for GitHub Pages
+    const updated = content.replace(localScriptPattern, localScript);
 
     // Write to deploy directory
     writeFileSync(join(deployDir, file), updated);
@@ -59,4 +76,4 @@ htmlFiles.forEach(file => {
 });
 
 console.log(`\nDeployment files ready in ./deploy`);
-console.log(`Using CDN: https://cdn.jsdelivr.net/npm/@codewithdan/zingit@${version}/client/dist/zingit-client.js`);
+console.log(`Using local dist: ./dist/zingit-client.js`);

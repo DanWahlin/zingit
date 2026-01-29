@@ -77,15 +77,15 @@ export class SiteHeader extends LitElement {
   render() {
     return html`
       <nav class="site-nav">
-        <a href="/" class="brand">
+        <a href="index.html" class="brand">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill="#fbbf24" stroke="none"/>
           </svg>
           ZingIt
         </a>
         <div class="nav-links">
-          <a href="/demo.html" class=${this.activePage === 'demo' ? 'active' : ''}>Demo</a>
-          <a href="/about.html" class=${this.activePage === 'about' ? 'active' : ''}>About</a>
+          <a href="demo.html" class=${this.activePage === 'demo' ? 'active' : ''}>Demo</a>
+          <a href="about.html" class=${this.activePage === 'about' ? 'active' : ''}>About</a>
         </div>
         <div class="nav-actions">
           <a href="https://github.com/danwahlin/zingit" target="_blank" title="GitHub">
