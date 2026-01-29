@@ -219,7 +219,7 @@ export class GitManager {
     // Get list of changed files since checkpoint
     let diffStat = '';
     try {
-      const result = await execAsync(`git diff --name-status ${checkpoint.commitHash}`, {
+      const result = await execFileAsync('git', ['diff', '--name-status', checkpoint.commitHash], {
         cwd: this.projectDir,
       });
       diffStat = result.stdout;
@@ -244,8 +244,9 @@ export class GitManager {
       let linesAdded = 0;
       let linesRemoved = 0;
       try {
-        const { stdout: numstat } = await execAsync(
-          `git diff --numstat ${checkpoint.commitHash} -- "${filePath}"`,
+        const { stdout: numstat } = await execFileAsync(
+          'git',
+          ['diff', '--numstat', checkpoint.commitHash, '--', filePath],
           { cwd: this.projectDir }
         );
         const parts = numstat.trim().split('\t');
@@ -313,7 +314,7 @@ export class GitManager {
     }
 
     // Reset to the checkpoint's original commit
-    await execAsync(`git reset --hard ${checkpoint.commitHash}`, { cwd: this.projectDir });
+    await execFileAsync('git', ['reset', '--hard', checkpoint.commitHash], { cwd: this.projectDir });
 
     // Get files that were reverted
     const filesReverted: string[] = [];
@@ -344,7 +345,7 @@ export class GitManager {
     }
 
     // Reset to that commit
-    await execAsync(`git reset --hard ${checkpoint.commitHash}`, { cwd: this.projectDir });
+    await execFileAsync('git', ['reset', '--hard', checkpoint.commitHash], { cwd: this.projectDir });
 
     // Mark all checkpoints after this one as reverted
     const checkpointIndex = history.checkpoints.findIndex((c) => c.id === checkpointId);

@@ -508,22 +508,62 @@ export class ZingAgentResponsePanel extends LitElement {
     // Always render as styled action steps for consistency (preserve Image #3 blockquote styling)
     return steps.map(step => {
       const stepClass = this._classifyStep(step);
-      // Parse markdown formatting (bold, italic, code) for proper display
-      const formatted = this._parseMarkdown(step);
-      return html`<div class="action-step ${stepClass}" .innerHTML=${formatted}></div>`;
+      // Parse markdown and return safe Lit template
+      return html`<div class="action-step ${stepClass}">${this._parseMarkdownToTemplate(step)}</div>`;
     });
   }
 
-  private _parseMarkdown(text: string): string {
-    return text
-      // Bold: **text** → <strong>text</strong>
-      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-      // Italic: *text* → <em>text</em>
-      .replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, '<em>$1</em>')
-      // Inline code: `text` → <code>text</code>
-      .replace(/`([^`]+)`/g, '<code style="background: rgba(59, 130, 246, 0.15); padding: 2px 6px; border-radius: 3px; font-family: monospace;">$1</code>')
-      // Preserve newlines
-      .replace(/\n/g, '<br>');
+  private _parseMarkdownToTemplate(text: string) {
+    // Parse markdown into safe Lit template parts
+    const parts: any[] = [];
+    let currentIndex = 0;
+
+    // Regex to find markdown patterns (bold, italic, code)
+    const markdownRegex = /(\*\*(.+?)\*\*)|(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)|`([^`]+)`/g;
+    let match;
+
+    while ((match = markdownRegex.exec(text)) !== null) {
+      // Add text before the match
+      if (match.index > currentIndex) {
+        parts.push(this._textWithLineBreaks(text.slice(currentIndex, match.index)));
+      }
+
+      // Add the formatted match
+      if (match[2]) {
+        // Bold: **text**
+        parts.push(html`<strong>${match[2]}</strong>`);
+      } else if (match[3]) {
+        // Italic: *text*
+        parts.push(html`<em>${match[3]}</em>`);
+      } else if (match[4]) {
+        // Inline code: `text`
+        parts.push(html`<code style="background: rgba(59, 130, 246, 0.15); padding: 2px 6px; border-radius: 3px; font-family: monospace;">${match[4]}</code>`);
+      }
+
+      currentIndex = match.index + match[0].length;
+    }
+
+    // Add remaining text
+    if (currentIndex < text.length) {
+      parts.push(this._textWithLineBreaks(text.slice(currentIndex)));
+    }
+
+    return parts;
+  }
+
+  private _textWithLineBreaks(text: string) {
+    // Split by newlines and join with <br> elements
+    const lines = text.split('\n');
+    const result: any[] = [];
+
+    lines.forEach((line, index) => {
+      result.push(line);
+      if (index < lines.length - 1) {
+        result.push(html`<br>`);
+      }
+    });
+
+    return result;
   }
 
   private _classifyStep(step: string): string {
