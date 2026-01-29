@@ -284,7 +284,10 @@ export class ZingToolbar extends LitElement {
           class="edit-mode-badge ${this.isRemoteUrl ? 'remote' : 'local'}"
           title="${this.isRemoteUrl ? 'Changes saved locally - deploy to see on this URL' : 'Local development - changes appear on refresh'}"
         >
-          ${this.isRemoteUrl ? '🌐 Remote' : '💻 Local'}
+          ${this.isRemoteUrl
+            ? html`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px; vertical-align: middle;"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>Remote`
+            : html`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px; vertical-align: middle;"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>Local`
+          }
         </div>
 
         <div class="divider"></div>
