@@ -1,6 +1,6 @@
 {
   "name": "@codewithdan/zingit",
-  "version": "0.16.0",
+  "version": "0.16.1",
   "description": "AI-powered UI annotation tool - point, annotate, and let AI fix it",
   "type": "module",
   "engines": {
