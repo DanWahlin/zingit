@@ -25,7 +25,7 @@ const TIMEOUT_MS = 120000; // 2 minutes for agent to respond
 interface TestScenario {
   name: string;
   description: string;
-  annotations: Array<{
+  markers: Array<{
     id: string;
     selector: string;
     identifier: string;
@@ -40,7 +40,7 @@ const scenarios: Record<string, TestScenario> = {
   simple: {
     name: 'Simple Button Change',
     description: 'Change a single button text',
-    annotations: [
+    markers: [
       {
         id: 'test-1',
         selector: 'button.login-btn',
@@ -54,7 +54,7 @@ const scenarios: Record<string, TestScenario> = {
   multi: {
     name: 'Multiple Changes',
     description: 'Make multiple UI changes',
-    annotations: [
+    markers: [
       {
         id: 'test-1',
         selector: 'h1',
@@ -76,7 +76,7 @@ const scenarios: Record<string, TestScenario> = {
   followup: {
     name: 'With Follow-up',
     description: 'Initial change with follow-up message',
-    annotations: [
+    markers: [
       {
         id: 'test-1',
         selector: 'footer p',
@@ -178,13 +178,13 @@ async function runTest(scenarioKey: string): Promise<boolean> {
             log(`Project directory: ${agentInfo.projectDir}`, colors.dim);
 
             // Send the batch after connection
-            log('\nSending annotations...', colors.yellow);
+            log('\nSending markers...', colors.yellow);
             const batch = {
               type: 'batch',
               data: {
                 pageUrl: 'http://localhost:3000/test',
                 pageTitle: 'ZingIt Test Page',
-                annotations: scenario.annotations
+                markers: scenario.markers
               }
             };
             ws.send(JSON.stringify(batch));

@@ -64,7 +64,7 @@ export class SiteFooter extends LitElement {
     return html`
       <footer class="site-footer">
         <div class="footer-content">
-          <div>&copy; 2026 ZingIt</div>
+          <div>&copy; 2026 Dan Wahlin</div>
         </div>
       </footer>
     `;

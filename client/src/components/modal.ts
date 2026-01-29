@@ -341,7 +341,7 @@ export class ZingModal extends LitElement {
       <div class="overlay" @click=${this.handleOverlayClick}>
         <div class="modal" @click=${(e: Event) => e.stopPropagation()}>
           <div class="header">
-            <h2 class="title">${this.editMode ? 'Edit Annotation' : 'Add Annotation'}</h2>
+            <h2 class="title">${this.editMode ? 'Edit Marker' : 'Add Marker'}</h2>
             <button class="close-btn" @click=${this.handleCancel}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <line x1="18" y1="6" x2="6" y2="18"/>
@@ -419,7 +419,7 @@ export class ZingModal extends LitElement {
                 <svg class="confirmation-icon" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 2L1 21h22L12 2zm0 3.83L19.53 19H4.47L12 5.83zM11 16h2v2h-2v-2zm0-6h2v4h-2v-4z"/>
                 </svg>
-                <h3 class="confirmation-title">Empty Annotation?</h3>
+                <h3 class="confirmation-title">Empty Marker?</h3>
                 <p class="confirmation-message">
                   You haven't added any notes. The AI agent won't have instructions on what to change. Are you sure you want to continue?
                 </p>
@@ -518,7 +518,7 @@ export class ZingModal extends LitElement {
       detail: {
         notes: this.localNotes,
         editMode: this.editMode,
-        annotationId: this.markerId,
+        markerId: this.markerId,
         captureScreenshot: this.captureScreenshot
       }
     }));

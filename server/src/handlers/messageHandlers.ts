@@ -287,7 +287,7 @@ export async function handleMessage(
 
   console.log('[Message] ===== Request started =====');
 
-  // Create session if it doesn't exist (allows direct messaging without annotations)
+  // Create session if it doesn't exist (allows direct messaging without markers)
   if (!state.session) {
     if (!state.agent) {
       console.warn('[ZingIt] No agent selected for message');

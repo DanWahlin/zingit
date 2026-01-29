@@ -145,7 +145,7 @@ export class ZingHistoryPanel extends LitElement {
       color: #fff;
     }
 
-    .checkpoint-annotations {
+    .checkpoint-markers {
       color: #f3f4f6;
       font-size: 13px;
       margin-bottom: 8px;

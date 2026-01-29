@@ -156,7 +156,7 @@ export class ZingMarkers extends LitElement {
   }
 
   updated(changedProperties: Map<string, unknown>) {
-    if (changedProperties.has('annotations')) {
+    if (changedProperties.has('markers')) {
       this.updatePositions();
     }
   }
@@ -208,7 +208,7 @@ export class ZingMarkers extends LitElement {
             ${pos.number}
             <button
               class="delete-btn"
-              title="Delete annotation"
+              title="Delete marker"
               @click=${(e: Event) => this.handleDelete(e, pos.id)}
             >×</button>
           </div>

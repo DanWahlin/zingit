@@ -32,8 +32,8 @@ export abstract class BaseAgent implements Agent {
   }
 
   /**
-   * Extract images from batch data annotations
-   * Returns an array of ImageContent objects for annotations that have screenshots
+   * Extract images from batch data markers
+   * Returns an array of ImageContent objects for markers that have screenshots
    */
   extractImages(data: BatchData): ImageContent[] {
     const images: ImageContent[] = [];
@@ -65,7 +65,7 @@ export abstract class BaseAgent implements Agent {
         const base64Regex = /^[A-Za-z0-9+/]*={0,2}$/;
         if (!base64Data || !base64Regex.test(base64Data) || base64Data.length % 4 !== 0) {
           console.warn(`ZingIt: Invalid base64 data in marker ${i + 1}, skipping screenshot`);
-          return; // Skip this annotation's screenshot
+          return; // Skip this marker's screenshot
         }
 
         // Check image size limit (base64 is ~33% larger than binary)
@@ -80,13 +80,13 @@ export abstract class BaseAgent implements Agent {
           Buffer.from(base64Data, 'base64');
         } catch (err) {
           console.warn(`ZingIt: Failed to decode base64 in marker ${i + 1}, skipping screenshot:`, err);
-          return; // Skip this annotation's screenshot
+          return; // Skip this marker's screenshot
         }
 
         images.push({
           base64: base64Data,
           mediaType,
-          label: `Screenshot of Annotation ${i + 1}: ${ann.identifier}`
+          label: `Screenshot of Marker ${i + 1}: ${ann.identifier}`
         });
       }
     });
@@ -105,7 +105,7 @@ URL: ${data.pageUrl}
     data.markers.forEach((ann, i) => {
       prompt += `---
 
-## Annotation ${i + 1}: ${ann.identifier}
+## Marker ${i + 1}: ${ann.identifier}
 
 **Requested Change:** ${ann.notes}
 
@@ -130,7 +130,7 @@ ${ann.parentContext ? `**Parent Path:** \`${ann.parentContext}\`` : ''}
 `;
     });
 
-    // Check if any annotations have screenshots
+    // Check if any markers have screenshots
     const hasScreenshots = data.markers.some(ann => ann.screenshot);
 
     prompt += `

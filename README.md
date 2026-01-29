@@ -97,11 +97,11 @@ Example: `http://localhost:5200/?zingit`
 | Key | Action |
 |-----|--------|
 | `Z` | Toggle mark mode on/off |
-| `Ctrl/Cmd+Z` | Undo last annotation |
+| `Ctrl/Cmd+Z` | Undo last marker |
 | `?` | Show help overlay |
 | `` ` `` | Toggle ZingIt visibility |
 | `Esc` | Close current panel/modal |
-| `Ctrl/Cmd+Enter` | Save annotation (in modal) |
+| `Ctrl/Cmd+Enter` | Save marker (in modal) |
 
 ## Configuration
 
@@ -112,7 +112,7 @@ Click the **gear icon** for settings:
 | WebSocket URL | `ws://localhost:3000` | Server connection |
 | Project Directory | *(server default)* | Override project path |
 | Highlight Color | `#fbbf24` | Element highlight color |
-| Marker Color | `#3b82f6` | Annotation marker color |
+| Marker Color | `#3b82f6` | Marker badge color |
 
 ## Architecture
 
@@ -138,7 +138,7 @@ zingit/
 - Check server logs for error messages
 
 **Markers not persisting**
-- Annotations are URL-specific and stored in localStorage
+- Markers are URL-specific and stored in localStorage
 - Changing pages clears markers
 
 **Changes not appearing on published site**

@@ -192,7 +192,7 @@ export class ZingUI extends LitElement {
         saveMarkers(this.markers);
         // Defer toast notification until after first render
         this.updateComplete.then(() => {
-          this.toast?.info(`Removed ${orphanedCount} stale annotation${orphanedCount > 1 ? 's' : ''}`);
+          this.toast?.info(`Removed ${orphanedCount} stale marker${orphanedCount > 1 ? 's' : ''}`);
         });
       }
     } catch (err) {
@@ -1137,7 +1137,7 @@ export class ZingUI extends LitElement {
 
     if (sent) {
       // Build toast message with screenshot info
-      let message = `Sent ${markersToSend.length} annotation${markersToSend.length > 1 ? 's' : ''}`;
+      let message = `Sent ${markersToSend.length} marker${markersToSend.length > 1 ? 's' : ''}`;
       if (screenshotCount > 0) {
         message += ` (${screenshotCount} with screenshot${screenshotCount > 1 ? 's' : ''})`;
       }
@@ -1450,7 +1450,7 @@ export class ZingUI extends LitElement {
     });
   }
 
-  /** Update annotation statuses and save to storage */
+  /** Update marker statuses and save to storage */
   private updateMarkerStatuses(
     fromStatus: 'pending' | 'processing' | 'completed',
     toStatus: 'pending' | 'processing' | 'completed'

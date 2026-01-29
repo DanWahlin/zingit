@@ -47,7 +47,7 @@ zingit/
 │   │   │   ├── toolbar.ts     # Action buttons and status
 │   │   │   ├── highlight.ts   # Element hover highlight
 │   │   │   ├── markers.ts     # Numbered marker badges
-│   │   │   ├── modal.ts       # Annotation input dialog
+│   │   │   ├── modal.ts       # Marker input dialog
 │   │   │   ├── settings.ts    # Configuration panel
 │   │   │   ├── response.ts    # Agent response display
 │   │   │   ├── toast.ts       # Notification toasts
@@ -109,7 +109,7 @@ zingit/
 
 ## Key Concepts
 
-### Annotations
+### Markers
 A marker captures:
 - `selector` - CSS selector to locate the element
 - `identifier` - Human-readable element description (e.g., "button.primary")
@@ -186,7 +186,7 @@ npx cross-env PROJECT_DIR=/path/to/your/project npx @codewithdan/zingit
 The client persists state to `localStorage`:
 - `zingit_markers` - Current page markers (URL-scoped)
 - `zingit_settings` - User preferences (wsUrl, colors, projectDir)
-- `zingit_active` - Annotation mode on/off (persists across pages)
+- `zingit_active` - Marker mode on/off (persists across pages)
 
 ## Important Implementation Details
 

@@ -20,7 +20,7 @@ function printBanner() {
   console.log('');
   console.log(`${colors.cyan}╔═══════════════════════════════════════════════════════════════╗${colors.reset}`);
   console.log(`${colors.cyan}║                                                               ║${colors.reset}`);
-  console.log(`${colors.cyan}║${colors.reset}  ${colors.bright}⚡ ZingIt${colors.reset} - AI-Powered UI Annotation Tool            ${colors.cyan}║${colors.reset}`);
+  console.log(`${colors.cyan}║${colors.reset}  ${colors.bright}⚡ ZingIt${colors.reset} - AI-Powered UI Marker Tool               ${colors.cyan}║${colors.reset}`);
   console.log(`${colors.cyan}║                                                               ║${colors.reset}`);
   console.log(`${colors.cyan}╚═══════════════════════════════════════════════════════════════╝${colors.reset}`);
   console.log('');
@@ -38,7 +38,7 @@ function printInstructions(port = 3000) {
   console.log(`   ${colors.bright}2.${colors.reset} Or visit the demo page:`);
   console.log(`      ${colors.blue}http://localhost:${port}${colors.reset}`);
   console.log('');
-  console.log(`   ${colors.bright}3.${colors.reset} Press ${colors.bright}Z${colors.reset} to toggle annotation mode`);
+  console.log(`   ${colors.bright}3.${colors.reset} Press ${colors.bright}Z${colors.reset} to toggle marker mode`);
   console.log('');
   console.log(`${colors.yellow}💡 Tip:${colors.reset} Make sure you have an AI agent running (Claude Code, GitHub Copilot CLI, or OpenAI Codex)`);
   console.log('');

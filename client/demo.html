@@ -10,23 +10,38 @@
   <!-- Navigation -->
   <site-header></site-header>
 
-  <!-- Demo Header -->
-  <section class="demo-header">
-    <h1>Interactive Demo Playground</h1>
-    <!-- Setup Notice -->
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-content">
+      <div class="hero-left">
+        <h1 class="hero-headline">Interactive Demo Playground</h1>
+        <p class="hero-tagline">Select It <span class="arrow">→</span> Mark It <span class="arrow">→</span> <span class="highlight"><i>ZingIt</i> to AI</span></p>
+      </div>
+      <div class="hero-right">
+        <div class="hero-image">
+          <picture>
+            <source media="(max-width: 640px)" srcset="./images/zingit-mobile.png">
+            <source media="(max-width: 768px)" srcset="./images/zingit-tablet.png">
+            <img src="./images/zingit.png" alt="ZingIt workflow illustration" />
+          </picture>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Setup Notice -->
+  <section class="setup-section">
     <div class="setup-notice">
       <div>
         <p><strong>New to ZingIt?</strong></p>
         <ol>
           <li>Make sure you've completed the <a href="/#setup">setup steps</a> before trying the demo.</li>
-          <li>Select an element in the page to annotate it.</li>
+          <li>Select an element in the page to mark it.</li>
           <li>Once ready, send the marker to the agent by clicking the <svg width="16" height="16" viewBox="0 0 24 24" fill="#fbbf24" stroke="none" style="vertical-align: middle; display: inline-block;"><path d="M12 1L14 9L22 11L14 13L12 21L10 13L2 11L10 9L12 1Z"/><path d="M19 3L19.7 6L22.5 6.7L19.7 7.4L19 10L18.3 7.4L15.5 6.7L18.3 6L19 3Z"/><path d="M5 14L5.7 17L8.5 17.7L5.7 18.4L5 21L4.3 18.4L1.5 17.7L4.3 17L5 14Z"/></svg> icon in the toolbar.</li>
-          <li>Press <kbd>Z</kbd> to start or stop marker elements or select the On button in the toolbar to enable/disable.</li>
+          <li>Press <kbd>Z</kbd> to start or stop marking elements or select the On button in the toolbar to enable/disable.</li>
         </ol>
       </div>
     </div>
-
-
   </section>
 
   <!-- Demo Grid -->
@@ -165,7 +180,7 @@
             <tr>
               <th>Project Name</th>
               <th>Status</th>
-              <th>Annotations</th>
+              <th>Markers</th>
               <th>Last Updated</th>
               <th>Actions</th>
             </tr>
@@ -208,7 +223,7 @@
           <div class="card-content">
             <span class="card-tag">Tutorial</span>
             <h3>Getting Started with ZingIt</h3>
-            <p>Learn how to annotate your first webpage and send changes to AI agents in under 5 minutes.</p>
+            <p>Learn how to mark your first webpage and send changes to AI agents in under 5 minutes.</p>
             <div class="card-meta">
               <span>5 min read</span>
               <span>•</span>
@@ -218,7 +233,7 @@
         </article>
         <article class="blog-card">
           <div class="card-image">
-            <div class="placeholder-image"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64"><path fill="#f5f5f5" d="M32 4c-8 0-16 12-18 28-1 8 2 16 6 22h24c4-6 7-14 6-22C48 16 40 4 32 4z"/><path fill="#e0e0e0" d="M32 4c-8 0-16 12-18 28h18V4z"/><path fill="#4fc3f7" d="M26 12c0 0-4 8-6 20h12V12h-6z"/><path fill="#29b6f6" d="M38 12c0 0 4 8 6 20H32V12h6z"/><path fill="#ff7043" d="M14 54c2-4 4-8 6-10h-6c-2 4-2 8 0 10z"/><path fill="#ff5722" d="M50 54c-2-4-4-8-6-10h6c2 4 2 8 0 10z"/><path fill="#ff7043" d="M26 54l6-20 6 20c-2 2-4 4-6 6-2-2-4-4-6-6z"/><path fill="#ffeb3b" d="M32 60c-1-2-3-4-4-6l4-14 4 14c-1 2-3 4-4 6z"/><circle fill="#263238" cx="32" cy="24" r="4"/></svg></div>
+            <div class="placeholder-image">🚀</div>
           </div>
           <div class="card-content">
             <span class="card-tag">Feature</span>
@@ -237,7 +252,7 @@
           </div>
           <div class="card-content">
             <span class="card-tag">Tips</span>
-            <h3>Best Annotation Practices</h3>
+            <h3>Best Marker Practices</h3>
             <p>Write better markers that help AI agents understand exactly what changes you want to make.</p>
             <div class="card-meta">
               <span>7 min read</span>
@@ -337,7 +352,7 @@
         </ul>
         <h4>Ordered Steps</h4>
         <ol class="steps-list">
-          <li>Click any element to annotate</li>
+          <li>Click any element to mark it</li>
           <li>Describe the changes you want</li>
           <li>Select your AI agent</li>
           <li>Watch AI implement changes</li>

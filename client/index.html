@@ -12,11 +12,21 @@
 
   <!-- Hero Section -->
   <section class="hero">
-    <h1 class="hero-headline">Streamline how you share UI changes with your AI assistant</h1>
-    <p class="hero-tagline"><span class="highlight">Select</span> → Mark → <span class="highlight">Send to AI</span></p>
-    <!-- <p class="hero-description">
-      The open source marker tool that turns visual feedback into automated code changes.
-    </p> -->
+    <div class="hero-content">
+      <div class="hero-left">
+        <h1 class="hero-headline">Streamline UI feedback for Claude Code, GitHub Copilot CLI, or OpenAI Codex</h1>
+        <p class="hero-tagline">Select It <span class="arrow">→</span> Mark It <span class="arrow">→</span> <span class="highlight"><i>ZingIt</i> to AI</span></p>
+      </div>
+      <div class="hero-right">
+        <div class="hero-image">
+          <picture>
+            <source media="(max-width: 640px)" srcset="./images/zingit-mobile.png">
+            <source media="(max-width: 768px)" srcset="./images/zingit-tablet.png">
+            <img src="./images/zingit.png" alt="ZingIt workflow illustration" />
+          </picture>
+        </div>
+      </div>
+    </div>
   </section>
 
   <!-- Features -->
@@ -34,10 +44,25 @@
         Click any element on your page to add notes about changes you want.
         Smart CSS selectors are automatically generated to target the exact element.
       </p>
+      <a href="#" class="example-link" data-image="./images/select-it.png" data-title="Visual Markers Example">Example</a>
     </div>
     <div class="feature-card">
       <div class="feature-icon">
-        <svg width="48" height="48" viewBox="0 0 24 24" fill="#fbbf24" stroke="none">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2">
+          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+          <circle cx="12" cy="13" r="4"/>
+        </svg>
+      </div>
+      <h3>Screenshot Capture</h3>
+      <p>
+        Automatically captures screenshots of marked elements to provide visual context to AI agents.
+        No more manual screenshot taking and copying/pasting. ZingIt generates them for you!
+      </p>
+      <a href="#" class="example-link" data-image="./images/screen-shots.png" data-title="Screenshot Capture Example">Example</a>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="#EF4444" stroke="none">
           <!-- AI Sparkle Icon -->
           <!-- Large center sparkle -->
           <path d="M12 1L14 9L22 11L14 13L12 21L10 13L2 11L10 9L12 1Z"/>
@@ -52,19 +77,7 @@
         Works with Claude Code, GitHub Copilot CLI, and OpenAI Codex.
         Choose your preferred AI assistant and watch it work in real-time.
       </p>
-    </div>
-    <div class="feature-card">
-      <div class="feature-icon">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2">
-          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-          <circle cx="12" cy="13" r="4"/>
-        </svg>
-      </div>
-      <h3>Screenshot Capture</h3>
-      <p>
-        Automatically captures screenshots of marked elements to provide visual context to AI agents.
-        No more manual screenshot taking! ZingIt generates them for you with perfect element targeting.
-      </p>
+      <a href="#" class="example-link" data-image="./images/multi-agents.png" data-title="Multi-Agent Support Example">Example</a>
     </div>
   </section>
 
@@ -268,6 +281,54 @@ npm run dev</pre>
         console.error('Failed to copy code:', err);
       }
     }
+
+    // Lightbox functionality
+    const lightbox = document.createElement('div');
+    lightbox.className = 'lightbox';
+    lightbox.innerHTML = `
+      <div class="lightbox-backdrop"></div>
+      <div class="lightbox-content">
+        <button class="lightbox-close" aria-label="Close">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+        <img class="lightbox-image" src="" alt="">
+        <div class="lightbox-title"></div>
+      </div>
+    `;
+    document.body.appendChild(lightbox);
+
+    // Handle example link clicks
+    document.querySelectorAll('.example-link').forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const image = link.dataset.image;
+        const title = link.dataset.title;
+
+        lightbox.querySelector('.lightbox-image').src = image;
+        lightbox.querySelector('.lightbox-title').textContent = title;
+        lightbox.classList.add('active');
+        document.body.style.overflow = 'hidden';
+      });
+    });
+
+    // Close lightbox
+    const closeLightbox = () => {
+      lightbox.classList.remove('active');
+      document.body.style.overflow = '';
+    };
+
+    lightbox.querySelector('.lightbox-close').addEventListener('click', closeLightbox);
+    lightbox.querySelector('.lightbox-backdrop').addEventListener('click', closeLightbox);
+
+    // Close on Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && lightbox.classList.contains('active')) {
+        closeLightbox();
+      }
+    });
   </script>
 </body>
 </html>
