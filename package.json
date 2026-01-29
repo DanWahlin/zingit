@@ -1,6 +1,6 @@
 {
   "name": "@codewithdan/zingit",
-  "version": "0.17.1",
+  "version": "0.17.2",
   "description": "AI-powered UI marker tool - point, mark, and let AI fix it",
   "type": "module",
   "engines": {
