@@ -225,6 +225,10 @@ export async function handleBatch(
   console.log('[Batch] Formatting prompt and extracting images...');
   const prompt = state.agent.formatPrompt(batchData, projectDir);
   const images = state.agent.extractImages(batchData);
+
+  // Log prompt preview to identify the request
+  const promptPreview = prompt.length > 150 ? prompt.substring(0, 150) + '...' : prompt;
+  console.log('[Batch] Prompt preview:', promptPreview);
   console.log('[Batch] Image count:', images.length);
 
   console.log('[Batch] Sending processing message to client');

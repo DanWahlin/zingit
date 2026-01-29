@@ -79,6 +79,7 @@ export class ZingUI extends LitElement {
   @state() private agentPickerError = '';
   @state() private isRemoteUrl = false;  // Whether editing a remote/published site
   @state() private currentPageUrl = '';
+  private remoteWarningShown = false;  // Guard to prevent showing warning twice
 
   @query('zing-toast') private toast!: ZingToast;
   @query('zing-history-panel') private historyPanel!: ZingHistoryPanel;
@@ -309,15 +310,12 @@ export class ZingUI extends LitElement {
   }
 
   private showRemoteUrlWarning() {
-    if (!this.toast) return;
+    if (!this.toast || this.remoteWarningShown) return;
 
-    const projectDir = this.settings.projectDir || this.serverProjectDir;
+    this.remoteWarningShown = true;
 
     this.toast.show(
-      `⚠️ Editing Remote Site\n\n` +
-      `You're editing ${this.currentPageUrl}\n\n` +
-      `Changes will be saved locally to:\n${projectDir}\n\n` +
-      `To see changes, run the project locally or deploy.`,
+      `You're editing a published site.\nChanges will be saved locally only.\n\nTo see your changes:\n• Run the project locally, or\n• Deploy the updated files`,
       'warning',
       0 // Persistent until dismissed
     );

@@ -7,7 +7,7 @@ import { customElement, state } from 'lit/decorators.js';
 interface ToastMessage {
   id: string;
   message: string;
-  type: 'success' | 'error' | 'info';
+  type: 'success' | 'error' | 'info' | 'warning';
   duration: number;
   action?: {
     label: string;
@@ -37,15 +37,17 @@ export class ZingToast extends LitElement {
     }
 
     .toast {
-      padding: 10px 16px;
+      position: relative;
+      padding: 12px 36px 12px 16px;
       border-radius: 8px;
       font-size: 13px;
       font-weight: 500;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
       animation: slideUp 0.2s ease-out;
       pointer-events: auto;
-      max-width: 300px;
-      text-align: center;
+      max-width: 400px;
+      text-align: left;
+      line-height: 1.5;
     }
 
     .toast.success {
@@ -62,6 +64,12 @@ export class ZingToast extends LitElement {
       background: #1f2937;
       color: white;
       border: 1px solid #374151;
+    }
+
+    .toast.warning {
+      background: #1f2937;
+      color: white;
+      border-left: 4px solid #f59e0b;
     }
 
     .toast.exiting {
@@ -90,6 +98,25 @@ export class ZingToast extends LitElement {
       background: rgba(255, 255, 255, 0.3);
     }
 
+    .toast-close {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: transparent;
+      border: none;
+      color: white;
+      cursor: pointer;
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      opacity: 0.6;
+      transition: opacity 0.15s ease;
+    }
+
+    .toast-close:hover {
+      opacity: 1;
+    }
+
     @keyframes slideUp {
       from {
         opacity: 0;
@@ -116,7 +143,7 @@ export class ZingToast extends LitElement {
   @state() private toasts: ToastMessage[] = [];
   private exitingIds = new Set<string>();
 
-  show(message: string, type: 'success' | 'error' | 'info' = 'info', duration = 3000, action?: { label: string; callback: () => void }) {
+  show(message: string, type: 'success' | 'error' | 'info' | 'warning' = 'info', duration = 3000, action?: { label: string; callback: () => void }) {
     const id = crypto.randomUUID();
     const toast: ToastMessage = { id, message, type, duration, action };
     this.toasts = [...this.toasts, toast];
@@ -159,8 +186,16 @@ export class ZingToast extends LitElement {
       <div class="toast-container">
         ${this.toasts.map(toast => html`
           <div class="toast ${toast.type} ${this.exitingIds.has(toast.id) ? 'exiting' : ''}">
+            ${toast.duration === 0 ? html`
+              <button class="toast-close" @click=${() => this.dismiss(toast.id)} title="Dismiss">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="18" y1="6" x2="6" y2="18"/>
+                  <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+            ` : ''}
             <div class="toast-content">
-              <span>${toast.message}</span>
+              <span style="white-space: pre-line;">${toast.message}</span>
               ${toast.action ? html`
                 <button class="toast-action" @click=${() => this.handleAction(toast)}>
                   ${toast.action.label}
