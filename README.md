@@ -1,4 +1,9 @@
+<div align="center">
+  <img src="client/images/zingit-readme.png" alt="ZingIt" width="200">
+
+
 # ZingIt
+</div>
 
 Streamline how you share UI changes with your AI assistant. Select elements, mark them, and send directly to AI agents for automated fixes.
 
@@ -6,11 +11,29 @@ Streamline how you share UI changes with your AI assistant. Select elements, mar
 
 ## Features
 
-- **Visual Markers** - Click any element to describe changes you want
-- **Multi-Agent Support** - Works with Claude Code, GitHub Copilot CLI, and OpenAI Codex
+### Visual Markers
+Click any element on your page to add notes about changes you want. Smart CSS selectors are automatically generated to target the exact element.
+
+<img src="client/images/select-it.png" alt="Visual Markers" width="600">
+
+### Screenshot Capture
+Automatically captures screenshots of marked elements to provide visual context to AI agents. No more manual screenshot taking!
+
+<img src="client/images/screen-shots.png" alt="Screenshot Capture" width="600">
+
+### Multi-Agent Support
+Works with Claude Code, GitHub Copilot CLI, and OpenAI Codex. Choose your preferred AI assistant and watch it work in real-time.
+
+<img src="client/images/multi-agents.png" alt="Multi-Agent Support" width="600">
+
+### Send Changes with a Click
+Once you've marked your changes, simply click the sparkle icon (✨) in the ZingIt toolbar to send everything to your AI agent. Watch as it generates code updates live!
+
+<img src="client/images/toolbar.png" alt="Multi-Agent Support">
+
+### Additional Features
 - **Real-time Streaming** - Watch the AI work in real-time
 - **Smart Selectors** - Auto-generates CSS selectors for precise targeting
-- **Screenshot Capture** - Automatically capture annotated elements to provide visual context to agents
 - **Change History** - Track all modifications made by your AI assistant
 - **Remote/Local Detection** - Warns when editing published sites vs local development
 
