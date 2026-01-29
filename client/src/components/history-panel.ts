@@ -471,7 +471,7 @@ export class ZingHistoryPanel extends LitElement {
           </span>
         </div>
         <div class="checkpoint-markers">
-          ${checkpoint.markers.map(m => m.identifier).join(', ') || 'No markers'}
+          ${checkpoint.markers?.map(m => m.identifier).join(', ') || 'No markers'}
         </div>
         <div class="checkpoint-stats">
           <span class="stat">
