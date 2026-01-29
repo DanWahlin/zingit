@@ -299,4 +299,16 @@ Automated release and deployment on commits starting with "release:":
 1. Runs `npm run release` - versions, builds, and publishes to npm
 2. Runs `npm run deploy` - deploys demo site to GitHub Pages
 
-Requires `NPM_TOKEN` secret in repository settings.
+**Setup Requirements:**
+- `NPM_TOKEN` secret in repository settings (for npm publishing)
+- `GITHUB_TOKEN` is automatically provided by GitHub Actions (for gh-pages deployment)
+
+**Authentication:**
+The workflow configures git with an authenticated remote URL before deploying:
+```bash
+git remote set-url origin https://x-access-token:$GITHUB_TOKEN@github.com/${{ github.repository }}.git
+```
+
+This allows `gh-pages` to push to the repository without prompting for credentials.
+
+**Workflow File:** `.github/workflows/release.yml`
