@@ -2,6 +2,8 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.17.2](https://github.com/danwahlin/zingit/compare/v0.17.1...v0.17.2) (2026-01-29)
+
 ### [0.17.1](https://github.com/danwahlin/zingit/compare/v0.16.1...v0.17.1) (2026-01-29)
 
 ### [0.16.1](https://github.com/danwahlin/zingit/compare/v0.16.0...v0.16.1) (2026-01-29)
