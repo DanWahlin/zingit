@@ -5,7 +5,7 @@ import { promisify } from 'util';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
-import type { Annotation } from '../types.js';
+import type { Marker } from '../types.js';
 
 const execAsync = promisify(exec);
 const execFileAsync = promisify(execFile);
@@ -29,7 +29,7 @@ export interface Checkpoint {
   timestamp: string;
   commitHash: string;
   branchName: string;
-  annotations: AnnotationSummary[];
+  markers: MarkerSummary[];
   pageUrl: string;
   pageTitle: string;
   agentName: string;
@@ -38,7 +38,7 @@ export interface Checkpoint {
   linesChanged: number;
 }
 
-export interface AnnotationSummary {
+export interface MarkerSummary {
   id: string;           // Annotation UUID for precise matching during undo
   identifier: string;
   notes: string;
@@ -61,7 +61,7 @@ export interface ChangeHistory {
 export interface CheckpointInfo {
   id: string;
   timestamp: string;
-  annotations: AnnotationSummary[];
+  markers: MarkerSummary[];
   filesModified: number;
   linesChanged: number;
   agentName: string;
@@ -146,7 +146,7 @@ export class GitManager {
    * Create a checkpoint before AI modifications
    */
   async createCheckpoint(metadata: {
-    annotations: Annotation[];
+    markers: Marker[];
     pageUrl: string;
     pageTitle: string;
     agentName: string;
@@ -183,10 +183,10 @@ export class GitManager {
       timestamp: new Date().toISOString(),
       commitHash: commitHash.trim(),
       branchName: status.branch,
-      annotations: metadata.annotations.map((a) => ({
-        id: a.id,
-        identifier: a.identifier,
-        notes: a.notes,
+      markers: metadata.markers.map((m) => ({
+        id: m.id,
+        identifier: m.identifier,
+        notes: m.notes,
       })),
       pageUrl: metadata.pageUrl,
       pageTitle: metadata.pageTitle,
@@ -272,7 +272,7 @@ export class GitManager {
     if (fileChanges.length > 0) {
       try {
         await execFileAsync('git', ['add', '-A'], { cwd: this.projectDir });
-        const identifiers = checkpoint.annotations.map((a) => sanitizeForGit(a.identifier)).join(', ');
+        const identifiers = checkpoint.markers.map((a) => sanitizeForGit(a.identifier)).join(', ');
         const commitMsg = `[ZingIt] ${identifiers}`;
         // Use execFile with array args to avoid shell injection
         await execFileAsync('git', ['commit', '-m', commitMsg], { cwd: this.projectDir });
@@ -371,7 +371,7 @@ export class GitManager {
     return history.checkpoints.map((cp, index) => ({
       id: cp.id,
       timestamp: cp.timestamp,
-      annotations: cp.annotations,
+      markers: cp.markers,
       filesModified: cp.filesModified,
       linesChanged: cp.linesChanged,
       agentName: cp.agentName,

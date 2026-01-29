@@ -123,7 +123,7 @@ CRITICAL EFFICIENCY RULES:
 2. Make the requested change immediately - don't explore or explain unless there's ambiguity
 3. For simple changes (text, styles, attributes), be concise - just do it and confirm
 4. Only search/explore if the selector doesn't match or you need to understand complex context
-5. Avoid explaining what annotations are or describing the codebase unnecessarily
+5. Avoid explaining what markers are or describing the codebase unnecessarily
 
 WHEN TO BE BRIEF (90% of cases):
 - Text changes: Find, change, confirm (1-2 sentences)

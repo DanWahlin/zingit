@@ -38,7 +38,7 @@ export abstract class BaseAgent implements Agent {
   extractImages(data: BatchData): ImageContent[] {
     const images: ImageContent[] = [];
 
-    data.annotations.forEach((ann, i) => {
+    data.markers.forEach((ann, i) => {
       if (ann.screenshot) {
         let base64Data = ann.screenshot;
         let mediaType = 'image/png'; // Default
@@ -64,14 +64,14 @@ export abstract class BaseAgent implements Agent {
         // 3. Check padding is correct
         const base64Regex = /^[A-Za-z0-9+/]*={0,2}$/;
         if (!base64Data || !base64Regex.test(base64Data) || base64Data.length % 4 !== 0) {
-          console.warn(`ZingIt: Invalid base64 data in annotation ${i + 1}, skipping screenshot`);
+          console.warn(`ZingIt: Invalid base64 data in marker ${i + 1}, skipping screenshot`);
           return; // Skip this annotation's screenshot
         }
 
         // Check image size limit (base64 is ~33% larger than binary)
         const estimatedBinarySize = Math.ceil(base64Data.length * 0.75);
         if (estimatedBinarySize > MAX_IMAGE_SIZE_BYTES) {
-          console.warn(`ZingIt: Image in annotation ${i + 1} exceeds ${MAX_IMAGE_SIZE_BYTES / 1024 / 1024}MB limit, skipping`);
+          console.warn(`ZingIt: Image in marker ${i + 1} exceeds ${MAX_IMAGE_SIZE_BYTES / 1024 / 1024}MB limit, skipping`);
           return; // Skip oversized image
         }
 
@@ -79,7 +79,7 @@ export abstract class BaseAgent implements Agent {
         try {
           Buffer.from(base64Data, 'base64');
         } catch (err) {
-          console.warn(`ZingIt: Failed to decode base64 in annotation ${i + 1}, skipping screenshot:`, err);
+          console.warn(`ZingIt: Failed to decode base64 in marker ${i + 1}, skipping screenshot:`, err);
           return; // Skip this annotation's screenshot
         }
 
@@ -102,7 +102,7 @@ URL: ${data.pageUrl}
 
 `;
 
-    data.annotations.forEach((ann, i) => {
+    data.markers.forEach((ann, i) => {
       prompt += `---
 
 ## Annotation ${i + 1}: ${ann.identifier}
@@ -131,7 +131,7 @@ ${ann.parentContext ? `**Parent Path:** \`${ann.parentContext}\`` : ''}
     });
 
     // Check if any annotations have screenshots
-    const hasScreenshots = data.annotations.some(ann => ann.screenshot);
+    const hasScreenshots = data.markers.some(ann => ann.screenshot);
 
     prompt += `
 CRITICAL INSTRUCTIONS:

@@ -44,7 +44,7 @@ function getShadowHost(element: Element): Element | null {
  * Important: This notation is specific to ZingIt and must be parsed by the
  * querySelector() function in this module. It is NOT valid CSS. The `>>>` syntax
  * was used in older Shadow DOM specs but was deprecated. We use it here as a
- * convenient notation for our annotation system.
+ * convenient notation for our marker system.
  *
  * The selector prioritizes:
  * 1. Element ID (most specific)
@@ -306,7 +306,7 @@ export function getElementHtml(element: Element, maxLength = 500): string {
  *
  * Important: This notation is specific to ZingIt and must be parsed by this function.
  * It is NOT valid CSS. The `>>>` syntax was used in older Shadow DOM specs but was
- * deprecated. We use it here as a convenient notation for our annotation system.
+ * deprecated. We use it here as a convenient notation for our marker system.
  *
  * @param selector - CSS selector, potentially with >>> for shadow DOM piercing
  * @returns The matching element or null

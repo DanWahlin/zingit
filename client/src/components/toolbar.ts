@@ -233,7 +233,7 @@ export class ZingToolbar extends LitElement {
   @property({ type: Boolean }) connected = false;
   @property({ type: Boolean }) processing = false;
   @property({ type: Boolean }) maxAttemptsReached = false;
-  @property({ type: Number }) annotationCount = 0;
+  @property({ type: Number }) markerCount = 0;
   @property({ type: String }) agent = '';
   @property({ type: String }) model = '';
   @property({ type: Boolean }) responseOpen = false;  // Whether the response panel is open
@@ -272,7 +272,7 @@ export class ZingToolbar extends LitElement {
 
         <button
           class="btn-toggle ${this.active ? '' : 'inactive'}"
-          title="${this.active ? 'Pause annotation mode' : 'Resume annotation mode'}"
+          title="${this.active ? 'Pause mark mode' : 'Resume mark mode'}"
           @click=${this.handleToggle}
         >
           ${this.active ? 'ON' : 'OFF'}
@@ -304,11 +304,11 @@ export class ZingToolbar extends LitElement {
         <div class="divider"></div>
 
         <div
-          class="count ${this.annotationCount === 0 ? 'disabled' : ''}"
-          title="${this.annotationCount > 0 ? 'Click to highlight annotations' : ''}"
+          class="count ${this.markerCount === 0 ? 'disabled' : ''}"
+          title="${this.markerCount > 0 ? 'Click to highlight markers' : ''}"
           @click=${this.handleCountClick}
         >
-          ${this.annotationCount} annotation${this.annotationCount !== 1 ? 's' : ''}
+          ${this.markerCount} marker${this.markerCount !== 1 ? 's' : ''}
         </div>
 
         <div class="divider"></div>
@@ -326,7 +326,7 @@ export class ZingToolbar extends LitElement {
               <button
                 class="btn-icon ${this.responseOpen ? 'active' : ''}"
                 ?disabled=${!this.connected}
-                title="${this.annotationCount > 0 && !this.processing ? `Send to ${this.agent ? this.agent.charAt(0).toUpperCase() + this.agent.slice(1) : 'Agent'}` : (this.responseOpen ? 'Hide agent panel' : 'Show agent panel')}"
+                title="${this.markerCount > 0 && !this.processing ? `Send to ${this.agent ? this.agent.charAt(0).toUpperCase() + this.agent.slice(1) : 'Agent'}` : (this.responseOpen ? 'Hide agent panel' : 'Show agent panel')}"
                 @click=${this.handleAgentButton}
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="#fbbf24" stroke="none">
@@ -357,8 +357,8 @@ export class ZingToolbar extends LitElement {
 
         <button
           class="btn-icon"
-          ?disabled=${this.annotationCount === 0}
-          title="Copy annotations as Markdown"
+          ?disabled=${this.markerCount === 0}
+          title="Copy markers as Markdown"
           @click=${this.handleExport}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -369,8 +369,8 @@ export class ZingToolbar extends LitElement {
 
         <button
           class="btn-icon"
-          ?disabled=${this.annotationCount === 0}
-          title="Clear all annotations"
+          ?disabled=${this.markerCount === 0}
+          title="Clear all markers"
           @click=${this.handleClear}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -421,9 +421,9 @@ export class ZingToolbar extends LitElement {
   }
 
   private handleAgentButton() {
-    // If we have annotations and not processing, send them (panel will open automatically)
+    // If we have markers and not processing, send them (panel will open automatically)
     // Otherwise, just toggle the panel
-    if (this.annotationCount > 0 && !this.processing) {
+    if (this.markerCount > 0 && !this.processing) {
       this.dispatchEvent(new CustomEvent('send', { bubbles: true, composed: true }));
     } else {
       this.dispatchEvent(new CustomEvent('toggle-response', { bubbles: true, composed: true }));
@@ -463,8 +463,8 @@ export class ZingToolbar extends LitElement {
   }
 
   private handleCountClick() {
-    if (this.annotationCount > 0) {
-      this.dispatchEvent(new CustomEvent('highlight-annotations', { bubbles: true, composed: true }));
+    if (this.markerCount > 0) {
+      this.dispatchEvent(new CustomEvent('highlight-markers', { bubbles: true, composed: true }));
     }
   }
 

@@ -157,7 +157,7 @@ export async function handleBatch(
     try {
       console.log('[Batch] Creating checkpoint...');
       const checkpoint = await state.gitManager.createCheckpoint({
-        annotations: batchData.annotations,
+        markers: batchData.markers,
         pageUrl: batchData.pageUrl,
         pageTitle: batchData.pageTitle,
         agentName: state.agentName,
@@ -169,7 +169,7 @@ export async function handleBatch(
         checkpoint: {
           id: checkpoint.id,
           timestamp: checkpoint.timestamp,
-          annotations: checkpoint.annotations,
+          markers: checkpoint.markers,
           filesModified: 0,
           linesChanged: 0,
           agentName: checkpoint.agentName,
@@ -210,12 +210,12 @@ export async function handleBatch(
     console.log('[Batch] Reusing existing session');
   }
 
-  // Log user's annotations before formatting
-  console.log('[Batch] Annotation count:', batchData.annotations?.length || 0);
-  if (batchData.annotations && batchData.annotations.length > 0) {
-    batchData.annotations.forEach((ann, idx) => {
-      const notePreview = ann.notes?.substring(0, 200) || '(no notes)';
-      console.log(`[Batch] Annotation ${idx + 1}: ${notePreview}`);
+  // Log user's markers before formatting
+  console.log('[Batch] Marker count:', batchData.markers?.length || 0);
+  if (batchData.markers && batchData.markers.length > 0) {
+    batchData.markers.forEach((m, idx) => {
+      const notePreview = m.notes?.substring(0, 200) || '(no notes)';
+      console.log(`[Batch] Marker ${idx + 1}: ${notePreview}`);
     });
   }
   if (batchData.pageUrl) {

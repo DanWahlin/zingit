@@ -1,8 +1,8 @@
 // client/src/types/index.ts
 
-export type AnnotationStatus = 'pending' | 'processing' | 'completed';
+export type MarkerStatus = 'pending' | 'processing' | 'completed';
 
-export interface Annotation {
+export interface Marker {
   id: string;
   selector: string;
   identifier: string;
@@ -13,7 +13,7 @@ export interface Annotation {
   textContent?: string;    // Plain text content (easier to search than HTML)
   siblingContext?: string; // Position among siblings (e.g., "Position 1 of 3 in parent")
   parentHtml?: string;     // Parent HTML with target element marked
-  status?: AnnotationStatus;  // pending = blue (default), processing = red, completed = green
+  status?: MarkerStatus;  // pending = blue (default), processing = red, completed = green
   screenshot?: string;     // Base64 encoded screenshot of the element
 }
 
@@ -44,7 +44,7 @@ export interface AgentInfo {
 export interface BatchData {
   pageUrl: string;
   pageTitle: string;
-  annotations: Annotation[];
+  markers: Marker[];
   projectDir?: string;  // Project directory (overrides server default)
 }
 
@@ -101,8 +101,8 @@ export interface WSMessage {
 // History/Undo Feature Types
 // ============================================
 
-export interface AnnotationSummary {
-  id: string;           // Annotation UUID for precise matching during undo
+export interface MarkerSummary {
+  id: string;           // Marker UUID for precise matching during undo
   identifier: string;
   notes: string;
 }
@@ -110,7 +110,7 @@ export interface AnnotationSummary {
 export interface CheckpointInfo {
   id: string;
   timestamp: string;
-  annotations: AnnotationSummary[];
+  markers: MarkerSummary[];
   filesModified: number;
   linesChanged: number;
   agentName: string;

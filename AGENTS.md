@@ -2,12 +2,12 @@
 
 ## Project Overview
 
-ZingIt is a browser-based annotation tool that allows users to click on webpage elements and add notes/instructions. These annotations are then sent to an AI agent (Claude Code, GitHub Copilot CLI, or OpenAI Codex) which can automatically implement the requested changes.
+ZingIt is a browser-based marker tool that allows users to click on webpage elements and add notes/instructions. These markers are then sent to an AI agent (Claude Code, GitHub Copilot CLI, or OpenAI Codex) which can automatically implement the requested changes.
 
 **Use case**: Point-and-click UI feedback that gets automatically implemented by AI.
 
 **Key Features**:
-- Visual element selection with annotation
+- Visual element selection with marking
 - Multi-agent support (Claude, Copilot, Codex)
 - Automatic screenshot capture
 - Change history tracking
@@ -46,7 +46,7 @@ zingit/
 │   │   │   ├── zing-ui.ts     # Main orchestrator component
 │   │   │   ├── toolbar.ts     # Action buttons and status
 │   │   │   ├── highlight.ts   # Element hover highlight
-│   │   │   ├── markers.ts     # Numbered annotation badges
+│   │   │   ├── markers.ts     # Numbered marker badges
 │   │   │   ├── modal.ts       # Annotation input dialog
 │   │   │   ├── settings.ts    # Configuration panel
 │   │   │   ├── response.ts    # Agent response display
@@ -110,7 +110,7 @@ zingit/
 ## Key Concepts
 
 ### Annotations
-An annotation captures:
+A marker captures:
 - `selector` - CSS selector to locate the element
 - `identifier` - Human-readable element description (e.g., "button.primary")
 - `html` - Outer HTML of the element
@@ -127,7 +127,7 @@ The history component tracks all changes made by the AI agent:
 - Accessible via the clock icon in the toolbar
 
 ### WebSocket Messages
-- **Client → Server**: `batch` (send annotations), `message` (follow-up), `reset` (clear session)
+- **Client → Server**: `batch` (send markers), `message` (follow-up), `reset` (clear session)
 - **Server → Client**: `connected`, `processing`, `delta` (streaming), `tool_start`/`tool_end`, `idle`, `error`
 
 ### Agent System
@@ -174,17 +174,17 @@ npx cross-env PROJECT_DIR=/path/to/your/project npx @codewithdan/zingit
 
 | Key | Action |
 |-----|--------|
-| `Z` | Toggle annotation mode on/off |
-| `Ctrl/Cmd+Z` | Undo last annotation |
+| `Z` | Toggle marker mode on/off |
+| `Ctrl/Cmd+Z` | Undo last marker |
 | `?` | Show help overlay |
 | `` ` `` | Toggle ZingIt visibility |
 | `Esc` | Close current panel/modal |
-| `Ctrl/Cmd+Enter` | Save annotation (in modal) |
+| `Ctrl/Cmd+Enter` | Save marker (in modal) |
 
 ## State Persistence
 
 The client persists state to `localStorage`:
-- `zingit_annotations` - Current page annotations (URL-scoped)
+- `zingit_markers` - Current page markers (URL-scoped)
 - `zingit_settings` - User preferences (wsUrl, colors, projectDir)
 - `zingit_active` - Annotation mode on/off (persists across pages)
 
@@ -279,7 +279,7 @@ Additional test pages are available:
 - `http://localhost:5200/about.html` - About page with stats/timeline
 - `http://localhost:5200/contact.html` - Contact form and FAQ
 
-Add `?zingit` to any URL to activate the annotation tool.
+Add `?zingit` to any URL to activate the marker tool.
 
 ## Build Output
 

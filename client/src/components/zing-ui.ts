@@ -4,12 +4,12 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, state, query } from 'lit/decorators.js';
 import html2canvas from 'html2canvas';
-import type { Annotation, ZingSettings, WSMessage, AgentInfo } from '../types/index.js';
+import type { Marker, ZingSettings, WSMessage, AgentInfo } from '../types/index.js';
 import { WebSocketClient } from '../services/websocket.js';
 import { generateSelector, generateIdentifier, getElementHtml, getParentContext, getTextContent, getSiblingContext, getParentHtml, querySelector } from '../services/selector.js';
-import { saveAnnotations, loadAnnotations, clearAnnotations, saveSettings, loadSettings, saveAnnotationActive, loadAnnotationActive, saveToolbarPosition, loadToolbarPosition, clearToolbarPosition, saveResponseState, loadResponseState, clearResponseState, type ToolbarPosition } from '../services/storage.js';
+import { saveMarkers, loadMarkers, clearMarkers, saveSettings, loadSettings, saveMarkActive, loadMarkActive, saveToolbarPosition, loadToolbarPosition, clearToolbarPosition, saveResponseState, loadResponseState, clearResponseState, type ToolbarPosition } from '../services/storage.js';
 import { getElementViewportRect, clipToViewport, addPadding } from '../utils/geometry.js';
-import { formatAnnotationsMarkdown, copyToClipboard } from '../utils/markdown.js';
+import { formatMarkersMarkdown, copyToClipboard } from '../utils/markdown.js';
 
 import './toolbar.js';
 import './highlight.js';
@@ -64,7 +64,7 @@ export class ZingUI extends LitElement {
     }
   `;
 
-  @state() private annotations: Annotation[] = [];
+  @state() private markers: Marker[] = [];
   @state() private settings: ZingSettings = loadSettings();
   @state() private wsConnected = false;
   @state() private wsMaxAttemptsReached = false;
@@ -72,7 +72,7 @@ export class ZingUI extends LitElement {
   @state() private agentName = '';
   @state() private agentModel = '';
   @state() private serverProjectDir = '';  // Server's default project directory
-  @state() private annotationActive = loadAnnotationActive();
+  @state() private markActive = loadMarkActive();
   @state() private availableAgents: AgentInfo[] = [];
   @state() private agentPickerOpen = false;
   @state() private agentPickerLoading = false;
@@ -83,7 +83,7 @@ export class ZingUI extends LitElement {
 
   @query('zing-toast') private toast!: ZingToast;
   @query('zing-history-panel') private historyPanel!: ZingHistoryPanel;
-  @query('zing-markers') private markers!: ZingMarkers;
+  @query('zing-markers') private markerBadges!: ZingMarkers;
 
   // Highlight state
   @state() private highlightVisible = false;
@@ -93,7 +93,7 @@ export class ZingUI extends LitElement {
   // Modal state
   @state() private modalOpen = false;
   @state() private modalEditMode = false;
-  @state() private modalAnnotationId = '';
+  @state() private modalMarkId = '';
   @state() private modalSelector = '';
   @state() private modalIdentifier = '';
   @state() private modalSelectedText = '';
@@ -120,8 +120,8 @@ export class ZingUI extends LitElement {
   @state() private responseScreenshotCount = 0;
   private isFollowUpMessage = false; // Track if current processing is a follow-up
 
-  // Undo stack for annotations
-  private undoStack: Annotation[] = [];
+  // Undo stack for markers
+  private undoStack: Marker[] = [];
 
   // History panel state
   @state() private historyOpen = false;
@@ -132,14 +132,14 @@ export class ZingUI extends LitElement {
   @state() private undoBarVisible = false;
   @state() private undoBarFilesModified = 0;
 
-  // Track annotation IDs to remove after undo/revert completes
-  private pendingAnnotationRemovals: Set<string> = new Set();
+  // Track marker IDs to remove after undo/revert completes
+  private pendingMarkerRemovals: Set<string> = new Set();
 
   // Debounce tracking for undo operations
   private undoInProgress = false;
 
-  // Recently deleted annotation for undo capability
-  private recentlyDeletedAnnotation: Annotation | null = null;
+  // Recently deleted marker for undo capability
+  private recentlyDeletedMarker: Marker | null = null;
   private deleteUndoTimeout: ReturnType<typeof setTimeout> | null = null;
 
   // Processing timeout to detect when agent hangs
@@ -170,33 +170,33 @@ export class ZingUI extends LitElement {
   connectedCallback() {
     super.connectedCallback();
 
-    // Load saved annotations
-    this.annotations = loadAnnotations();
+    // Load saved markers
+    this.markers = loadMarkers();
 
-    // Clean up orphaned annotations (elements that no longer exist on the page)
+    // Clean up orphaned markers (elements that no longer exist on the page)
     try {
-      const validAnnotations = this.annotations.filter(ann => {
+      const validMarkers = this.markers.filter(marker => {
         try {
-          const element = querySelector(ann.selector);
+          const element = querySelector(marker.selector);
           return element !== null;
         } catch (error) {
           // Invalid selector - treat as orphaned
-          console.warn(`[ZingIt] Invalid selector "${ann.selector}":`, error);
+          console.warn(`[ZingIt] Invalid selector "${marker.selector}":`, error);
           return false;
         }
       });
-      if (validAnnotations.length < this.annotations.length) {
-        const orphanedCount = this.annotations.length - validAnnotations.length;
-        console.log(`[ZingIt] Removed ${orphanedCount} orphaned annotation(s) - elements no longer exist`);
-        this.annotations = validAnnotations;
-        saveAnnotations(this.annotations);
+      if (validMarkers.length < this.markers.length) {
+        const orphanedCount = this.markers.length - validMarkers.length;
+        console.log(`[ZingIt] Removed ${orphanedCount} orphaned marker(s) - elements no longer exist`);
+        this.markers = validMarkers;
+        saveMarkers(this.markers);
         // Defer toast notification until after first render
         this.updateComplete.then(() => {
           this.toast?.info(`Removed ${orphanedCount} stale annotation${orphanedCount > 1 ? 's' : ''}`);
         });
       }
     } catch (err) {
-      console.warn('[ZingIt] Error cleaning up orphaned annotations:', err);
+      console.warn('[ZingIt] Error cleaning up orphaned markers:', err);
     }
 
     // Restore response dialog state if it was saved before auto-refresh
@@ -258,15 +258,15 @@ export class ZingUI extends LitElement {
       this.wsConnected = true;
       this.wsMaxAttemptsReached = false;
 
-      // If we had processing annotations and reconnected (likely due to hot reload after agent made changes),
+      // If we had processing markers and reconnected (likely due to hot reload after agent made changes),
       // mark them as completed since the agent probably finished before the reload
-      const hadProcessing = this.annotations.some(a => a.status === 'processing');
+      const hadProcessing = this.markers.some(a => a.status === 'processing');
       if (hadProcessing) {
-        console.log('[ZingIt] Reconnected with processing annotations - marking as completed');
-        this.annotations = this.annotations.map(a =>
+        console.log('[ZingIt] Reconnected with processing markers - marking as completed');
+        this.markers = this.markers.map(a =>
           a.status === 'processing' ? { ...a, status: 'completed' as const } : a
         );
-        saveAnnotations(this.annotations);
+        saveMarkers(this.markers);
         this.toast.success('Connected - changes completed');
       } else {
         this.toast.success('Connected to server');
@@ -366,7 +366,7 @@ export class ZingUI extends LitElement {
         this.processing = false;
         this.responseToolStatus = '';
         this.isFollowUpMessage = false; // Reset follow-up flag
-        this.updateAnnotationStatuses('processing', 'completed');
+        this.updateMarkerStatuses('processing', 'completed');
         if (this.settings.playSoundOnComplete) {
           this.playCompletionSound();
         }
@@ -401,8 +401,8 @@ export class ZingUI extends LitElement {
         this.responseToolStatus = '';
         this.isFollowUpMessage = false; // Reset follow-up flag
         this.undoInProgress = false;  // Reset undo state on error
-        this.pendingAnnotationRemovals.clear();  // Clear pending removals
-        this.updateAnnotationStatuses('processing', 'pending');
+        this.pendingMarkerRemovals.clear();  // Clear pending removals
+        this.updateMarkerStatuses('processing', 'pending');
         this.toast.error(msg.message || 'An error occurred');
         break;
 
@@ -499,8 +499,8 @@ export class ZingUI extends LitElement {
   }
 
   private handleDocumentClick(e: MouseEvent) {
-    // Ignore if annotation mode is paused
-    if (!this.annotationActive) {
+    // Ignore if mark mode is paused
+    if (!this.markActive) {
       return;
     }
 
@@ -522,13 +522,13 @@ export class ZingUI extends LitElement {
       return;
     }
 
-    // Capture click for annotation
+    // Capture click for marker
     e.preventDefault();
     e.stopPropagation();
 
     this.pendingElement = target;
     this.modalEditMode = false;
-    this.modalAnnotationId = '';
+    this.modalMarkId = '';
     this.modalSelector = generateSelector(target);
     this.modalIdentifier = generateIdentifier(target);
     this.modalNotes = '';
@@ -543,8 +543,8 @@ export class ZingUI extends LitElement {
   }
 
   private handleDocumentMouseMove(e: MouseEvent) {
-    // Ignore if annotation mode is paused
-    if (!this.annotationActive) {
+    // Ignore if mark mode is paused
+    if (!this.markActive) {
       this.highlightVisible = false;
       return;
     }
@@ -616,14 +616,14 @@ export class ZingUI extends LitElement {
     // Skip keyboard shortcuts if typing in an input field (including inside Shadow DOM)
     if (this.isEditableTarget(e)) return;
 
-    // Cmd/Ctrl+Z for undo (both annotation and git-based)
+    // Cmd/Ctrl+Z for undo (both marker and git-based)
     const canGitUndo = this.historyCheckpoints.some(c => c.canUndo);
     if ((e.metaKey || e.ctrlKey) && e.key === 'z' && !e.shiftKey && (this.undoStack.length > 0 || canGitUndo)) {
       e.preventDefault();
       this.handleUndo();
     }
 
-    // "Z" to toggle annotation mode
+    // "Z" to toggle mark mode
     if (e.key === 'z' || e.key === 'Z') {
       this.handleToggle();
     }
@@ -747,7 +747,7 @@ export class ZingUI extends LitElement {
       ></zing-highlight>
 
       <zing-markers
-        .annotations=${this.annotations}
+        .markers=${this.markers}
         style="--marker-color: ${this.settings.markerColor}; --processing-color: ${this.settings.processingColor}; --completed-color: ${this.settings.completedColor}"
         @marker-click=${this.handleMarkerClick}
         @marker-delete=${this.handleMarkerDelete}
@@ -758,11 +758,11 @@ export class ZingUI extends LitElement {
         style="${this.toolbarPosition ? `left: ${this.toolbarPosition.x}px; top: ${this.toolbarPosition.y}px;` : ''}"
       >
         <zing-toolbar
-          .active=${this.annotationActive}
+          .active=${this.markActive}
           .connected=${this.wsConnected}
           .processing=${this.processing}
           .maxAttemptsReached=${this.wsMaxAttemptsReached}
-          .annotationCount=${this.annotations.length}
+          .markerCount=${this.markers.length}
           .agent=${this.agentName}
           .model=${this.agentModel}
           .responseOpen=${this.responseOpen}
@@ -779,7 +779,7 @@ export class ZingUI extends LitElement {
           @toggle-response=${() => this.responseOpen = !this.responseOpen}
           @toggle-history=${this.handleToggleHistory}
           @change-agent=${() => this.agentPickerOpen = true}
-          @highlight-annotations=${this.handleHighlightAnnotations}
+          @highlight-markers=${this.handleHighlightMarkers}
           @drag-start=${this.handleToolbarDragStart}
           @drag-reset=${this.handleToolbarDragReset}
         ></zing-toolbar>
@@ -788,7 +788,7 @@ export class ZingUI extends LitElement {
       <zing-modal
         .open=${this.modalOpen}
         .editMode=${this.modalEditMode}
-        .annotationId=${this.modalAnnotationId}
+        .markerId=${this.modalMarkId}
         .selector=${this.modalSelector}
         .identifier=${this.modalIdentifier}
         .selectedText=${this.modalSelectedText}
@@ -941,18 +941,18 @@ export class ZingUI extends LitElement {
     }
   }
 
-  private handleModalSave(e: CustomEvent<{ notes: string; editMode: boolean; annotationId: string; captureScreenshot: boolean }>) {
+  private handleModalSave(e: CustomEvent<{ notes: string; editMode: boolean; markerId: string; captureScreenshot: boolean }>) {
     try {
-      const { notes, editMode, annotationId, captureScreenshot } = e.detail;
+      const { notes, editMode, markerId, captureScreenshot } = e.detail;
 
       if (editMode) {
-        // Update existing annotation and reset status to pending so it can be sent again
+        // Update existing marker and reset status to pending so it can be sent again
         // Also update the screenshot: use current preview if capturing, or remove if unchecked
         const screenshot = captureScreenshot && this.modalScreenshotPreview ? this.modalScreenshotPreview : undefined;
 
-        this.annotations = this.annotations.map(a => {
-          if (a.id === annotationId) {
-            // Create updated annotation, removing screenshot property if not capturing
+        this.markers = this.markers.map(a => {
+          if (a.id === markerId) {
+            // Create updated marker, removing screenshot property if not capturing
             const updated = { ...a, notes, status: 'pending' as const };
             if (screenshot) {
               updated.screenshot = screenshot;
@@ -963,11 +963,11 @@ export class ZingUI extends LitElement {
           }
           return a;
         });
-        saveAnnotations(this.annotations);
+        saveMarkers(this.markers);
 
         // Also update the undo stack to keep it in sync
         this.undoStack = this.undoStack.map(a => {
-          if (a.id === annotationId) {
+          if (a.id === markerId) {
             const updated = { ...a, notes, status: 'pending' as const };
             if (screenshot) {
               updated.screenshot = screenshot;
@@ -980,15 +980,15 @@ export class ZingUI extends LitElement {
         });
 
         this.handleModalCancel();
-        this.toast.success('Annotation updated');
+        this.toast.success('Marker updated');
       } else {
-        // Create new annotation
+        // Create new marker
         if (!this.pendingElement) return;
 
         // Use pre-captured screenshot if available
         const screenshot = captureScreenshot && this.modalScreenshotPreview ? this.modalScreenshotPreview : undefined;
 
-        const annotation: Annotation = {
+        const marker: Marker = {
           id: crypto.randomUUID(),
           selector: this.modalSelector,
           identifier: this.modalIdentifier,
@@ -1003,38 +1003,38 @@ export class ZingUI extends LitElement {
           ...(screenshot ? { screenshot } : {})
         };
 
-        this.annotations = [...this.annotations, annotation];
-        saveAnnotations(this.annotations);
+        this.markers = [...this.markers, marker];
+        saveMarkers(this.markers);
 
         // Push to undo stack
-        this.undoStack = [...this.undoStack, annotation];
+        this.undoStack = [...this.undoStack, marker];
 
         this.handleModalCancel();
-        this.toast.success(screenshot ? 'Annotation saved with screenshot' : 'Annotation saved');
+        this.toast.success(screenshot ? 'Marker saved with screenshot' : 'Marker saved');
       }
     } catch (err) {
-      console.error('ZingIt: Error saving annotation', err);
-      this.toast.error('Failed to save annotation');
+      console.error('ZingIt: Error saving marker', err);
+      this.toast.error('Failed to save marker');
     }
   }
 
   private handleMarkerClick(e: CustomEvent<{ id: string }>) {
     try {
-      const annotation = this.annotations.find(a => a.id === e.detail.id);
-      if (annotation) {
+      const marker = this.markers.find(a => a.id === e.detail.id);
+      if (marker) {
         // Open modal in edit mode
         this.modalEditMode = true;
-        this.modalAnnotationId = annotation.id;
-        this.modalSelector = annotation.selector;
-        this.modalIdentifier = annotation.identifier;
-        this.modalSelectedText = annotation.selectedText || '';
-        this.modalNotes = annotation.notes;
+        this.modalMarkId = marker.id;
+        this.modalSelector = marker.selector;
+        this.modalIdentifier = marker.identifier;
+        this.modalSelectedText = marker.selectedText || '';
+        this.modalNotes = marker.notes;
 
-        // Restore screenshot state if annotation has a screenshot
-        this.modalCaptureScreenshot = !!annotation.screenshot;
-        this.modalScreenshotPreview = annotation.screenshot || '';
+        // Restore screenshot state if marker has a screenshot
+        this.modalCaptureScreenshot = !!marker.screenshot;
+        this.modalScreenshotPreview = marker.screenshot || '';
 
-        this.pendingElement = querySelector(annotation.selector);
+        this.pendingElement = querySelector(marker.selector);
         if (!this.pendingElement) {
           this.toast.info('Element no longer exists on page');
         }
@@ -1042,16 +1042,16 @@ export class ZingUI extends LitElement {
       }
     } catch (err) {
       console.error('ZingIt: Error handling marker click', err);
-      this.toast.error('Failed to open annotation');
+      this.toast.error('Failed to open marker');
     }
   }
 
   private handleMarkerDelete(e: CustomEvent<{ id: string }>) {
     const id = e.detail.id;
 
-    // Store the annotation for potential undo
-    const deletedAnnotation = this.annotations.find(a => a.id === id);
-    if (!deletedAnnotation) return;
+    // Store the marker for potential undo
+    const deletedMarker = this.markers.find(a => a.id === id);
+    if (!deletedMarker) return;
 
     // Clear any previous delete undo timeout
     if (this.deleteUndoTimeout) {
@@ -1060,43 +1060,43 @@ export class ZingUI extends LitElement {
     }
 
     // Store for undo
-    this.recentlyDeletedAnnotation = deletedAnnotation;
+    this.recentlyDeletedMarker = deletedMarker;
 
-    // Remove from annotations and undo stack
-    this.annotations = this.annotations.filter(a => a.id !== id);
+    // Remove from markers and undo stack
+    this.markers = this.markers.filter(a => a.id !== id);
     this.undoStack = this.undoStack.filter(a => a.id !== id);
-    saveAnnotations(this.annotations);
+    saveMarkers(this.markers);
 
     // Show toast with undo action
-    this.toast.info('Annotation deleted', 5000, {
+    this.toast.info('Marker deleted', 5000, {
       label: 'Undo',
       callback: () => this.undoDelete()
     });
 
     // Clear recently deleted after timeout (can't undo after this)
     this.deleteUndoTimeout = setTimeout(() => {
-      this.recentlyDeletedAnnotation = null;
+      this.recentlyDeletedMarker = null;
       this.deleteUndoTimeout = null;
     }, 5000);
   }
 
   private undoDelete() {
-    // Guard: check if annotation still available and component is connected
-    if (!this.recentlyDeletedAnnotation || !this.isConnected) return;
+    // Guard: check if marker still available and component is connected
+    if (!this.recentlyDeletedMarker || !this.isConnected) return;
 
-    // Restore the annotation
-    this.annotations = [...this.annotations, this.recentlyDeletedAnnotation];
-    this.undoStack = [...this.undoStack, this.recentlyDeletedAnnotation];
-    saveAnnotations(this.annotations);
+    // Restore the marker
+    this.markers = [...this.markers, this.recentlyDeletedMarker];
+    this.undoStack = [...this.undoStack, this.recentlyDeletedMarker];
+    saveMarkers(this.markers);
 
-    // Clear the stored annotation
-    this.recentlyDeletedAnnotation = null;
+    // Clear the stored marker
+    this.recentlyDeletedMarker = null;
     if (this.deleteUndoTimeout) {
       clearTimeout(this.deleteUndoTimeout);
       this.deleteUndoTimeout = null;
     }
 
-    this.toast?.success('Annotation restored');
+    this.toast?.success('Marker restored');
   }
 
   private handleSend() {
@@ -1104,23 +1104,23 @@ export class ZingUI extends LitElement {
     this.responseOpen = true;
     this.isFollowUpMessage = false; // This is a new conversation, not a follow-up
 
-    if (!this.ws || !this.wsConnected || this.annotations.length === 0) return;
+    if (!this.ws || !this.wsConnected || this.markers.length === 0) return;
 
     // Use client-specified projectDir if set, otherwise server will use its default
     const projectDir = this.settings.projectDir || undefined;
 
-    // Only send pending annotations (not completed ones)
-    const pendingAnnotations = this.annotations.filter(a => a.status !== 'completed');
-    if (pendingAnnotations.length === 0) {
-      // No pending annotations - panel is already open, just return
+    // Only send pending markers (not completed ones)
+    const pendingMarkers = this.markers.filter(a => a.status !== 'completed');
+    if (pendingMarkers.length === 0) {
+      // No pending markers - panel is already open, just return
       return;
     }
 
-    this.updateAnnotationStatuses('pending', 'processing');
+    this.updateMarkerStatuses('pending', 'processing');
 
-    // Send only the annotations being processed
-    const annotationsToSend = this.annotations.filter(a => a.status === 'processing');
-    const screenshotCount = annotationsToSend.filter(a => a.screenshot).length;
+    // Send only the markers being processed
+    const markersToSend = this.markers.filter(a => a.status === 'processing');
+    const screenshotCount = markersToSend.filter(a => a.screenshot).length;
 
     // Store screenshot count for response panel
     this.responseScreenshotCount = screenshotCount;
@@ -1128,16 +1128,16 @@ export class ZingUI extends LitElement {
     const sent = this.ws.sendBatch({
       pageUrl: window.location.href,
       pageTitle: document.title,
-      annotations: annotationsToSend
+      markers: markersToSend
     }, projectDir, undefined, () => {
-      // On failure: revert annotations to pending status
-      this.updateAnnotationStatuses('processing', 'pending');
-      this.toast.error('Failed to send annotations - will retry on reconnection');
+      // On failure: revert markers to pending status
+      this.updateMarkerStatuses('processing', 'pending');
+      this.toast.error('Failed to send markers - will retry on reconnection');
     });
 
     if (sent) {
       // Build toast message with screenshot info
-      let message = `Sent ${annotationsToSend.length} annotation${annotationsToSend.length > 1 ? 's' : ''}`;
+      let message = `Sent ${markersToSend.length} annotation${markersToSend.length > 1 ? 's' : ''}`;
       if (screenshotCount > 0) {
         message += ` (${screenshotCount} with screenshot${screenshotCount > 1 ? 's' : ''})`;
       }
@@ -1145,13 +1145,13 @@ export class ZingUI extends LitElement {
       this.toast.info(message);
     } else {
       // Immediate failure, but message queued for retry
-      this.toast.info('Connection lost - annotations queued for retry');
+      this.toast.info('Connection lost - markers queued for retry');
     }
   }
 
   private handleExport() {
-    const markdown = formatAnnotationsMarkdown(
-      this.annotations,
+    const markdown = formatMarkersMarkdown(
+      this.markers,
       window.location.href,
       document.title
     );
@@ -1170,18 +1170,18 @@ export class ZingUI extends LitElement {
       return;
     }
 
-    // Fall back to annotation undo stack
+    // Fall back to marker undo stack
     if (this.undoStack.length === 0) return;
 
-    // Pop the last annotation from the undo stack
-    const lastAnnotation = this.undoStack[this.undoStack.length - 1];
+    // Pop the last marker from the undo stack
+    const lastMarker = this.undoStack[this.undoStack.length - 1];
     this.undoStack = this.undoStack.slice(0, -1);
 
-    // Remove it from annotations
-    this.annotations = this.annotations.filter(a => a.id !== lastAnnotation.id);
-    saveAnnotations(this.annotations);
+    // Remove it from markers
+    this.markers = this.markers.filter(a => a.id !== lastMarker.id);
+    saveMarkers(this.markers);
 
-    this.toast.info('Annotation removed');
+    this.toast.info('Marker removed');
   }
 
   private handleGitUndo() {
@@ -1199,9 +1199,9 @@ export class ZingUI extends LitElement {
     // Find the checkpoint being undone (most recent with canUndo)
     const checkpointToUndo = this.historyCheckpoints.find(c => c.canUndo);
     if (checkpointToUndo) {
-      // Track which annotation IDs should be removed after undo completes
-      this.pendingAnnotationRemovals = new Set(
-        checkpointToUndo.annotations.map(a => a.id)
+      // Track which marker IDs should be removed after undo completes
+      this.pendingMarkerRemovals = new Set(
+        checkpointToUndo.markers.map(a => a.id)
       );
     }
 
@@ -1231,8 +1231,8 @@ export class ZingUI extends LitElement {
       // All checkpoints before the target index (more recent) will be reverted
       // historyCheckpoints is ordered newest first, so indices 0 to targetIndex-1 are being reverted
       const checkpointsToRevert = this.historyCheckpoints.slice(0, targetIndex);
-      this.pendingAnnotationRemovals = new Set(
-        checkpointsToRevert.flatMap(c => c.annotations.map(a => a.id))
+      this.pendingMarkerRemovals = new Set(
+        checkpointsToRevert.flatMap(c => c.markers.map(a => a.id))
       );
     }
 
@@ -1267,9 +1267,9 @@ export class ZingUI extends LitElement {
   }
 
   private handleClear() {
-    this.annotations = [];
+    this.markers = [];
     this.undoStack = [];
-    clearAnnotations();
+    clearMarkers();
     this.ws?.sendReset();
 
     // Reset response panel state
@@ -1279,12 +1279,12 @@ export class ZingUI extends LitElement {
     this.responseScreenshotCount = 0;
     this.processing = false;
 
-    this.toast.info('Annotations cleared');
+    this.toast.info('Markers cleared');
   }
 
-  private handleHighlightAnnotations() {
-    if (this.markers) {
-      this.markers.highlightMarkers();
+  private handleHighlightMarkers() {
+    if (this.markerBadges) {
+      this.markerBadges.highlightMarkers();
     }
   }
 
@@ -1299,11 +1299,11 @@ export class ZingUI extends LitElement {
   }
 
   private handleToggle() {
-    this.annotationActive = !this.annotationActive;
-    saveAnnotationActive(this.annotationActive);
+    this.markActive = !this.markActive;
+    saveMarkActive(this.markActive);
 
-    // Clear highlight when disabling annotation mode
-    if (!this.annotationActive) {
+    // Clear highlight when disabling mark mode
+    if (!this.markActive) {
       this.highlightVisible = false;
     }
   }
@@ -1356,7 +1356,7 @@ export class ZingUI extends LitElement {
     this.ws.sendStop();
     this.processing = false;
     this.responseToolStatus = '';
-    this.updateAnnotationStatuses('processing', 'pending');
+    this.updateMarkerStatuses('processing', 'pending');
     this.toast.info('Agent stopped');
   }
 
@@ -1422,10 +1422,10 @@ export class ZingUI extends LitElement {
       this.isFollowUpMessage = false; // Reset follow-up flag
 
       // Show helpful error message
-      this.responseError = 'The AI agent took too long to respond. This can happen occasionally. Please try submitting your annotations again.';
+      this.responseError = 'The AI agent took too long to respond. This can happen occasionally. Please try submitting your markers again.';
 
-      // Revert annotations to pending so they can be re-sent
-      this.updateAnnotationStatuses('processing', 'pending');
+      // Revert markers to pending so they can be re-sent
+      this.updateMarkerStatuses('processing', 'pending');
 
       // Show toast notification
       this.toast.error('Request timed out - please try again');
@@ -1451,14 +1451,14 @@ export class ZingUI extends LitElement {
   }
 
   /** Update annotation statuses and save to storage */
-  private updateAnnotationStatuses(
+  private updateMarkerStatuses(
     fromStatus: 'pending' | 'processing' | 'completed',
     toStatus: 'pending' | 'processing' | 'completed'
   ) {
-    this.annotations = this.annotations.map(a =>
+    this.markers = this.markers.map(a =>
       a.status === fromStatus ? { ...a, status: toStatus } : a
     );
-    saveAnnotations(this.annotations);
+    saveMarkers(this.markers);
   }
 
   /** Handle checkpoint restoration (undo or revert) */
@@ -1469,17 +1469,17 @@ export class ZingUI extends LitElement {
     // Clear undo-in-progress flag (allows new undo operations)
     this.undoInProgress = false;
 
-    // Remove only the annotations associated with the reverted checkpoint(s)
-    if (this.pendingAnnotationRemovals.size > 0) {
-      this.annotations = this.annotations.filter(
-        a => !this.pendingAnnotationRemovals.has(a.id)
+    // Remove only the markers associated with the reverted checkpoint(s)
+    if (this.pendingMarkerRemovals.size > 0) {
+      this.markers = this.markers.filter(
+        a => !this.pendingMarkerRemovals.has(a.id)
       );
       // Also clean up local undo stack to stay in sync with git state
       this.undoStack = this.undoStack.filter(
-        a => !this.pendingAnnotationRemovals.has(a.id)
+        a => !this.pendingMarkerRemovals.has(a.id)
       );
-      saveAnnotations(this.annotations);
-      this.pendingAnnotationRemovals.clear();
+      saveMarkers(this.markers);
+      this.pendingMarkerRemovals.clear();
     }
 
     this.toast.success(successMessage);

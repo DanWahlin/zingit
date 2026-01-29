@@ -1,9 +1,9 @@
 // client/src/services/storage.ts
-// Persist annotations in localStorage
+// Persist markers in localStorage
 
-import type { Annotation, ZingSettings } from '../types/index.js';
+import type { Marker, ZingSettings } from '../types/index.js';
 
-const STORAGE_KEY = 'zingit_annotations';
+const STORAGE_KEY = 'zingit_marks';
 const SETTINGS_KEY = 'zingit_settings';
 const ACTIVE_KEY = 'zingit_active';
 const TOOLBAR_POS_KEY = 'zingit_toolbar_position';
@@ -21,20 +21,20 @@ export interface ToolbarPosition {
   y: number;
 }
 
-export function saveAnnotations(annotations: Annotation[]): void {
+export function saveMarkers(markers: Marker[]): void {
   try {
     const data = {
       url: window.location.href,
-      annotations,
+      markers,
       timestamp: Date.now()
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   } catch (err) {
-    console.warn('ZingIt: Failed to save annotations', err);
+    console.warn('ZingIt: Failed to save markers', err);
   }
 }
 
-export function loadAnnotations(): Annotation[] {
+export function loadMarkers(): Marker[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return [];
@@ -47,21 +47,21 @@ export function loadAnnotations(): Annotation[] {
     }
 
     // Validate structure
-    if (!Array.isArray(data.annotations)) {
+    if (!Array.isArray(data.markers)) {
       return [];
     }
 
-    return data.annotations;
+    return data.markers;
   } catch {
     return [];
   }
 }
 
-export function clearAnnotations(): void {
+export function clearMarkers(): void {
   try {
     localStorage.removeItem(STORAGE_KEY);
   } catch (err) {
-    console.warn('ZingIt: Failed to clear annotations', err);
+    console.warn('ZingIt: Failed to clear markers', err);
   }
 }
 
@@ -100,7 +100,7 @@ export function loadSettings(): ZingSettings {
   }
 }
 
-export function saveAnnotationActive(active: boolean): void {
+export function saveMarkActive(active: boolean): void {
   try {
     localStorage.setItem(ACTIVE_KEY, JSON.stringify(active));
   } catch (err) {
@@ -108,7 +108,7 @@ export function saveAnnotationActive(active: boolean): void {
   }
 }
 
-export function loadAnnotationActive(): boolean {
+export function loadMarkActive(): boolean {
   try {
     const raw = localStorage.getItem(ACTIVE_KEY);
     if (raw === null) return true; // Default to active

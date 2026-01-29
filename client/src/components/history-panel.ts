@@ -470,8 +470,8 @@ export class ZingHistoryPanel extends LitElement {
             ${checkpoint.status === 'applied' && isCurrent ? 'Current' : checkpoint.status === 'pending' ? 'Live' : checkpoint.status === 'applied' ? 'Applied' : 'Reverted'}
           </span>
         </div>
-        <div class="checkpoint-annotations">
-          ${checkpoint.annotations.map(a => a.identifier).join(', ') || 'No annotations'}
+        <div class="checkpoint-markers">
+          ${checkpoint.markers.map(m => m.identifier).join(', ') || 'No markers'}
         </div>
         <div class="checkpoint-stats">
           <span class="stat">
@@ -545,7 +545,7 @@ export class ZingHistoryPanel extends LitElement {
       return; // Can't revert to already reverted or current checkpoint
     }
 
-    if (confirm(`Revert to this checkpoint?\n\nAll changes after "${checkpoint.annotations.map(a => a.identifier).join(', ')}" will be undone.`)) {
+    if (confirm(`Revert to this checkpoint?\n\nAll changes after "${checkpoint.markers.map(m => m.identifier).join(', ')}" will be undone.`)) {
       this.dispatchEvent(
         new CustomEvent('revert-to', {
           detail: { checkpointId: checkpoint.id },

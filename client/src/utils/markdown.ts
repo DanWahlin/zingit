@@ -1,45 +1,45 @@
 // client/src/utils/markdown.ts
-// Format annotations for export
+// Format markers for export
 
-import type { Annotation } from '../types/index.js';
+import type { Marker } from '../types/index.js';
 
-export function formatAnnotationsMarkdown(annotations: Annotation[], pageUrl: string, pageTitle: string): string {
-  let md = `# UI Annotations\n\n`;
+export function formatMarkersMarkdown(markers: Marker[], pageUrl: string, pageTitle: string): string {
+  let md = `# UI Markers\n\n`;
   md += `**Page:** ${pageTitle}\n`;
   md += `**URL:** ${pageUrl}\n`;
   md += `**Date:** ${new Date().toISOString()}\n\n`;
   md += `---\n\n`;
 
-  annotations.forEach((ann, i) => {
-    md += `## ${i + 1}. ${ann.identifier}\n\n`;
-    md += `**Selector:** \`${ann.selector}\`\n\n`;
-    md += `**Notes:** ${ann.notes}\n\n`;
+  markers.forEach((marker, i) => {
+    md += `## ${i + 1}. ${marker.identifier}\n\n`;
+    md += `**Selector:** \`${marker.selector}\`\n\n`;
+    md += `**Notes:** ${marker.notes}\n\n`;
 
-    if (ann.selectedText) {
-      md += `**Selected Text:** "${ann.selectedText}"\n\n`;
+    if (marker.selectedText) {
+      md += `**Selected Text:** "${marker.selectedText}"\n\n`;
     }
 
-    md += `**HTML:**\n\`\`\`html\n${ann.html}\n\`\`\`\n\n`;
+    md += `**HTML:**\n\`\`\`html\n${marker.html}\n\`\`\`\n\n`;
     md += `---\n\n`;
   });
 
   return md;
 }
 
-export function formatAnnotationsJson(annotations: Annotation[], pageUrl: string, pageTitle: string): string {
+export function formatMarkersJson(markers: Marker[], pageUrl: string, pageTitle: string): string {
   const data = {
     page: {
       url: pageUrl,
       title: pageTitle,
       timestamp: new Date().toISOString()
     },
-    annotations: annotations.map(ann => ({
-      id: ann.id,
-      selector: ann.selector,
-      identifier: ann.identifier,
-      notes: ann.notes,
-      selectedText: ann.selectedText || null,
-      html: ann.html
+    markers: markers.map(marker => ({
+      id: marker.id,
+      selector: marker.selector,
+      identifier: marker.identifier,
+      notes: marker.notes,
+      selectedText: marker.selectedText || null,
+      html: marker.html
     }))
   };
 

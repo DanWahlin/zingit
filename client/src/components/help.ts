@@ -130,14 +130,14 @@ export class ZingHelp extends LitElement {
             </button>
           </div>
 
-          <div class="section-title">Annotation Mode</div>
+          <div class="section-title">Mark Mode</div>
           <div class="shortcuts">
             <div class="shortcut">
-              <span class="shortcut-desc">Toggle annotation mode</span>
+              <span class="shortcut-desc">Toggle mark mode</span>
               <div class="shortcut-keys"><kbd>Z</kbd></div>
             </div>
             <div class="shortcut">
-              <span class="shortcut-desc">Undo last annotation</span>
+              <span class="shortcut-desc">Undo last marker</span>
               <div class="shortcut-keys"><kbd>Ctrl</kbd><kbd>Z</kbd></div>
             </div>
           </div>
@@ -165,7 +165,7 @@ export class ZingHelp extends LitElement {
           <div class="section-title">In Modal</div>
           <div class="shortcuts">
             <div class="shortcut">
-              <span class="shortcut-desc">Save annotation</span>
+              <span class="shortcut-desc">Save marker</span>
               <div class="shortcut-keys"><kbd>Ctrl</kbd><kbd>Enter</kbd></div>
             </div>
           </div>

@@ -479,7 +479,7 @@ export class ZingAgentResponsePanel extends LitElement {
           </div>
         `;
       }
-      return html`<div class="text-block" style="color: #6b7280;">Add annotations or type a message below to get started.</div>`;
+      return html`<div class="text-block" style="color: #6b7280;">Add markers or type a message below to get started.</div>`;
     }
 
     const segments = this._parseContent(this.content);

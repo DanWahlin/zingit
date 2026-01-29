@@ -1,5 +1,5 @@
 // client/src/components/modal.ts
-// Modal for adding annotation notes
+// Modal for adding marker notes
 
 import { LitElement, html, css } from 'lit';
 import { customElement, property, query, state } from 'lit/decorators.js';
@@ -277,7 +277,7 @@ export class ZingModal extends LitElement {
 
   @property({ type: Boolean }) open = false;
   @property({ type: Boolean }) editMode = false;
-  @property({ type: String }) annotationId = '';
+  @property({ type: String }) markerId = '';
   @property({ type: String }) selector = '';
   @property({ type: String }) identifier = '';
   @property({ type: String }) selectedText = '';
@@ -518,7 +518,7 @@ export class ZingModal extends LitElement {
       detail: {
         notes: this.localNotes,
         editMode: this.editMode,
-        annotationId: this.annotationId,
+        annotationId: this.markerId,
         captureScreenshot: this.captureScreenshot
       }
     }));

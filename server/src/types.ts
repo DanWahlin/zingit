@@ -32,13 +32,13 @@ export interface AgentSession {
   getSessionId?(): string | null;  // Optional: get session ID for resumption
 }
 
-export interface Annotation {
+export interface Marker {
   id: string;
   selector: string;
   identifier: string;
   html: string;
   notes: string;
-  status?: 'pending' | 'processing' | 'completed';  // Annotation processing status
+  status?: 'pending' | 'processing' | 'completed';  // Marker processing status
   selectedText?: string;
   parentContext?: string;  // Parent elements path like "div.card > section.content"
   textContent?: string;    // Plain text content (easier to search than HTML)
@@ -50,7 +50,7 @@ export interface Annotation {
 export interface BatchData {
   pageUrl: string;
   pageTitle: string;
-  annotations: Annotation[];
+  markers: Marker[];
   projectDir?: string;  // Client-specified project directory (overrides server default)
 }
 

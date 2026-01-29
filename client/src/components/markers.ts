@@ -3,7 +3,7 @@
 
 import { LitElement, html, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
-import type { Annotation, AnnotationStatus } from '../types/index.js';
+import type { Marker, MarkerStatus } from '../types/index.js';
 import { getElementViewportRect, getViewportRect, getMarkerPosition } from '../utils/geometry.js';
 import { querySelector } from '../services/selector.js';
 
@@ -13,7 +13,7 @@ interface MarkerPosition {
   top: number;
   left: number;
   visible: boolean;
-  status: AnnotationStatus;
+  status: MarkerStatus;
 }
 
 @customElement('zing-markers')
@@ -129,7 +129,7 @@ export class ZingMarkers extends LitElement {
     }
   `;
 
-  @property({ type: Array }) annotations: Annotation[] = [];
+  @property({ type: Array }) markers: Marker[] = [];
   @state() private positions: MarkerPosition[] = [];
   @state() private highlighting = false;
 
@@ -164,7 +164,7 @@ export class ZingMarkers extends LitElement {
   private updatePositions() {
     const viewport = getViewportRect();
 
-    this.positions = this.annotations.map((ann, index) => {
+    this.positions = this.markers.map((ann, index) => {
       const element = querySelector(ann.selector);
       if (!element) {
         return {

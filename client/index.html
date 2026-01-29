@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ZingIt - AI-Powered UI Annotation Tool</title>
+  <title>ZingIt - AI-Powered UI Marker Tool</title>
   <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
@@ -13,9 +13,9 @@
   <!-- Hero Section -->
   <section class="hero">
     <h1 class="hero-headline">Streamline how you share UI changes with your AI assistant</h1>
-    <p class="hero-tagline"><span class="highlight">Select</span> → Annotate → <span class="highlight">Send to AI</span></p>
+    <p class="hero-tagline"><span class="highlight">Select</span> → Mark → <span class="highlight">Send to AI</span></p>
     <!-- <p class="hero-description">
-      The open source annotation tool that turns visual feedback into automated code changes.
+      The open source marker tool that turns visual feedback into automated code changes.
     </p> -->
   </section>
 
@@ -29,7 +29,7 @@
           <circle cx="11" cy="11" r="3"/>
         </svg>
       </div>
-      <h3>Visual Annotations</h3>
+      <h3>Visual Markers</h3>
       <p>
         Click any element on your page to add notes about changes you want.
         Smart CSS selectors are automatically generated to target the exact element.
@@ -62,7 +62,7 @@
       </div>
       <h3>Screenshot Capture</h3>
       <p>
-        Automatically captures screenshots of annotated elements to provide visual context to AI agents.
+        Automatically captures screenshots of marked elements to provide visual context to AI agents.
         No more manual screenshot taking! ZingIt generates them for you with perfect element targeting.
       </p>
     </div>
@@ -130,9 +130,9 @@ npm run dev</pre>
       <div class="setup-step-item">
         <div class="step-number">3</div>
         <div class="step-details">
-          <h3>Start Annotating</h3>
-          <p class="step-desc">With <code>?zingit</code> added to your URL, click any element to annotate it. Press <kbd>Z</kbd> to toggle annotation mode (turn it on/off).</p>
-          <p class="step-desc">Once you've added your annotations, select the <svg width="16" height="16" viewBox="0 0 24 24" fill="#fbbf24" stroke="none" style="display: inline; vertical-align: middle; margin: 0 2px;"><path d="M12 1L14 9L22 11L14 13L12 21L10 13L2 11L10 9L12 1Z"/><path d="M19 3L19.7 6L22.5 6.7L19.7 7.4L19 10L18.3 7.4L15.5 6.7L18.3 6L19 3Z"/><path d="M5 14L5.7 17L8.5 17.7L5.7 18.4L5 21L4.3 18.4L1.5 17.7L4.3 17L5 14Z"/></svg> icon in the ZingIt toolbar to send your annotations to your AI assistant.</p>
+          <h3>Start Marking</h3>
+          <p class="step-desc">With <code>?zingit</code> added to your URL, click any element to mark it. Press <kbd>Z</kbd> to toggle mark mode (turn it on/off).</p>
+          <p class="step-desc">Once you've added your markers, select the <svg width="16" height="16" viewBox="0 0 24 24" fill="#fbbf24" stroke="none" style="display: inline; vertical-align: middle; margin: 0 2px;"><path d="M12 1L14 9L22 11L14 13L12 21L10 13L2 11L10 9L12 1Z"/><path d="M19 3L19.7 6L22.5 6.7L19.7 7.4L19 10L18.3 7.4L15.5 6.7L18.3 6L19 3Z"/><path d="M5 14L5.7 17L8.5 17.7L5.7 18.4L5 21L4.3 18.4L1.5 17.7L4.3 17L5 14Z"/></svg> icon in the ZingIt toolbar to send your markers to your AI assistant.</p>
           <p class="step-desc">Here's a quick guide to the toolbar icons:</p>
           <table class="toolbar-icons-table">
             <tbody>
@@ -140,7 +140,7 @@ npm run dev</pre>
                 <td class="icon-cell">
                   <div style="padding: 4px 8px; border-radius: 4px; background: #374151; color: #d1d5db; font-size: 11px; font-weight: 600; display: inline-block;">ON</div>
                 </td>
-                <td class="desc-cell">Toggle annotation mode on/off. When ON, you can click elements to annotate them.</td>
+                <td class="desc-cell">Toggle mark mode on/off. When ON, you can click elements to mark them.</td>
               </tr>
               <tr>
                 <td class="icon-cell">
@@ -150,7 +150,7 @@ npm run dev</pre>
                     <path d="M5 14L5.7 17L8.5 17.7L5.7 18.4L5 21L4.3 18.4L1.5 17.7L4.3 17L5 14Z"/>
                   </svg>
                 </td>
-                <td class="desc-cell">Send your annotations to your AI assistant. The assistant will analyze them and make the requested changes.</td>
+                <td class="desc-cell">Send your markers to your AI assistant. The assistant will analyze them and make the requested changes.</td>
               </tr>
               <tr>
                 <td class="icon-cell">
@@ -168,7 +168,7 @@ npm run dev</pre>
                     <path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h2"/>
                   </svg>
                 </td>
-                <td class="desc-cell">Copy all annotations as Markdown to share with your team or save for later.</td>
+                <td class="desc-cell">Copy all markers as Markdown to share with your team or save for later.</td>
               </tr>
               <tr>
                 <td class="icon-cell">
@@ -179,7 +179,7 @@ npm run dev</pre>
                     <path d="M6 21c0-5 2-9 6-9s6 4 6 9"/>
                   </svg>
                 </td>
-                <td class="desc-cell">Clear all annotations to start fresh.</td>
+                <td class="desc-cell">Clear all markers to start fresh.</td>
               </tr>
               <tr>
                 <td class="icon-cell">

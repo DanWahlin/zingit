@@ -102,7 +102,7 @@ export class CodexAgent extends BaseAgent {
           }
 
           // Add system instructions and main prompt
-          const systemInstructions = `You are a UI debugging assistant. When given annotations about UI elements, search for the corresponding code using the selectors and HTML context provided, then make the requested changes.
+          const systemInstructions = `You are a UI debugging assistant. When given markers about UI elements, search for the corresponding code using the selectors and HTML context provided, then make the requested changes.
 
 When screenshots are provided, use them to:
 - Better understand the visual context and styling of the elements

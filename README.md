@@ -1,12 +1,12 @@
 # ZingIt
 
-Streamline how you share UI changes with your AI assistant. Select elements, annotate them, and send directly to AI agents for automated fixes.
+Streamline how you share UI changes with your AI assistant. Select elements, mark them, and send directly to AI agents for automated fixes.
 
 **[Try the Live Demo →](https://danwahlin.github.io/zingit)**
 
 ## Features
 
-- **Visual Annotations** - Click any element to describe changes you want
+- **Visual Markers** - Click any element to describe changes you want
 - **Multi-Agent Support** - Works with Claude Code, GitHub Copilot CLI, and OpenAI Codex
 - **Real-time Streaming** - Watch the AI work in real-time
 - **Smart Selectors** - Auto-generates CSS selectors for precise targeting
@@ -50,7 +50,7 @@ npm run dev
 
 5. Visit [http://localhost:5200/?zingit](http://localhost:5200/?zingit) to see ZingIt in action!
 
-6. You'll be prompted to select an AI agent. Start annotating!
+6. You'll be prompted to select an AI agent. Start marking!
 
 ### Option 2: Add to Your Website
 
@@ -74,20 +74,20 @@ Example: `http://localhost:5200/?zingit`
 
 ## Usage
 
-1. **Press `Z`** to toggle annotation mode on/off
-2. **Click elements** on your page to annotate them - add notes about changes you want
-3. **Click the sparkle icon** (✨) in the toolbar to send annotations to your AI agent
+1. **Press `Z`** to toggle mark mode on/off
+2. **Click elements** on your page to mark them - add notes about changes you want
+3. **Click the sparkle icon** (✨) in the toolbar to send markers to your AI agent
 4. **Watch the agent work** in real-time - the response panel shows streaming updates
 
 ### Toolbar Icons
 
 | Icon | Description |
 |------|-------------|
-| **ON/OFF** | Toggle annotation mode |
-| **✨** (Sparkle) | Send annotations to AI agent |
+| **ON/OFF** | Toggle mark mode |
+| **✨** (Sparkle) | Send markers to AI agent |
 | **🕒** (Clock) | View change history |
-| **📋** (Copy) | Export annotations as Markdown |
-| **🧹** (Broom) | Clear all annotations |
+| **📋** (Copy) | Export markers as Markdown |
+| **🧹** (Broom) | Clear all markers |
 | **?** | View keyboard shortcuts |
 | **⚙️** (Gear) | Open settings |
 | **✕** | Close ZingIt toolbar |
@@ -96,7 +96,7 @@ Example: `http://localhost:5200/?zingit`
 
 | Key | Action |
 |-----|--------|
-| `Z` | Toggle annotation mode on/off |
+| `Z` | Toggle mark mode on/off |
 | `Ctrl/Cmd+Z` | Undo last annotation |
 | `?` | Show help overlay |
 | `` ` `` | Toggle ZingIt visibility |
@@ -137,9 +137,9 @@ zingit/
 - Verify AI agent is installed and authenticated
 - Check server logs for error messages
 
-**Annotations not persisting**
+**Markers not persisting**
 - Annotations are URL-specific and stored in localStorage
-- Changing pages clears annotations
+- Changing pages clears markers
 
 **Changes not appearing on published site**
 - If you see a "Remote" badge in the toolbar, you're editing a published site

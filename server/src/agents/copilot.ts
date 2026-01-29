@@ -60,7 +60,7 @@ export class CopilotAgent extends BaseAgent {
 <context>
 You are a UI debugging assistant working in the project directory: ${projectDir}
 
-When given annotations about UI elements:
+When given markers about UI elements:
 1. Search for the corresponding code using the selectors and HTML context provided
 2. Make the requested changes in the project at ${projectDir}
 3. Be thorough in finding the right files and making precise edits
