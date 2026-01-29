@@ -76,7 +76,7 @@
         <div class="step-number">1</div>
         <div class="step-details">
           <h3>Install an AI Agent</h3>
-          <p class="step-desc">You'll need one of these installed:</p>
+          <p class="step-desc">Install and login to one of these AI agents on your dev machine:</p>
           <ul class="agent-list">
             <li><a href="https://github.com/anthropics/claude-code" target="_blank" rel="noopener">Claude Code</a></li>
             <li><a href="https://github.com/github/copilot-cli" target="_blank" rel="noopener">GitHub Copilot CLI</a></li>
@@ -88,53 +88,158 @@
       <div class="setup-step-item">
         <div class="step-number">2</div>
         <div class="step-details">
-          <h3>Start the Server</h3>
+          <h3>Try it with the ZingIt Website</h3>
+          <p class="step-desc">Clone the <a href="https://github.com/danwahlin/zingit" target="_blank" rel="noopener">https://github.com/danwahlin/zingit</a> repo:</p>
           <div class="code-container">
-            <pre class="code-snippet">PROJECT_DIR=/path/to/your/project npx @codewithdan/zingit</pre>
-            <button class="copy-btn" onclick="copyCode(this, 'PROJECT_DIR=/path/to/your/project npx @codewithdan/zingit')" title="Copy to clipboard">
+            <pre class="code-snippet">git clone https://github.com/danwahlin/zingit.git</pre>
+            <button class="copy-btn" onclick="copyCode(this, 'git clone https://github.com/danwahlin/zingit.git')" title="Copy to clipboard">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                 <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
               </svg>
             </button>
           </div>
-          <p class="step-note">Replace <code>/path/to/your/project</code> with your project path. Server runs on <code>ws://localhost:3000</code></p>
+          <p class="step-desc">In a terminal, start the ZingIt server:</p>
+          <div class="code-container">
+            <pre class="code-snippet">cd zingit/server
+npm install
+npx cross-env PROJECT_DIR=../client npm run dev</pre>
+            <button class="copy-btn" onclick="copyCode(this, 'cd zingit/server\nnpm install\nnpx cross-env PROJECT_DIR=../client npm run dev')" title="Copy to clipboard">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+            </button>
+          </div>
+          <p class="step-desc">In another terminal, run the demo site:</p>
+          <div class="code-container">
+            <pre class="code-snippet">cd zingit/client
+npm install
+npm run dev</pre>
+            <button class="copy-btn" onclick="copyCode(this, 'cd zingit/client\nnpm install\nnpm run dev')" title="Copy to clipboard">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+            </button>
+          </div>
+          <p class="step-note">Visit <code>http://localhost:5200/?zingit</code> to see ZingIt in action! You'll be prompted to select an AI agent to assist you.</p>
         </div>
       </div>
 
       <div class="setup-step-item">
         <div class="step-number">3</div>
         <div class="step-details">
-          <h3>Ready to Try It?</h3>
-          <p>Experience ZingIt in action with our interactive demo playground. Annotate forms, tables, buttons, and more with real-time feedback.</p>
-          <a href="/demo.html" class="btn-primary">Launch Interactive Demo</a>
+          <h3>Start Annotating</h3>
+          <p class="step-desc">With <code>?zingit</code> added to your URL, click any element to annotate it. Press <kbd>Z</kbd> to toggle annotation mode (turn it on/off).</p>
+          <p class="step-desc">Once you've added your annotations, select the <svg width="16" height="16" viewBox="0 0 24 24" fill="#fbbf24" stroke="none" style="display: inline; vertical-align: middle; margin: 0 2px;"><path d="M12 1L14 9L22 11L14 13L12 21L10 13L2 11L10 9L12 1Z"/><path d="M19 3L19.7 6L22.5 6.7L19.7 7.4L19 10L18.3 7.4L15.5 6.7L18.3 6L19 3Z"/><path d="M5 14L5.7 17L8.5 17.7L5.7 18.4L5 21L4.3 18.4L1.5 17.7L4.3 17L5 14Z"/></svg> icon in the ZingIt toolbar to send your annotations to your AI assistant.</p>
+          <p class="step-desc">Here's a quick guide to the toolbar icons:</p>
+          <table class="toolbar-icons-table">
+            <tbody>
+              <tr>
+                <td class="icon-cell">
+                  <div style="padding: 4px 8px; border-radius: 4px; background: #374151; color: #d1d5db; font-size: 11px; font-weight: 600; display: inline-block;">ON</div>
+                </td>
+                <td class="desc-cell">Toggle annotation mode on/off. When ON, you can click elements to annotate them.</td>
+              </tr>
+              <tr>
+                <td class="icon-cell">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="#fbbf24" stroke="none">
+                    <path d="M12 1L14 9L22 11L14 13L12 21L10 13L2 11L10 9L12 1Z"/>
+                    <path d="M19 3L19.7 6L22.5 6.7L19.7 7.4L19 10L18.3 7.4L15.5 6.7L18.3 6L19 3Z"/>
+                    <path d="M5 14L5.7 17L8.5 17.7L5.7 18.4L5 21L4.3 18.4L1.5 17.7L4.3 17L5 14Z"/>
+                  </svg>
+                </td>
+                <td class="desc-cell">Send your annotations to your AI assistant. The assistant will analyze them and make the requested changes.</td>
+              </tr>
+              <tr>
+                <td class="icon-cell">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <polyline points="12 6 12 12 16 14"/>
+                  </svg>
+                </td>
+                <td class="desc-cell">View change history to see all modifications made by your AI assistant.</td>
+              </tr>
+              <tr>
+                <td class="icon-cell">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2">
+                    <rect x="8" y="8" width="12" height="14" rx="2"/>
+                    <path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h2"/>
+                  </svg>
+                </td>
+                <td class="desc-cell">Copy all annotations as Markdown to share with your team or save for later.</td>
+              </tr>
+              <tr>
+                <td class="icon-cell">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2">
+                    <path d="M5 21h14"/>
+                    <path d="M12 17V3"/>
+                    <path d="M8 21c0-4 1.5-7 4-7s4 3 4 7"/>
+                    <path d="M6 21c0-5 2-9 6-9s6 4 6 9"/>
+                  </svg>
+                </td>
+                <td class="desc-cell">Clear all annotations to start fresh.</td>
+              </tr>
+              <tr>
+                <td class="icon-cell">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2.5">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M9.5 9a2.5 2.5 0 1 1 3 2.4 1.5 1.5 0 0 0-.5 1.1v.5"/>
+                    <circle cx="12" cy="17" r=".5" fill="#9ca3af"/>
+                  </svg>
+                </td>
+                <td class="desc-cell">View keyboard shortcuts and help documentation.</td>
+              </tr>
+              <tr>
+                <td class="icon-cell">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2">
+                    <circle cx="12" cy="12" r="3"/>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                  </svg>
+                </td>
+                <td class="desc-cell">Configure ZingIt settings including AI agent selection and project directory.</td>
+              </tr>
+              <tr>
+                <td class="icon-cell">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                </td>
+                <td class="desc-cell">Close the ZingIt toolbar. Reopen by adding <code>?zingit</code> to the URL.</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
 
       <div class="setup-step-item">
         <div class="step-number">4</div>
         <div class="step-details">
-          <h3>Start Annotating</h3>
-          <p class="step-desc">Press <kbd>Z</kbd> to toggle annotation mode, then click any element to annotate it.</p>
-          <p class="step-note">Tip: Add <code>?zingit</code> to any URL to auto-activate</p>
-        </div>
-      </div>
-
-      <div class="setup-step-item optional">
-        <div class="step-number">5</div>
-        <div class="step-details">
-          <h3>Add to Your Page <span class="optional-badge">(Optional)</span></h3>
+          <h3>Try it with Your Website</h3>
+          <p class="step-desc">Start the ZingIt server in a terminal. Replace <code>/path/to/your/project</code> with your project path. Works on Windows, Mac, and Linux.</p>
           <div class="code-container">
-            <pre class="code-snippet">&lt;script src="https://cdn.jsdelivr.net/npm/@codewithdan/zingit@latest/dist/zingit-client.js"&gt;&lt;/script&gt;
-&lt;script&gt;ZingIt.connect('ws://localhost:3000');&lt;/script&gt;</pre>
-            <button class="copy-btn" onclick="copyCode(this, '<script src=&quot;https://cdn.jsdelivr.net/npm/@codewithdan/zingit@latest/dist/zingit-client.js&quot;></script>\n<script>ZingIt.connect(\\'ws://localhost:3000\\');</script>')" title="Copy to clipboard">
+            <pre class="code-snippet">npx cross-env PROJECT_DIR=/path/to/your/project npx @codewithdan/zingit</pre>
+            <button class="copy-btn" onclick="copyCode(this, 'npx cross-env PROJECT_DIR=/path/to/your/project npx @codewithdan/zingit')" title="Copy to clipboard">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                 <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
               </svg>
             </button>
           </div>
-          <p class="step-note">For use on your own pages</p>
+          <p class="step-desc">Add the ZingIt script to your HTML pages just before the closing <code>&lt;/body&gt;</code> tag:</p>
+          <div class="code-container">
+            <pre class="code-snippet">&lt;script src="https://cdn.jsdelivr.net/npm/@codewithdan/zingit@latest/dist/zingit-client.js"&gt;&lt;/script&gt;</pre>
+            <button class="copy-btn" onclick="copyCode(this, '<script src=&quot;https://cdn.jsdelivr.net/npm/@codewithdan/zingit@latest/dist/zingit-client.js&quot;></script>')" title="Copy to clipboard">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+            </button>
+          </div>
+          <p class="step-desc">Run your website's dev server and visit it with <code>?zingit</code> added to the URL.</p>
+          <p class="step-note">Example: <code>http://localhost:5200/?zingit</code></p>
         </div>
       </div>
     </div>
@@ -143,7 +248,7 @@
   <!-- Footer -->
   <site-footer></site-footer>
 
-  <script src="https://cdn.jsdelivr.net/npm/@codewithdan/zingit@0.13.0/client/dist/zingit-client.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@codewithdan/zingit@0.16.0/client/dist/zingit-client.js"></script>
   <script>
     async function copyCode(button, code) {
       try {
