@@ -7,7 +7,7 @@
 
 #### Point-and-click UI feedback that gets automatically implemented by AI
 
-Tired of describing what element to change in the UI, taking screenshots, and copying/pasting them into your AI assitant? Streamline how you share UI changes! Select elements, mark them with the changes you want to make, and send directly to AI agents for automated fixes.
+Tired of describing what element to change in the UI, taking screenshots, and copying/pasting them into your AI assistant? Streamline how you share UI changes! Select elements, mark them with the changes you want to make, and send directly to AI agents for automated fixes.
 
 **Point → Click → Describe → ZingIt to AI**
 
