@@ -12,14 +12,27 @@
 
   <!-- Hero Section -->
   <section class="hero">
-    <h1 class="hero-headline">About ZingIt</h1>
-    <p class="hero-tagline">The open source tool that bridges the gap between visual feedback and AI-powered code changes.</p>
+    <div class="hero-content">
+      <div class="hero-left">
+        <h1 class="hero-headline">About ZingIt</h1>
+        <p class="hero-tagline">Select It <span class="arrow">→</span> Mark It <span class="arrow">→</span> <span class="highlight"><i>ZingIt</i> to AI</span></p>
+      </div>
+      <div class="hero-right">
+        <div class="hero-image">
+          <picture>
+            <source media="(max-width: 640px)" srcset="./images/zingit-mobile.png">
+            <source media="(max-width: 768px)" srcset="./images/zingit-tablet.png">
+            <img src="./images/zingit.png" alt="ZingIt workflow illustration" />
+          </picture>
+        </div>
+      </div>
+    </div>
   </section>
 
   <!-- What is ZingIt -->
   <section class="content-section" style="margin-top: 32px;">
     <h2>What is ZingIt?</h2>
-    <p>ZingIt is an open source UI annotation tool created by <a href="https://x.com/danwahlin" target="_blank" rel="noopener">Dan Wahlin</a> that lets developers and designers point at elements on a webpage, describe what changes they want, and send those instructions directly to AI coding agents for automated implementation.</p>
+    <p>ZingIt is an open source UI marker tool created by <a href="https://x.com/danwahlin" target="_blank" rel="noopener">Dan Wahlin</a> that lets developers and designers point at elements on a webpage, describe what changes they want, and send those instructions directly to AI coding agents for automated implementation.</p>
     <p>Instead of writing detailed prompts about UI elements to change, creating screenshots, and pasting all of the details into an agent, you simply click on what you want to change and describe the fix concisely. ZingIt will even generate a screenshot for you to send to the agent automatically!</p>
   </section>
 
@@ -28,16 +41,35 @@
     <h2>How It Works</h2>
     <div class="values">
       <div class="value">
-        <h3>1. Point</h3>
-        <p>Click on any element in your webpage. ZingIt automatically captures the element's CSS selector, HTML structure, and visual context.</p>
+        <div class="value-icon">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="#3B82F6" stroke="none">
+            <path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/>
+            <path d="M13 13l6 6"/>
+          </svg>
+        </div>
+        <h3>1. Point &amp; Click</h3>
+        <p>Simply click any element on your webpage. ZingIt instantly captures its CSS selector, HTML structure, and visual context—no manual inspection needed.</p>
       </div>
       <div class="value">
-        <h3>2. Annotate</h3>
-        <p>Describe the change you want in plain English. "Make this button blue", "Add form validation", "Fix the spacing here".</p>
+        <div class="value-icon">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+        </div>
+        <h3>2. Describe Your Vision</h3>
+        <p>Write what you want in plain English. "Make this button blue and larger", "Add hover effects", "Fix the alignment"—ZingIt understands natural language.</p>
       </div>
       <div class="value">
-        <h3>3. Let AI Fix It</h3>
-        <p>Send your annotations to an AI agent (Claude, Copilot, or Codex) which finds the corresponding code and makes the changes automatically.</p>
+        <div class="value-icon">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="#fbbf24" stroke="none">
+            <path d="M12 1L14 9L22 11L14 13L12 21L10 13L2 11L10 9L12 1Z"/>
+            <path d="M19 3L19.7 6L22.5 6.7L19.7 7.4L19 10L18.3 7.4L15.5 6.7L18.3 6L19 3Z"/>
+            <path d="M5 14L5.7 17L8.5 17.7L5.7 18.4L5 21L4.3 18.4L1.5 17.7L4.3 17L5 14Z"/>
+          </svg>
+        </div>
+        <h3>3. Watch AI Build It</h3>
+        <p>Send to your AI agent (Claude, Copilot, or Codex) and watch as it locates the exact code, makes precise changes, and implements your vision automatically.</p>
       </div>
     </div>
   </section>
@@ -47,20 +79,46 @@
     <h2>Key Features</h2>
     <div class="values">
       <div class="value">
-        <h3>Multi-Agent Support</h3>
-        <p>Works with Claude Code, GitHub Copilot CLI, and OpenAI Codex. Use whichever AI assistant you prefer.</p>
+        <div class="value-icon">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="#fbbf24" stroke="none">
+            <path d="M12 1L14 9L22 11L14 13L12 21L10 13L2 11L10 9L12 1Z"/>
+            <path d="M19 3L19.7 6L22.5 6.7L19.7 7.4L19 10L18.3 7.4L15.5 6.7L18.3 6L19 3Z"/>
+            <path d="M5 14L5.7 17L8.5 17.7L5.7 18.4L5 21L4.3 18.4L1.5 17.7L4.3 17L5 14Z"/>
+          </svg>
+        </div>
+        <h3>Choose Your AI Agent</h3>
+        <p>Seamlessly integrates with Claude Code, GitHub Copilot CLI, and OpenAI Codex. Switch between agents or use your favorite—ZingIt adapts to your workflow.</p>
       </div>
       <div class="value">
-        <h3>Change History</h3>
-        <p>Every AI modification is tracked with git-based checkpoints. Review what changed and undo with a single click.</p>
+        <div class="value-icon">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2">
+            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+            <polyline points="17 6 23 6 23 12"/>
+          </svg>
+        </div>
+        <h3>Time-Travel Your Code</h3>
+        <p>Every AI change creates a git checkpoint. Browse your modification history, see exactly what changed, and roll back to any previous state instantly.</p>
       </div>
       <div class="value">
-        <h3>Screenshot Capture</h3>
-        <p>Optionally capture screenshots of annotated elements to give the AI visual context about what needs to change.</p>
+        <div class="value-icon">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+            <circle cx="12" cy="13" r="4"/>
+          </svg>
+        </div>
+        <h3>Visual Context Matters</h3>
+        <p>Automatically captures pixel-perfect screenshots of marked elements. Give AI agents the visual context they need to understand design intent and implement changes accurately.</p>
       </div>
       <div class="value">
-        <h3>Bookmarklet Ready</h3>
-        <p>Inject ZingIt into any webpage with a single click. Shadow DOM isolation ensures no style conflicts.</p>
+        <div class="value-icon">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="2" y1="12" x2="22" y2="12"/>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+          </svg>
+        </div>
+        <h3>Works Everywhere</h3>
+        <p>Use as a bookmarklet or script tag. Shadow DOM isolation means zero style conflicts—inject ZingIt into any site without breaking existing layouts or JavaScript.</p>
       </div>
     </div>
   </section>
@@ -70,20 +128,20 @@
     <h2>Use Cases</h2>
     <div class="timeline">
       <div class="timeline-item">
-        <div class="timeline-year">Bug Fixes</div>
-        <p>Click on the broken element, describe the issue, let AI find and fix the code.</p>
+        <div class="timeline-year">🐛 Bug Fixes</div>
+        <p>Found a broken button? Misaligned text? Click it, describe the issue, and watch AI hunt down the bug in your codebase and fix it—no file searching required.</p>
       </div>
       <div class="timeline-item">
-        <div class="timeline-year">UI Tweaks</div>
-        <p>Quickly adjust colors, spacing, fonts, and layouts without hunting through CSS files.</p>
+        <div class="timeline-year">🎨 UI Tweaks</div>
+        <p>Stop diving into nested CSS files. Point at what needs changing—colors, spacing, fonts, animations—and let AI make precise adjustments across your stylesheets.</p>
       </div>
       <div class="timeline-item">
-        <div class="timeline-year">Design Reviews</div>
-        <p>Designers can annotate elements during review and developers get actionable AI-ready instructions.</p>
+        <div class="timeline-year">👀 Design Reviews</div>
+        <p>Designers mark up mockups, developers get AI-ready instructions. Bridge the gap between "make it pop" and actionable code changes with zero ambiguity.</p>
       </div>
       <div class="timeline-item">
-        <div class="timeline-year">Prototyping</div>
-        <p>Rapidly iterate on UI changes by describing what you want and seeing it implemented instantly.</p>
+        <div class="timeline-year">⚡ Rapid Prototyping</div>
+        <p>Experiment fearlessly. Describe wild UI ideas and iterate in seconds as AI implements changes instantly. Git checkpoints mean you can always roll back experiments.</p>
       </div>
     </div>
   </section>
@@ -100,6 +158,6 @@
   <!-- Footer -->
   <site-footer></site-footer>
 
-  <script src="https://cdn.jsdelivr.net/npm/@codewithdan/zingit@0.16.1/client/dist/zingit-client.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@codewithdan/zingit@0.17.1/client/dist/zingit-client.js"></script>
 </body>
 </html>
