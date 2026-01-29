@@ -46,6 +46,10 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
+      - name: Push version bump
+        run: |
+          git push --follow-tags origin main
+
       - name: Run deploy
         run: npm run deploy
         env:
