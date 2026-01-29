@@ -85,11 +85,9 @@ a:hover {
 .hero {
   text-align: center;
   padding: 60px 24px 50px;
-  background:
-    url('../images/hero-background.png') no-repeat center center / cover,
-    linear-gradient(135deg, #1e3a8a 0%, #2563eb 35%, #3b82f6 65%, #60a5fa 100%);
-  background-size: cover, 200% 200%;
-  background-position: center, 0% 50%;
+  background: linear-gradient(135deg, #166534 0%, #22c55e 50%, #4ade80 100%);
+  background-size: 200% 200%;
+  background-position: 0% 50%;
   animation: gradientShift 15s ease infinite;
   color: #fff;
   position: relative;
