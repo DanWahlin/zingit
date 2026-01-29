@@ -2,9 +2,17 @@
 
 ## Project Overview
 
-ZingIt is a browser-based annotation tool that allows users to click on webpage elements and add notes/instructions. These annotations are then sent to an AI agent (Claude Code or GitHub Copilot) which can automatically implement the requested changes.
+ZingIt is a browser-based annotation tool that allows users to click on webpage elements and add notes/instructions. These annotations are then sent to an AI agent (Claude Code, GitHub Copilot CLI, or OpenAI Codex) which can automatically implement the requested changes.
 
 **Use case**: Point-and-click UI feedback that gets automatically implemented by AI.
+
+**Key Features**:
+- Visual element selection with annotation
+- Multi-agent support (Claude, Copilot, Codex)
+- Automatic screenshot capture
+- Change history tracking
+- Remote/local URL detection with warnings
+- Keyboard shortcuts for fast workflow
 
 ## Architecture
 
@@ -13,17 +21,18 @@ ZingIt is a browser-based annotation tool that allows users to click on webpage 
 │                        Browser                               │
 │  ┌─────────────────────────────────────────────────────┐    │
 │  │                   ZingIt Client                      │    │
-│  │  (Lit Web Components injected via bookmarklet)       │    │
+│  │  (Lit Web Components - ?zingit URL parameter)        │    │
 │  └──────────────────────┬──────────────────────────────┘    │
 └─────────────────────────┼───────────────────────────────────┘
                           │ WebSocket
                           ▼
 ┌─────────────────────────────────────────────────────────────┐
 │                    ZingIt Server                             │
-│  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐     │
-│  │ WebSocket   │───▶│   Agent     │───▶│ Claude Code │     │
-│  │ Handler     │    │  Registry   │    │ or Copilot  │     │
-│  └─────────────┘    └─────────────┘    └─────────────┘     │
+│  ┌─────────────┐    ┌─────────────┐    ┌──────────────┐    │
+│  │ WebSocket   │───▶│   Agent     │───▶│ Claude Code  │    │
+│  │ Handler     │    │  Registry   │    │   Copilot    │    │
+│  │             │    │             │    │    Codex     │    │
+│  └─────────────┘    └─────────────┘    └──────────────┘    │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -42,7 +51,10 @@ zingit/
 │   │   │   ├── settings.ts    # Configuration panel
 │   │   │   ├── response.ts    # Agent response display
 │   │   │   ├── toast.ts       # Notification toasts
-│   │   │   └── help.ts        # Keyboard shortcuts overlay
+│   │   │   ├── help.ts        # Keyboard shortcuts overlay
+│   │   │   ├── history.ts     # Change history panel
+│   │   │   ├── site-header.ts # Demo site navigation
+│   │   │   └── site-footer.ts # Demo site footer
 │   │   ├── services/
 │   │   │   ├── selector.ts    # CSS selector generation
 │   │   │   ├── storage.ts     # localStorage persistence
@@ -57,14 +69,22 @@ zingit/
 │   ├── about.html             # Test page
 │   ├── contact.html           # Test page
 │   ├── styles.css             # Shared styles for test pages
-│   └── vite.config.ts         # Build config (IIFE for bookmarklet)
+│   ├── deploy/                # Build output for GitHub Pages
+│   │   ├── index.html         # Static version of demo site
+│   │   └── styles.css         # Copied styles
+│   ├── scripts/
+│   │   └── prepare-deploy.js  # Prepares deploy folder
+│   └── vite.config.ts         # Build config
 │
 ├── server/                    # Node.js WebSocket server
 │   └── src/
 │       ├── agents/
 │       │   ├── base.ts        # Abstract base agent class
 │       │   ├── claude.ts      # Claude Code CLI integration
-│       │   └── copilot.ts     # GitHub Copilot SDK integration
+│       │   ├── copilot.ts     # GitHub Copilot SDK integration
+│       │   └── codex.ts       # OpenAI Codex integration
+│       ├── handlers/
+│       │   └── messageHandlers.ts  # WebSocket message handlers
 │       ├── types.ts           # Server-side TypeScript interfaces
 │       └── index.ts           # WebSocket server entry point
 │
@@ -80,11 +100,12 @@ zingit/
 - **Shadow DOM** - Style isolation (critical for bookmarklet injection)
 
 ### Server
-- **Node.js** - Runtime
+- **Node.js** - Runtime (>=22.0.0)
 - **ws** - WebSocket library
 - **tsx** - TypeScript execution
 - **@anthropic-ai/claude-agent-sdk** - Claude Code integration
 - **@github/copilot-sdk** - GitHub Copilot integration
+- **@openai/codex-sdk** - OpenAI Codex integration
 
 ## Key Concepts
 
@@ -98,16 +119,24 @@ An annotation captures:
 - `parentContext` - Parent element path for context
 - `textContent` - Plain text content
 
+### Change History
+The history component tracks all changes made by the AI agent:
+- Displays a chronological list of modifications
+- Shows file paths and change summaries
+- Allows users to review what was changed
+- Accessible via the clock icon in the toolbar
+
 ### WebSocket Messages
 - **Client → Server**: `batch` (send annotations), `message` (follow-up), `reset` (clear session)
 - **Server → Client**: `connected`, `processing`, `delta` (streaming), `tool_start`/`tool_end`, `idle`, `error`
 
 ### Agent System
 The server uses a pluggable agent architecture:
-- Set `AGENT=claude` or `AGENT=copilot` environment variable
+- Set `AGENT=claude`, `AGENT=copilot`, or `AGENT=codex` environment variable
 - Agents implement `Agent` interface with `createSession()` and `formatPrompt()`
 - Claude agent spawns `claude --print` CLI process
 - Copilot agent uses the GitHub Copilot SDK
+- Codex agent uses the OpenAI Codex SDK
 
 ## Development Commands
 
@@ -116,26 +145,36 @@ The server uses a pluggable agent architecture:
 cd client
 npm install
 npm run dev          # Start Vite dev server (http://localhost:5200)
-npm run build        # Build for production (outputs IIFE bundle)
+npm run build        # Build for production
+npm run deploy       # Prepare and deploy to GitHub Pages
 npm run typecheck    # Type check without emitting
 npm run typecheck:watch  # Watch mode type checking
 ```
+
+**Note**: The deploy script (`npm run deploy`) runs `prepare-deploy.js` which copies files to the `deploy/` folder, then uses `gh-pages` to publish to GitHub Pages.
 
 ### Server
 ```bash
 cd server
 npm install
-AGENT=claude npm run dev   # Start with Claude Code agent
-AGENT=copilot npm run dev  # Start with GitHub Copilot agent
-npm run typecheck          # Type check
-npm run typecheck:watch    # Watch mode type checking
+npx cross-env AGENT=claude npm run dev   # Start with Claude Code agent
+npx cross-env AGENT=copilot npm run dev  # Start with GitHub Copilot agent
+npx cross-env AGENT=codex npm run dev    # Start with OpenAI Codex agent
+npm run typecheck                         # Type check
+npm run typecheck:watch                   # Watch mode type checking
+```
+
+### Running the Published Package
+```bash
+# For external users
+npx cross-env PROJECT_DIR=/path/to/your/project npx @codewithdan/zingit
 ```
 
 ## Keyboard Shortcuts
 
 | Key | Action |
 |-----|--------|
-| `P` | Toggle annotation mode on/off |
+| `Z` | Toggle annotation mode on/off |
 | `Ctrl/Cmd+Z` | Undo last annotation |
 | `?` | Show help overlay |
 | `` ` `` | Toggle ZingIt visibility |
@@ -151,8 +190,15 @@ The client persists state to `localStorage`:
 
 ## Important Implementation Details
 
+### Remote URL Detection
+ZingIt detects when you're editing a published/remote site versus local development:
+- **Local** (localhost, 127.0.0.1, etc.) - Changes appear immediately on refresh
+- **Remote** (published sites) - Shows warning toast that changes are saved locally only
+- Badge displayed in toolbar: "💻 Local" or "🌐 Remote"
+- Warning can be dismissed but persists until user understands the limitation
+
 ### Shadow DOM
-All components use Shadow DOM for style isolation. This is critical because ZingIt is injected as a bookmarklet into arbitrary pages - styles must not leak in or out.
+All components use Shadow DOM for style isolation. This is critical because ZingIt is injected into arbitrary pages - styles must not leak in or out.
 
 ### Viewport Coordinates
 The highlight and marker positioning uses viewport coordinates (not page coordinates) because the main `zing-ui` component is `position: fixed`. Use `getElementViewportRect()` from `geometry.ts`.
@@ -163,6 +209,15 @@ The WebSocket client implements exponential backoff reconnection:
 - Max 10 attempts before showing "Reconnect" button
 - Call `forceReconnect()` to manually retry
 
+### Toast Notifications
+The toast system supports multiple types with different styling:
+- **success** - Green background for successful operations
+- **error** - Red background for failures
+- **info** - Dark gray with subtle border
+- **warning** - Dark gray with orange left border (for remote URL warnings)
+
+Persistent toasts (duration=0) show a close button in the top-right corner.
+
 ### Component Communication
 Components communicate via custom events that bubble through Shadow DOM:
 ```typescript
@@ -172,6 +227,18 @@ this.dispatchEvent(new CustomEvent('save', {
   detail: { ... }
 }));
 ```
+
+### Server Logging
+Request boundaries are logged for debugging:
+```
+[Batch] ===== Request started =====
+[Batch] Prompt preview: Change the background color to blue...
+[Batch] Image count: 2
+... processing logs ...
+[Batch] ===== Request completed =====
+```
+
+This makes it easy to track multiple concurrent requests and debug issues.
 
 ## Common Tasks
 
@@ -194,21 +261,42 @@ Edit `client/src/components/toolbar.ts`:
 - Create handler method that dispatches event
 - Wire up event in `zing-ui.ts`
 
+**Note**: Icons use SVG (not emoticons) for professional appearance and better rendering across platforms. The local/remote badge uses inline SVG icons with `currentColor` for theming.
+
 ## Testing
 
-Test pages are available at:
-- `http://localhost:5200/` - Main demo page
+### Demo Site
+The main demo site (`client/index.html`) showcases ZingIt with:
+- Hero section with features
+- Installation instructions
+- Toolbar icon reference table
+- Try it with demo section
+- Try it with your website section
+
+### Test Pages
+Additional test pages are available:
 - `http://localhost:5200/products.html` - Product cards
 - `http://localhost:5200/about.html` - About page with stats/timeline
 - `http://localhost:5200/contact.html` - Contact form and FAQ
 
+Add `?zingit` to any URL to activate the annotation tool.
+
 ## Build Output
 
 The Vite build produces:
-- `dist/zingit.es.js` - ES module version
-- `dist/zingit.iife.js` - IIFE for bookmarklet injection
+- `dist/zingit-client.js` - Bundled client code
 
-The IIFE can be used as a bookmarklet:
-```javascript
-javascript:(function(){var s=document.createElement('script');s.src='http://localhost:5200/dist/zingit.iife.js';document.body.appendChild(s);})()
+Published to npm as `@codewithdan/zingit` and available via CDN:
+```html
+<script src="https://cdn.jsdelivr.net/npm/@codewithdan/zingit@latest/dist/zingit-client.js"></script>
 ```
+
+Users activate ZingIt by adding `?zingit` to any URL: `http://localhost:5200/?zingit`
+
+## GitHub Actions Workflow
+
+Automated release and deployment on commits starting with "release:":
+1. Runs `npm run release` - versions, builds, and publishes to npm
+2. Runs `npm run deploy` - deploys demo site to GitHub Pages
+
+Requires `NPM_TOKEN` secret in repository settings.
