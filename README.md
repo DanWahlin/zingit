@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="client/images/zingit-readme.png" alt="ZingIt" width="200">
+  <img src="client/images/zingit-readme.webp" alt="ZingIt" width="200">
 
 
 # ZingIt
@@ -21,17 +21,17 @@ Tired of describing what element to change in the UI, taking screenshots, and co
 ### Visual Markers
 Click any element on your page to add notes about changes you want. Smart CSS selectors are automatically generated to target the exact element.
 
-<img src="client/images/select-it.png" alt="Visual Markers" width="600">
+<img src="client/images/select-it.webp" alt="Visual Markers" width="600">
 
 ### Screenshot Capture
 Automatically captures screenshots of marked elements to provide visual context to AI agents. No more manual screenshot taking!
 
-<img src="client/images/screen-shots.png" alt="Screenshot Capture" width="600">
+<img src="client/images/screen-shots.webp" alt="Screenshot Capture" width="600">
 
 ### Multi-Agent Support
 Works with Claude Code, GitHub Copilot CLI, and OpenAI Codex. Choose your preferred AI assistant and watch it work in real-time.
 
-<img src="client/images/multi-agents.png" alt="Multi-Agent Support" width="600">
+<img src="client/images/multi-agents.webp" alt="Multi-Agent Support" width="600">
 
 ### Send Changes with a Click
 Once you've marked your changes, simply click the sparkle icon (✨) in the ZingIt toolbar to send everything to your AI agent. Watch as it generates code updates live!
