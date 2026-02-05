@@ -1484,6 +1484,9 @@ a:hover {
   flex-direction: column;
   gap: 32px;
   position: relative;
+  overflow: hidden;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* Connecting line between steps */
@@ -1505,6 +1508,8 @@ a:hover {
   align-items: flex-start;
   position: relative;
   z-index: 1;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .setup-step-item.optional {
@@ -1564,6 +1569,9 @@ a:hover {
 .step-details {
   flex: 1;
   padding-top: 4px;
+  min-width: 0; /* Prevent flex overflow */
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .step-details h3 {
@@ -1647,9 +1655,11 @@ a:hover {
   margin: 0 0 8px 0;
   max-height: 140px;
   max-width: 100%;
+  width: 100%;
   flex-shrink: 0;
   white-space: pre;
   word-wrap: break-word;
+  box-sizing: border-box;
 }
 
 .code-snippet::-webkit-scrollbar {
@@ -1674,6 +1684,8 @@ a:hover {
 .code-container {
   position: relative;
   margin: 0 0 8px 0;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .code-container .code-snippet {
@@ -2358,6 +2370,17 @@ a:hover {
 
 /* Small mobile breakpoint (iPhone SE, small phones) */
 @media (max-width: 375px) {
+  /* Prevent horizontal overflow */
+  body {
+    overflow-x: hidden;
+  }
+
+  /* Links with long URLs need to break */
+  a {
+    word-break: break-all;
+    overflow-wrap: break-word;
+  }
+
   .hero {
     padding: 8px 16px 8px;
   }
@@ -2398,10 +2421,22 @@ a:hover {
 
   .setup-steps-vertical {
     padding: 0 8px;
+    max-width: 100%;
+    overflow-x: hidden;
   }
 
   .setup-step-item {
     gap: 10px;
+    max-width: 100%;
+  }
+
+  .step-details {
+    min-width: 0;
+    overflow-x: hidden;
+  }
+
+  .code-container {
+    max-width: 100%;
   }
 
   .step-number {
@@ -2425,6 +2460,14 @@ a:hover {
     font-size: 11px;
     padding: 10px;
     border-radius: 4px;
+    max-width: 100%;
+    overflow-x: auto;
+    word-break: break-word;
+  }
+
+  /* Ensure agent list links break properly */
+  .agent-list a {
+    word-break: break-all;
   }
 
   .code-container .code-snippet {
