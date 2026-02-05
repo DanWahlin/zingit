@@ -227,6 +227,115 @@ export class ZingToolbar extends LitElement {
       0%, 100% { opacity: 1; }
       50% { opacity: 0.7; }
     }
+
+    /* Mobile responsive styles */
+    @media (max-width: 640px) {
+      .toolbar {
+        gap: 6px;
+        padding: 6px 8px;
+        flex-wrap: wrap;
+        max-width: calc(100vw - 32px);
+      }
+
+      button {
+        padding: 5px 10px;
+        font-size: 11px;
+      }
+
+      .btn-icon {
+        padding: 5px;
+      }
+
+      .btn-toggle {
+        padding: 5px 8px;
+        font-size: 11px;
+      }
+
+      .status {
+        font-size: 11px;
+      }
+
+      .count {
+        font-size: 11px;
+        min-width: 70px;
+      }
+
+      .edit-mode-badge {
+        font-size: 10px;
+        padding: 3px 6px;
+      }
+
+      .divider {
+        height: 16px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .toolbar {
+        gap: 4px;
+        padding: 4px 6px;
+      }
+
+      .status {
+        max-width: 80px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .count {
+        min-width: auto;
+      }
+
+      /* Hide some dividers on very small screens */
+      .divider:nth-child(n+10) {
+        display: none;
+      }
+    }
+
+    @media (max-width: 375px) {
+      .toolbar {
+        gap: 3px;
+        padding: 4px;
+      }
+
+      button {
+        padding: 4px 8px;
+        font-size: 10px;
+      }
+
+      .btn-icon {
+        padding: 4px;
+      }
+
+      .btn-icon svg {
+        width: 14px;
+        height: 14px;
+      }
+
+      .btn-toggle {
+        padding: 4px 6px;
+        font-size: 10px;
+      }
+
+      .status {
+        font-size: 10px;
+        max-width: 60px;
+      }
+
+      .count {
+        font-size: 10px;
+      }
+
+      .edit-mode-badge {
+        display: none;
+      }
+
+      .drag-handle svg {
+        width: 10px;
+        height: 14px;
+      }
+    }
   `;
 
   @property({ type: Boolean }) active = true;
