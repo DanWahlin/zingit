@@ -23,7 +23,8 @@ export class ZingAgentResponsePanel extends LitElement {
       position: fixed;
       right: 0;
       top: 0;
-      width: 400px;
+      width: min(400px, 100vw);
+      max-width: 100vw;
       height: 100vh;
       background: #1f2937;
       border-left: 1px solid #374151;
@@ -38,6 +39,13 @@ export class ZingAgentResponsePanel extends LitElement {
     .panel.open {
       transform: translateX(0);
       box-shadow: -4px 0 20px rgba(0, 0, 0, 0.3);
+    }
+
+    @media (max-width: 480px) {
+      .panel {
+        width: 100vw;
+        border-left: none;
+      }
     }
 
     .header {
@@ -180,17 +188,28 @@ export class ZingAgentResponsePanel extends LitElement {
       padding: 12px;
       margin: 8px 0;
       overflow-x: auto;
+      max-width: 100%;
       font-family: 'SF Mono', Monaco, 'Consolas', monospace;
       font-size: 13px;
       color: #e5e7eb;
       white-space: pre-wrap;
       word-break: break-word;
+      overflow-wrap: break-word;
     }
 
     .text-block {
       margin: 8px 0;
       white-space: pre-wrap;
       word-break: break-word;
+      overflow-wrap: break-word;
+    }
+
+    @media (max-width: 480px) {
+      .code-block {
+        font-size: 11px;
+        padding: 10px;
+        border-radius: 4px;
+      }
     }
 
     .loading-container {
@@ -323,6 +342,74 @@ export class ZingAgentResponsePanel extends LitElement {
 
     .screenshot-badge svg {
       flex-shrink: 0;
+    }
+
+    /* Mobile responsive styles */
+    @media (max-width: 480px) {
+      .header {
+        padding: 12px;
+      }
+
+      .header h3 {
+        font-size: 13px;
+      }
+
+      .content {
+        padding: 12px;
+        font-size: 13px;
+      }
+
+      .footer {
+        padding: 10px 12px;
+      }
+
+      input {
+        padding: 10px 12px;
+        font-size: 16px; /* Prevent iOS zoom */
+      }
+
+      .send-btn {
+        padding: 10px 14px;
+        font-size: 13px;
+      }
+
+      .action-step {
+        padding: 8px 10px;
+        font-size: 12px;
+      }
+
+      .tool-status {
+        font-size: 11px;
+        padding: 6px 10px;
+      }
+
+      .screenshot-badge {
+        font-size: 11px;
+        padding: 5px 8px;
+      }
+    }
+
+    @media (max-width: 375px) {
+      .header h3 {
+        font-size: 12px;
+        gap: 6px;
+      }
+
+      .header-icon {
+        width: 16px;
+        height: 16px;
+      }
+
+      .stop-btn,
+      .refresh-btn {
+        padding: 3px 8px;
+        font-size: 11px;
+      }
+
+      .close-btn svg {
+        width: 16px;
+        height: 16px;
+      }
     }
   `;
 
