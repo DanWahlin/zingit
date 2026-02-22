@@ -68,11 +68,21 @@ body {
   line-height: 1.6;
   color: var(--color-gray-700);
   background: var(--color-white);
+  overflow-x: hidden;
+  min-width: 320px;
+}
+
+/* Global text overflow handling */
+p, li, td, th, span, label {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 a {
   color: var(--color-primary);
   text-decoration: none;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 a:hover {
@@ -369,7 +379,7 @@ a:hover {
 /* Feature Cards */
 .features {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr));
   gap: 32px;
   padding: 60px 24px;
   max-width: 1200px;
@@ -1352,6 +1362,9 @@ a:hover {
   overflow-x: auto;
   margin: 16px 0;
   line-height: 1.5;
+  max-width: 100%;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .step-note {
@@ -1471,6 +1484,9 @@ a:hover {
   flex-direction: column;
   gap: 32px;
   position: relative;
+  overflow: hidden;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* Connecting line between steps */
@@ -1492,6 +1508,8 @@ a:hover {
   align-items: flex-start;
   position: relative;
   z-index: 1;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .setup-step-item.optional {
@@ -1551,6 +1569,9 @@ a:hover {
 .step-details {
   flex: 1;
   padding-top: 4px;
+  min-width: 0; /* Prevent flex overflow */
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .step-details h3 {
@@ -1629,11 +1650,16 @@ a:hover {
   font-family: 'SF Mono', Monaco, Consolas, monospace;
   font-size: 14px;
   line-height: 1.5;
-  overflow: auto;
+  overflow-x: auto;
+  overflow-y: auto;
   margin: 0 0 8px 0;
   max-height: 140px;
+  max-width: 100%;
+  width: 100%;
   flex-shrink: 0;
   white-space: pre;
+  word-wrap: break-word;
+  box-sizing: border-box;
 }
 
 .code-snippet::-webkit-scrollbar {
@@ -1658,6 +1684,8 @@ a:hover {
 .code-container {
   position: relative;
   margin: 0 0 8px 0;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .code-container .code-snippet {
@@ -1947,6 +1975,13 @@ a:hover {
   width: 100%;
   border-collapse: collapse;
   font-size: 14px;
+  display: table;
+}
+
+/* Wrapper for horizontal scrolling on mobile */
+.demo-card:has(.data-table) {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .data-table thead {
@@ -2301,5 +2336,225 @@ a:hover {
   .data-table th,
   .data-table td {
     padding: 8px;
+  }
+
+  /* Code block mobile fixes */
+  .code-block,
+  .code-snippet {
+    font-size: 12px;
+    padding: 12px;
+  }
+
+  .code-container .code-snippet {
+    padding-right: 36px;
+  }
+
+  /* Fix text overflow on mobile */
+  .step-details p,
+  .step-details .step-desc,
+  .step-details .step-note,
+  .content-section p,
+  .demo-intro,
+  .info-content p {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+  }
+
+  /* Fix long URLs breaking layout */
+  a {
+    word-break: break-word;
+    overflow-wrap: break-word;
+  }
+}
+
+/* Small mobile breakpoint (iPhone SE, small phones) */
+@media (max-width: 375px) {
+  /* Prevent horizontal overflow */
+  body {
+    overflow-x: hidden;
+  }
+
+  /* Links with long URLs need to break */
+  a {
+    word-break: break-all;
+    overflow-wrap: break-word;
+  }
+
+  .hero {
+    padding: 8px 16px 8px;
+  }
+
+  .hero-headline {
+    font-size: 1.75rem;
+  }
+
+  .hero-tagline {
+    font-size: 1rem;
+  }
+
+  .hero-image img {
+    max-width: 200px;
+  }
+
+  .content-section {
+    padding: 16px;
+  }
+
+  .features {
+    padding: 40px 16px;
+    gap: 24px;
+  }
+
+  .feature-card {
+    padding: 24px 20px;
+  }
+
+  .feature-card h3 {
+    font-size: 18px;
+  }
+
+  .demo-grid {
+    padding: 32px 16px;
+    gap: 24px;
+  }
+
+  .setup-steps-vertical {
+    padding: 0 8px;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  .setup-step-item {
+    gap: 10px;
+    max-width: 100%;
+  }
+
+  .step-details {
+    min-width: 0;
+    overflow-x: hidden;
+  }
+
+  .code-container {
+    max-width: 100%;
+  }
+
+  .step-number {
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
+  }
+
+  .step-details h3 {
+    font-size: 16px;
+  }
+
+  .step-details p,
+  .step-details .step-desc {
+    font-size: 14px;
+  }
+
+  /* Code blocks on small mobile */
+  .code-block,
+  .code-snippet {
+    font-size: 11px;
+    padding: 10px;
+    border-radius: 4px;
+    max-width: 100%;
+    overflow-x: auto;
+    word-break: break-word;
+  }
+
+  /* Ensure agent list links break properly */
+  .agent-list a {
+    word-break: break-all;
+  }
+
+  .code-container .code-snippet {
+    padding-right: 32px;
+  }
+
+  .copy-btn {
+    padding: 6px;
+  }
+
+  .copy-btn svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  /* Fix pricing cards */
+  .pricing-card {
+    padding: 24px 20px;
+  }
+
+  .price {
+    font-size: 36px;
+  }
+
+  /* Fix buttons on small screens */
+  .btn-primary,
+  .btn-secondary,
+  .btn-danger {
+    padding: 8px 16px;
+    font-size: 13px;
+  }
+
+  .hero-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .hero-actions a {
+    text-align: center;
+    padding: 10px 20px;
+    font-size: 14px;
+  }
+
+  /* Fix table overflow */
+  .data-table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .toolbar-icons-table {
+    font-size: 12px;
+  }
+
+  .toolbar-icons-table td {
+    padding: 10px 12px;
+  }
+
+  /* Fix setup notice */
+  .setup-notice {
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+  }
+
+  .demo-hint {
+    flex-direction: column;
+    text-align: center;
+    padding: 12px 16px;
+  }
+
+  /* Fix form elements */
+  .form-group input,
+  .form-group textarea,
+  .form-group select {
+    font-size: 16px; /* Prevent iOS zoom on focus */
+  }
+
+  /* Fix alerts */
+  .alert {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  /* Fix tabs */
+  .tab {
+    padding: 10px 16px;
+    font-size: 13px;
   }
 }
