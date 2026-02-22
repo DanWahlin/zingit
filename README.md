@@ -58,29 +58,21 @@ Once you've marked your changes, simply click the sparkle icon (✨) in the Zing
 
 ```bash
 git clone https://github.com/danwahlin/zingit.git
+cd zingit
+npm install
 ```
 
-3. **Start the ZingIt server** (in one terminal):
+3. **Start the ZingIt server and demo site**:
 
 ```bash
-cd zingit/server
-npm install
-npx cross-env PROJECT_DIR=../client npm run dev
-```
-
-Server runs on `ws://localhost:3000`
-
-4. **Run the demo site** (in another terminal):
-
-```bash
-cd zingit/client
-npm install
 npm run dev
 ```
 
-5. Visit [http://localhost:5200/?zingit](http://localhost:5200/?zingit) to see ZingIt in action!
+This starts both the server (`ws://localhost:3000`) and the client dev server concurrently.
 
-6. You'll be prompted to select an AI agent. Start marking!
+4. Visit [http://localhost:5200/?zingit](http://localhost:5200/?zingit) to see ZingIt in action!
+
+5. You'll be prompted to select an AI agent. Start marking!
 
 ### Option 2: Add to Your Website
 

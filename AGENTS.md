@@ -140,28 +140,31 @@ The server uses a pluggable agent architecture:
 
 ## Development Commands
 
+This project uses [npm workspaces](https://docs.npmjs.com/cli/using-npm/workspaces). A single `npm install` at the root installs all dependencies for both client and server.
+
+```bash
+npm install          # Install all dependencies (run from root)
+npm run dev          # Start both server and client concurrently
+npm run build        # Build both client and server
+npm run test         # Run client unit tests
+```
+
 ### Client
 ```bash
-cd client
-npm install
-npm run dev          # Start Vite dev server (http://localhost:5200)
-npm run build        # Build for production
-npm run deploy       # Prepare and deploy to GitHub Pages
-npm run typecheck    # Type check without emitting
-npm run typecheck:watch  # Watch mode type checking
+npm run dev -w client          # Start Vite dev server (http://localhost:5200)
+npm run build -w client        # Build for production
+npm run deploy -w client       # Prepare and deploy to GitHub Pages
+npm run typecheck -w client    # Type check without emitting
 ```
 
 **Note**: The deploy script (`npm run deploy`) runs `prepare-deploy.js` which copies files to the `deploy/` folder, then uses `gh-pages` to publish to GitHub Pages.
 
 ### Server
 ```bash
-cd server
-npm install
-npx cross-env AGENT=claude npm run dev   # Start with Claude Code agent
-npx cross-env AGENT=copilot npm run dev  # Start with GitHub Copilot agent
-npx cross-env AGENT=codex npm run dev    # Start with OpenAI Codex agent
-npm run typecheck                         # Type check
-npm run typecheck:watch                   # Watch mode type checking
+npx cross-env AGENT=claude npm run dev -w server   # Start with Claude Code agent
+npx cross-env AGENT=copilot npm run dev -w server  # Start with GitHub Copilot agent
+npx cross-env AGENT=codex npm run dev -w server    # Start with OpenAI Codex agent
+npm run typecheck -w server                         # Type check
 ```
 
 ### Running the Published Package
