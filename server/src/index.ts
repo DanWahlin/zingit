@@ -29,18 +29,23 @@ import {
   handleClearHistory
 } from './handlers/messageHandlers.js';
 
+import { resolve } from 'path';
+
 const PORT = parseInt(process.env.PORT || '3000', 10);
 
 // Legacy support: still allow AGENT env var for backwards compatibility
 const DEFAULT_AGENT = process.env.AGENT || null;
 
-if (!process.env.PROJECT_DIR) {
-  console.error('ERROR: PROJECT_DIR environment variable is required');
-  console.error('Example: PROJECT_DIR=/path/to/your/project npm run dev');
-  process.exit(1);
+// Resolve PROJECT_DIR: explicit env var > npm invocation directory > cwd
+const rawProjectDir = process.env.PROJECT_DIR;
+const initCwd = process.env.INIT_CWD || process.cwd();
+let PROJECT_DIR: string;
+if (rawProjectDir) {
+  PROJECT_DIR = resolve(initCwd, rawProjectDir);
+} else {
+  PROJECT_DIR = initCwd;
+  console.log(`ℹ PROJECT_DIR not set, defaulting to: ${PROJECT_DIR}`);
 }
-
-const PROJECT_DIR: string = process.env.PROJECT_DIR;
 
 // Agent registry — wraps @codewithdan/agent-sdk-core providers with zingit adapter
 function createClaudeSpawner(): { permissionMode: 'acceptEdits' | 'bypassPermissions'; spawnClaudeCodeProcess?: (options: SpawnOptions) => SpawnedProcess } {
