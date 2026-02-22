@@ -34,7 +34,7 @@
     "test": "npm run test -w client",
     "test:watch": "npm run test:watch -w client",
     "test:ui": "npm run test:ui -w client",
-    "release": "standard-version && npm run build && npm publish --access public"
+    "release": "commit-and-tag-version && npm run build && npm publish --access public"
   },
   "keywords": [
     "ui",
@@ -59,8 +59,8 @@
   },
   "homepage": "https://github.com/danwahlin/zingit#readme",
   "dependencies": {
-    "@codewithdan/agent-sdk-core": "^0.2.0",
     "@anthropic-ai/claude-agent-sdk": "^0.2.17",
+    "@codewithdan/agent-sdk-core": "^0.2.0",
     "@github/copilot-sdk": "^0.1.16",
     "@openai/codex-sdk": ">=0.80.0",
     "diff": "^8.0.3",
@@ -69,7 +69,10 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "concurrently": "^9.1.2",
-    "standard-version": "^9.5.0"
+    "commit-and-tag-version": "^12.6.1",
+    "concurrently": "^9.1.2"
+  },
+  "overrides": {
+    "minimatch": "^10.2.1"
   }
 }
