@@ -1,6 +1,26 @@
 # Changelog
 
-All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
+All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
+
+## 0.17.5 (2026-02-22)
+
+
+### Features
+
+* integrate @codewithdan/agent-sdk-core for all AI agent providers ([a49229f](https://github.com/danwahlin/zingit/commit/a49229f390f00578539ea5bb3671565f01efbaee))
+
+
+### Bug Fixes
+
+* default PROJECT_DIR to npm invocation directory ([bd21484](https://github.com/danwahlin/zingit/commit/bd21484ea02b6a8e139fc850726c2e9f8597ee14))
+* replace deprecated standard-version with commit-and-tag-version ([3e0646c](https://github.com/danwahlin/zingit/commit/3e0646c03d1cf3451dd334a15dfe95bb106b8744))
+* update vulnerable devDependencies and harden querySelector ([c6a88e4](https://github.com/danwahlin/zingit/commit/c6a88e473a081dcee8887bbb7dae5390044e6102))
+
+
+### Documentation
+
+* update demo site setup steps for npm workspaces ([e53859c](https://github.com/danwahlin/zingit/commit/e53859cfb84a17b772e4570b378c95cf4c7b7f5b))
+* update README and AGENTS.md for npm workspaces setup ([bf9a6ab](https://github.com/danwahlin/zingit/commit/bf9a6ab37ac0da8e2d41e283a9c185380d64803c))
 
 ### [0.17.4](https://github.com/danwahlin/zingit/compare/v0.17.3...v0.17.4) (2026-01-30)
 
