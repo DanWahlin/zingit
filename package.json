@@ -6,6 +6,10 @@
   "engines": {
     "node": ">=22.0.0"
   },
+  "workspaces": [
+    "client",
+    "server"
+  ],
   "bin": {
     "zingit": "bin/cli.js"
   },
@@ -21,15 +25,15 @@
   "main": "client/dist/zingit-client.js",
   "scripts": {
     "build": "npm run build:client && npm run build:server",
-    "build:client": "cd client && npm run build",
-    "build:server": "cd server && npm run build",
-    "deploy": "cd client && npm run deploy",
+    "build:client": "npm run build -w client",
+    "build:server": "npm run build -w server",
+    "deploy": "npm run deploy -w client",
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
-    "dev:server": "cd server && npm run dev",
-    "dev:client": "cd client && npm run dev",
-    "test": "cd client && npm run test",
-    "test:watch": "cd client && npm run test:watch",
-    "test:ui": "cd client && npm run test:ui",
+    "dev:server": "npm run dev -w server",
+    "dev:client": "npm run dev -w client",
+    "test": "npm run test -w client",
+    "test:watch": "npm run test:watch -w client",
+    "test:ui": "npm run test:ui -w client",
     "release": "standard-version && npm run build && npm publish --access public"
   },
   "keywords": [
@@ -65,14 +69,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@types/diff": "^6.0.0",
-    "@types/node": "^25.0.10",
-    "@types/uuid": "^10.0.0",
-    "@types/ws": "^8.18.1",
     "concurrently": "^9.1.2",
-    "gh-pages": "^6.3.0",
-    "standard-version": "^9.5.0",
-    "tsx": "^4.21.0",
-    "typescript": "^5.9.3"
+    "standard-version": "^9.5.0"
   }
 }

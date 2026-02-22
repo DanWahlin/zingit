@@ -7,7 +7,7 @@ export function App() {
   return (
     <div className="app">
       <header>
-        <h1 style={{ color: 'blue' }}>Welcome to My App</h1>
+        <h1>Welcome to My App</h1>
         <button className="login-btn">Login</button>
       </header>
 

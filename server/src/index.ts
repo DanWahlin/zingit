@@ -212,60 +212,66 @@ async function main(): Promise<void> {
       getAgent
     };
 
-    ws.on('message', async (data: Buffer) => {
-      let msg: WSIncomingMessage;
-      try {
-        msg = JSON.parse(data.toString());
-      } catch {
-        sendMessage(ws, { type: 'error', message: 'Invalid JSON' });
-        return;
-      }
+    // Serialize message processing to prevent race conditions
+    // (e.g., undo arriving while batch finalization is still in progress)
+    let messageQueue = Promise.resolve();
 
-      try {
-        switch (msg.type) {
-          case 'get_agents':
-            await handleGetAgents(ws, deps);
-            break;
-
-          case 'select_agent':
-            await handleSelectAgent(ws, state, msg, deps);
-            break;
-
-          case 'batch':
-            await handleBatch(ws, state, msg, deps);
-            break;
-
-          case 'message':
-            await handleMessage(ws, state, msg, deps);
-            break;
-
-          case 'reset':
-            await handleReset(ws, state);
-            break;
-
-          case 'stop':
-            await handleStop(ws, state);
-            break;
-
-          case 'get_history':
-            await handleGetHistory(ws, state);
-            break;
-
-          case 'undo':
-            await handleUndo(ws, state, GitManagerError);
-            break;
-
-          case 'revert_to':
-            await handleRevertTo(ws, state, msg, GitManagerError);
-            break;
-
-          case 'clear_history':
-            await handleClearHistory(ws, state);
-            break;
+    ws.on('message', (data: Buffer) => {
+      messageQueue = messageQueue.then(async () => {
+        let msg: WSIncomingMessage;
+        try {
+          msg = JSON.parse(data.toString());
+        } catch {
+          sendMessage(ws, { type: 'error', message: 'Invalid JSON' });
+          return;
         }
-      } catch (err) {
-        sendMessage(ws, { type: 'error', message: (err as Error).message });
-      }
+
+        try {
+          switch (msg.type) {
+            case 'get_agents':
+              await handleGetAgents(ws, deps);
+              break;
+
+            case 'select_agent':
+              await handleSelectAgent(ws, state, msg, deps);
+              break;
+
+            case 'batch':
+              await handleBatch(ws, state, msg, deps);
+              break;
+
+            case 'message':
+              await handleMessage(ws, state, msg, deps);
+              break;
+
+            case 'reset':
+              await handleReset(ws, state);
+              break;
+
+            case 'stop':
+              await handleStop(ws, state);
+              break;
+
+            case 'get_history':
+              await handleGetHistory(ws, state);
+              break;
+
+            case 'undo':
+              await handleUndo(ws, state, GitManagerError);
+              break;
+
+            case 'revert_to':
+              await handleRevertTo(ws, state, msg, GitManagerError);
+              break;
+
+            case 'clear_history':
+              await handleClearHistory(ws, state);
+              break;
+          }
+        } catch (err) {
+          sendMessage(ws, { type: 'error', message: (err as Error).message });
+        }
+      });
     });
 
     ws.on('close', async () => {
