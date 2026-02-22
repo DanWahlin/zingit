@@ -21,12 +21,12 @@
     "lit": "^3.3.2"
   },
   "devDependencies": {
-    "@vitest/ui": "^2.1.8",
+    "@vitest/ui": "^4.0.18",
     "gh-pages": "^6.3.0",
-    "happy-dom": "^15.11.7",
+    "happy-dom": "^20.7.0",
     "terser": "^5.46.0",
     "typescript": "^5.9.3",
     "vite": "^7.3.1",
-    "vitest": "^2.1.8"
+    "vitest": "^4.0.18"
   }
 }

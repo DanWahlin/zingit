@@ -327,7 +327,11 @@ export function querySelector(selector: string): Element | null {
   // Check if selector contains shadow DOM piercing
   if (!selector.includes('>>>')) {
     // Regular selector - use standard querySelector
-    return document.querySelector(selector);
+    try {
+      return document.querySelector(selector);
+    } catch {
+      return null;
+    }
   }
 
   // Split on >>> and traverse shadow DOM
