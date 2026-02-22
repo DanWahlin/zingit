@@ -6,7 +6,6 @@ import {
   CopilotProvider,
   ClaudeProvider,
   CodexProvider,
-  detectAgents as coreDetectAgents,
 } from '@codewithdan/agent-sdk-core';
 import type { SpawnOptions, SpawnedProcess } from '@anthropic-ai/claude-agent-sdk';
 import { spawn } from 'node:child_process';

@@ -2,6 +2,10 @@
 
 export type MarkerStatus = 'pending' | 'processing' | 'completed';
 
+/**
+ * Canonical definition of a Marker.
+ * Keep in sync with: server/src/types.ts (Marker)
+ */
 export interface Marker {
   id: string;
   selector: string;
@@ -41,6 +45,10 @@ export interface AgentInfo {
   installCommand: string;
 }
 
+/**
+ * Canonical definition of BatchData.
+ * Keep in sync with: server/src/types.ts (BatchData)
+ */
 export interface BatchData {
   pageUrl: string;
   pageTitle: string;
@@ -101,12 +109,18 @@ export interface WSMessage {
 // History/Undo Feature Types
 // ============================================
 
+/**
+ * Keep in sync with: server/src/services/git-manager.ts (MarkerSummary)
+ */
 export interface MarkerSummary {
   id: string;           // Marker UUID for precise matching during undo
   identifier: string;
   notes: string;
 }
 
+/**
+ * Keep in sync with: server/src/services/git-manager.ts (CheckpointInfo)
+ */
 export interface CheckpointInfo {
   id: string;
   timestamp: string;

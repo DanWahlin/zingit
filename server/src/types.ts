@@ -32,6 +32,10 @@ export interface AgentSession {
   getSessionId?(): string | null;  // Optional: get session ID for resumption
 }
 
+/**
+ * Canonical definition of a Marker.
+ * Keep in sync with: client/src/types/index.ts (Marker)
+ */
 export interface Marker {
   id: string;
   selector: string;
@@ -47,6 +51,10 @@ export interface Marker {
   screenshot?: string;     // Base64 encoded screenshot of the element (without data:image/png;base64, prefix)
 }
 
+/**
+ * Canonical definition of BatchData.
+ * Keep in sync with: client/src/types/index.ts (BatchData)
+ */
 export interface BatchData {
   pageUrl: string;
   pageTitle: string;
