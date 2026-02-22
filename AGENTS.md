@@ -298,9 +298,16 @@ Users activate ZingIt by adding `?zingit` to any URL: `http://localhost:5200/?zi
 
 ## GitHub Actions Workflow
 
-Automated release and deployment on commits starting with "release:":
-1. Runs `npm run release` - versions, builds, and publishes to npm
-2. Runs `npm run deploy` - deploys demo site to GitHub Pages
+Automated release and deployment triggered by pushing a version tag (`v*`):
+
+**Local release steps:**
+1. Run `npm run release` — bumps version, updates CHANGELOG.md, commits, and creates a `v*` tag
+2. Run `git push --follow-tags origin main` — pushes the commit and tag
+
+**What the GitHub Actions workflow does:**
+1. Installs dependencies and builds both client and server
+2. Publishes to npm (`npm publish`)
+3. Deploys demo site to GitHub Pages
 
 **Setup Requirements:**
 - `NPM_TOKEN` secret in repository settings (for npm publishing)
