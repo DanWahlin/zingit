@@ -79,6 +79,7 @@ export async function handleSelectAgent(
       console.error('Error destroying session during agent switch:', (err as Error).message);
     } finally {
       state.session = null;
+      state.sessionId = null;  // Clear stale session ID to prevent resume with wrong agent
     }
   }
 

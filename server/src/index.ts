@@ -1,9 +1,16 @@
 // server/src/index.ts
 
 import { WebSocketServer, WebSocket } from 'ws';
-import { CopilotAgent } from './agents/copilot.js';
-import { ClaudeCodeAgent } from './agents/claude.js';
-import { CodexAgent } from './agents/codex.js';
+import { CoreProviderAdapter } from './agents/core-adapter.js';
+import {
+  CopilotProvider,
+  ClaudeProvider,
+  CodexProvider,
+  detectAgents as coreDetectAgents,
+} from '@codewithdan/agent-sdk-core';
+import type { SpawnOptions, SpawnedProcess } from '@anthropic-ai/claude-agent-sdk';
+import { spawn } from 'node:child_process';
+import { userInfo } from 'node:os';
 import { detectAgents } from './utils/agent-detection.js';
 import { GitManager, GitManagerError } from './services/git-manager.js';
 import type { Agent, WSIncomingMessage, WSOutgoingMessage } from './types.js';
@@ -35,12 +42,45 @@ if (!process.env.PROJECT_DIR) {
 
 const PROJECT_DIR: string = process.env.PROJECT_DIR;
 
-// Agent registry
-const agentClasses: Record<string, new () => Agent> = {
-  copilot: CopilotAgent,
-  claude: ClaudeCodeAgent,
-  codex: CodexAgent,
-};
+// Agent registry — wraps @codewithdan/agent-sdk-core providers with zingit adapter
+function createClaudeSpawner(): { permissionMode: 'acceptEdits' | 'bypassPermissions'; spawnClaudeCodeProcess?: (options: SpawnOptions) => SpawnedProcess } {
+  if (userInfo().uid === 0) {
+    return {
+      permissionMode: 'bypassPermissions',
+      spawnClaudeCodeProcess: (options: SpawnOptions): SpawnedProcess => {
+        const { command, args, cwd, env, signal } = options;
+        const child = spawn('sudo', ['-u', 'ccrunner', '-E', command, ...args], {
+          cwd,
+          stdio: ['pipe', 'pipe', 'pipe'],
+          signal,
+          env: { ...env, HOME: '/home/ccrunner', USER: 'ccrunner' },
+          windowsHide: true,
+        });
+        return {
+          stdin: child.stdin!,
+          stdout: child.stdout!,
+          get killed() { return child.killed; },
+          get exitCode() { return child.exitCode; },
+          kill: (sig) => child.kill(sig),
+          on: child.on.bind(child) as SpawnedProcess['on'],
+          once: child.once.bind(child) as SpawnedProcess['once'],
+          off: child.off.bind(child) as SpawnedProcess['off'],
+        };
+      },
+    };
+  }
+  return { permissionMode: 'acceptEdits' };
+}
+
+function createAgentFactory(): Record<string, () => Agent> {
+  const claudeOpts = createClaudeSpawner();
+  return {
+    copilot: () => new CoreProviderAdapter(new CopilotProvider()),
+    claude: () => new CoreProviderAdapter(new ClaudeProvider(claudeOpts)),
+    codex: () => new CoreProviderAdapter(new CodexProvider()),
+  };
+}
+const agentFactories = createAgentFactory();
 
 // Cache for initialized agents (lazy initialization)
 const initializedAgents: Map<string, Agent> = new Map();
@@ -56,12 +96,12 @@ async function getAgent(agentName: string): Promise<Agent> {
   }
 
   // Initialize new agent
-  const AgentClass = agentClasses[agentName];
-  if (!AgentClass) {
+  const factory = agentFactories[agentName];
+  if (!factory) {
     throw new Error(`Unknown agent: ${agentName}`);
   }
 
-  const agent = new AgentClass();
+  const agent = factory();
   await agent.start();
   initializedAgents.set(agentName, agent);
   return agent;

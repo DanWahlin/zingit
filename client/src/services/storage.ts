@@ -66,7 +66,7 @@ export function clearMarkers(): void {
 }
 
 const defaultSettings: ZingSettings = {
-  wsUrl: 'ws://localhost:3000',
+  wsUrl: `ws://${typeof window !== 'undefined' ? window.location.hostname : 'localhost'}:3000`,
   highlightColor: '#fbbf24',
   markerColor: '#3b82f6',       // Pending (blue)
   processingColor: '#ef4444',   // Processing (red)

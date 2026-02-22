@@ -144,7 +144,7 @@ export class ZingToast extends LitElement {
   private exitingIds = new Set<string>();
 
   show(message: string, type: 'success' | 'error' | 'info' | 'warning' = 'info', duration = 3000, action?: { label: string; callback: () => void }) {
-    const id = crypto.randomUUID();
+    const id = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : `toast-${Date.now()}-${Math.random().toString(36).slice(2)}`;
     const toast: ToastMessage = { id, message, type, duration, action };
     this.toasts = [...this.toasts, toast];
 

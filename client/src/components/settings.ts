@@ -269,7 +269,7 @@ export class ZingSettingsPanel extends LitElement {
   @property({ type: Array }) agents: AgentInfo[] = [];  // Available agents from server
   @property({ type: Boolean }) isRemoteUrl = false;  // Whether editing a remote site
   @property({ type: Object }) settings: ZingSettings = {
-    wsUrl: 'ws://localhost:3000',
+    wsUrl: `ws://${typeof window !== 'undefined' ? window.location.hostname : 'localhost'}:3000`,
     highlightColor: '#fbbf24',
     markerColor: '#3b82f6',
     processingColor: '#ef4444',

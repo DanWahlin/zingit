@@ -346,9 +346,9 @@ export class ZingUI extends LitElement {
 
       case 'delta':
         this.responseContent += msg.content || '';
-        // Continuously save response state if autoRefresh is enabled
-        // This ensures state persists even if Vite HMR triggers before our explicit reload
-        if (this.settings.autoRefresh && this.responseContent) {
+        // Save response state on every delta so it persists across page reloads
+        // (Vite HMR may reload when agent edits project files mid-stream)
+        if (this.responseContent) {
           this.saveCurrentResponseState();
         }
         break;
@@ -387,8 +387,10 @@ export class ZingUI extends LitElement {
             this.ws.send({ type: 'get_history' });
           }
         }, 500);
+        // Always save response state so it persists across page reloads
+        // (Vite HMR may reload the page when agent edits project files)
+        this.saveCurrentResponseState();
         if (this.settings.autoRefresh) {
-          this.saveCurrentResponseState();
           this.toast.info('Refreshing page...');
           setTimeout(() => window.location.reload(), 1000);
         }
@@ -989,7 +991,7 @@ export class ZingUI extends LitElement {
         const screenshot = captureScreenshot && this.modalScreenshotPreview ? this.modalScreenshotPreview : undefined;
 
         const marker: Marker = {
-          id: crypto.randomUUID(),
+          id: (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : `m-${Date.now()}-${Math.random().toString(36).slice(2)}`,
           selector: this.modalSelector,
           identifier: this.modalIdentifier,
           html: getElementHtml(this.pendingElement),
