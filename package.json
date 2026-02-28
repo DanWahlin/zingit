@@ -60,7 +60,7 @@
   "homepage": "https://github.com/danwahlin/zingit#readme",
   "dependencies": {
     "@anthropic-ai/claude-agent-sdk": "^0.2.17",
-    "@codewithdan/agent-sdk-core": "^0.2.0",
+    "@codewithdan/agent-sdk-core": "^0.3.0",
     "@github/copilot-sdk": "^0.1.16",
     "@openai/codex-sdk": ">=0.80.0",
     "diff": "^8.0.3",
