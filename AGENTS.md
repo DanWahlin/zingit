@@ -82,7 +82,8 @@ zingit/
 │       │   ├── base.ts        # Abstract base agent class
 │       │   ├── claude.ts      # Claude Code CLI integration
 │       │   ├── copilot.ts     # GitHub Copilot SDK integration
-│       │   └── codex.ts       # OpenAI Codex integration
+│       │   ├── codex.ts       # OpenAI Codex integration
+│       │   └── opencode.ts    # OpenCode integration
 │       ├── handlers/
 │       │   └── messageHandlers.ts  # WebSocket message handlers
 │       ├── types.ts           # Server-side TypeScript interfaces
@@ -106,6 +107,7 @@ zingit/
 - **@anthropic-ai/claude-agent-sdk** - Claude Code integration
 - **@github/copilot-sdk** - GitHub Copilot integration
 - **@openai/codex-sdk** - OpenAI Codex integration
+- **@codewithdan/agent-sdk-core** - Unified agent provider (Copilot, Claude, Codex, OpenCode)
 
 ## Key Concepts
 
@@ -132,7 +134,7 @@ The history component tracks all changes made by the AI agent:
 
 ### Agent System
 The server uses a pluggable agent architecture:
-- Set `AGENT=claude`, `AGENT=copilot`, or `AGENT=codex` environment variable
+- Set `AGENT=claude`, `AGENT=copilot`, `AGENT=codex`, or `AGENT=opencode` environment variable
 - Agents implement `Agent` interface with `createSession()` and `formatPrompt()`
 - Claude agent spawns `claude --print` CLI process
 - Copilot agent uses the GitHub Copilot SDK
@@ -163,7 +165,8 @@ npm run typecheck -w client    # Type check without emitting
 ```bash
 npx cross-env AGENT=claude npm run dev -w server   # Start with Claude Code agent
 npx cross-env AGENT=copilot npm run dev -w server  # Start with GitHub Copilot agent
-npx cross-env AGENT=codex npm run dev -w server    # Start with OpenAI Codex agent
+npx cross-env AGENT=codex npm run dev -w server     # Start with OpenAI Codex agent
+npx cross-env AGENT=opencode npm run dev -w server  # Start with OpenCode agent
 npm run typecheck -w server                         # Type check
 ```
 

@@ -29,7 +29,7 @@ export interface ZingSettings {
   completedColor: string;        // Completed status color (green default)
   projectDir: string;            // Project directory for AI agent to work in
   playSoundOnComplete: boolean;  // Play a ding sound when agent completes
-  selectedAgent: string;         // Selected agent name (claude, copilot, codex)
+  selectedAgent: string;         // Selected agent name (claude, copilot, codex, opencode)
   autoRefresh: boolean;          // Auto refresh page when agent completes
   // Undo/Redo features
   showUndoBar: boolean;          // Show undo toast after changes (default: true)

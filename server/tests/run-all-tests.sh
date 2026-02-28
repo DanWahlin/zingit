@@ -21,7 +21,7 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Available agents
-AGENTS=("copilot" "claude" "codex")
+AGENTS=("copilot" "claude" "codex" "opencode")
 
 # Parse arguments
 DRY_RUN=false
@@ -36,14 +36,14 @@ for arg in "$@"; do
     --scenario=*)
       SCENARIO="${arg#*=}"
       ;;
-    copilot|claude|codex)
+    copilot|claude|codex|opencode)
       SPECIFIC_AGENT="$arg"
       ;;
     --help|-h)
       echo "Usage: $0 [agent] [options]"
       echo ""
       echo "Arguments:"
-      echo "  agent          Test specific agent (copilot, claude, codex)"
+      echo "  agent          Test specific agent (copilot, claude, codex, opencode)"
       echo ""
       echo "Options:"
       echo "  --scenario=X   Test scenario (simple, multi, followup)"
@@ -55,6 +55,7 @@ for arg in "$@"; do
       echo "  $0 claude                   # Test only Claude agent"
       echo "  $0 --scenario=multi         # Test all agents with 'multi' scenario"
       echo "  $0 codex --scenario=followup"
+      echo "  $0 opencode --scenario=simple"
       exit 0
       ;;
   esac
