@@ -38,6 +38,10 @@ export interface Checkpoint {
   linesChanged: number;
 }
 
+/**
+ * Canonical definition of MarkerSummary.
+ * Keep in sync with: client/src/types/index.ts (MarkerSummary)
+ */
 export interface MarkerSummary {
   id: string;           // Annotation UUID for precise matching during undo
   identifier: string;
@@ -58,6 +62,10 @@ export interface ChangeHistory {
   currentCheckpointId: string | null;
 }
 
+/**
+ * Canonical definition of CheckpointInfo.
+ * Keep in sync with: client/src/types/index.ts (CheckpointInfo)
+ */
 export interface CheckpointInfo {
   id: string;
   timestamp: string;

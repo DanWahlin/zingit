@@ -73,6 +73,32 @@ We use conventional commits for clarity:
 
 Example: `feat: add screenshot auto-capture for markers`
 
+## Error Handling Conventions
+
+The project uses three error handling patterns depending on context:
+
+1. **Silent recovery** — For non-critical operations where failure should not interrupt the user (e.g., localStorage reads/writes in `client/src/services/storage.ts`). Log a warning and return a safe default.
+
+2. **Forward to client** — For server-side errors during agent processing. Catch the error and send a WebSocket `error` message so the UI can display it (e.g., `server/src/handlers/messageHandlers.ts`).
+
+3. **Typed errors** — For recoverable server errors that callers need to handle differently based on the cause. Throw a custom error class with an error code (e.g., `GitManagerError` with codes like `'NOT_GIT_REPO'` in `server/src/services/git-manager.ts`).
+
+**Guidelines:**
+- Never silently swallow errors without at least a `console.warn`
+- Prefer typed errors (`GitManagerError`) over generic `Error` when callers need to distinguish failure modes
+- Always validate user input at the boundary (WebSocket message handlers) before passing to internal services
+
+## Shared Types
+
+Several TypeScript interfaces are defined in both the client and server because they can't share a module directly (the client is a Vite/browser bundle, the server is Node.js). These interfaces have `Keep in sync with:` JSDoc comments pointing to their counterpart:
+
+- `Marker` — `client/src/types/index.ts` ↔ `server/src/types.ts`
+- `BatchData` — `client/src/types/index.ts` ↔ `server/src/types.ts`
+- `MarkerSummary` — `client/src/types/index.ts` ↔ `server/src/services/git-manager.ts`
+- `CheckpointInfo` — `client/src/types/index.ts` ↔ `server/src/services/git-manager.ts`
+
+When modifying any of these interfaces, update both files and run `npm run typecheck` to verify.
+
 ## License
 
 By contributing, you agree that your contributions will be licensed under the MIT License.

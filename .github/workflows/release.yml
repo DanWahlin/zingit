@@ -2,35 +2,22 @@ name: Release and Deploy
 
 on:
   push:
-    branches:
-      - main
+    tags:
+      - 'v*'
   workflow_dispatch:
-    inputs:
-      release_type:
-        description: 'Release type (auto reads from commits, or force patch/minor/major)'
-        required: false
-        default: 'auto'
-        type: choice
-        options:
-          - auto
-          - patch
-          - minor
-          - major
 
 jobs:
   release:
-    # Only run if commit message starts with "release: " OR manually triggered
-    if: startsWith(github.event.head_commit.message, 'release:') || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
 
     permissions:
-      contents: write  # Needed for gh-pages deployment
+      contents: write
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Fetch all history for proper versioning
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -38,14 +25,16 @@ jobs:
           node-version: '22'
           registry-url: 'https://registry.npmjs.org'
 
-      - name: Install root dependencies
+      - name: Install dependencies
         run: npm install
 
-      - name: Install client dependencies
-        run: cd client && npm install
+      - name: Build
+        run: npm run build
 
-      - name: Install server dependencies
-        run: cd server && npm install
+      - name: Publish to npm
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Configure Git
         run: |
@@ -53,23 +42,7 @@ jobs:
           git config --global user.email "actions@github.com"
           git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
 
-      - name: Run release
-        run: |
-          if [ "${{ github.event.inputs.release_type }}" = "auto" ] || [ -z "${{ github.event.inputs.release_type }}" ]; then
-            npm run release
-          else
-            npx standard-version --release-as ${{ github.event.inputs.release_type }}
-            npm run build
-            npm publish --access public
-          fi
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      - name: Push version bump
-        run: |
-          git push --follow-tags origin main
-
-      - name: Run deploy
+      - name: Deploy to GitHub Pages
         run: npm run deploy
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -21,17 +21,42 @@ export interface ToolbarPosition {
   y: number;
 }
 
-export function saveMarkers(markers: Marker[]): void {
+// --- Storage helpers to reduce repetitive try-catch blocks ---
+
+function safeSet(storage: Storage, key: string, value: unknown, label: string): void {
   try {
-    const data = {
-      url: window.location.href,
-      markers,
-      timestamp: Date.now()
-    };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    storage.setItem(key, JSON.stringify(value));
   } catch (err) {
-    console.warn('ZingIt: Failed to save markers', err);
+    console.warn(`ZingIt: Failed to save ${label}`, err);
   }
+}
+
+function safeGet<T>(storage: Storage, key: string): T | null {
+  try {
+    const raw = storage.getItem(key);
+    if (!raw) return null;
+    return JSON.parse(raw) as T;
+  } catch {
+    return null;
+  }
+}
+
+function safeRemove(storage: Storage, key: string, label: string): void {
+  try {
+    storage.removeItem(key);
+  } catch (err) {
+    console.warn(`ZingIt: Failed to clear ${label}`, err);
+  }
+}
+
+// --- Markers ---
+
+export function saveMarkers(markers: Marker[]): void {
+  safeSet(localStorage, STORAGE_KEY, {
+    url: window.location.href,
+    markers,
+    timestamp: Date.now()
+  }, 'markers');
 }
 
 export function loadMarkers(): Marker[] {
@@ -58,12 +83,10 @@ export function loadMarkers(): Marker[] {
 }
 
 export function clearMarkers(): void {
-  try {
-    localStorage.removeItem(STORAGE_KEY);
-  } catch (err) {
-    console.warn('ZingIt: Failed to clear markers', err);
-  }
+  safeRemove(localStorage, STORAGE_KEY, 'markers');
 }
+
+// --- Settings ---
 
 const defaultSettings: ZingSettings = {
   wsUrl: `ws://${typeof window !== 'undefined' ? window.location.hostname : 'localhost'}:3000`,
@@ -81,31 +104,18 @@ const defaultSettings: ZingSettings = {
 };
 
 export function saveSettings(settings: ZingSettings): void {
-  try {
-    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
-  } catch (err) {
-    console.warn('ZingIt: Failed to save settings', err);
-  }
+  safeSet(localStorage, SETTINGS_KEY, settings, 'settings');
 }
 
 export function loadSettings(): ZingSettings {
-  try {
-    const raw = localStorage.getItem(SETTINGS_KEY);
-    if (!raw) return defaultSettings;
-
-    const saved = JSON.parse(raw);
-    return { ...defaultSettings, ...saved };
-  } catch {
-    return defaultSettings;
-  }
+  const saved = safeGet<Partial<ZingSettings>>(localStorage, SETTINGS_KEY);
+  return saved ? { ...defaultSettings, ...saved } : defaultSettings;
 }
 
+// --- Active state ---
+
 export function saveMarkActive(active: boolean): void {
-  try {
-    localStorage.setItem(ACTIVE_KEY, JSON.stringify(active));
-  } catch (err) {
-    console.warn('ZingIt: Failed to save active state', err);
-  }
+  safeSet(localStorage, ACTIVE_KEY, active, 'active state');
 }
 
 export function loadMarkActive(): boolean {
@@ -118,63 +128,39 @@ export function loadMarkActive(): boolean {
   }
 }
 
+// --- Toolbar position ---
+
 export function saveToolbarPosition(position: ToolbarPosition): void {
-  try {
-    localStorage.setItem(TOOLBAR_POS_KEY, JSON.stringify(position));
-  } catch (err) {
-    console.warn('ZingIt: Failed to save toolbar position', err);
-  }
+  safeSet(localStorage, TOOLBAR_POS_KEY, position, 'toolbar position');
 }
 
 export function loadToolbarPosition(): ToolbarPosition | null {
-  try {
-    const raw = localStorage.getItem(TOOLBAR_POS_KEY);
-    if (!raw) return null;
-    return JSON.parse(raw);
-  } catch {
-    return null;
-  }
+  return safeGet<ToolbarPosition>(localStorage, TOOLBAR_POS_KEY);
 }
 
 export function clearToolbarPosition(): void {
-  try {
-    localStorage.removeItem(TOOLBAR_POS_KEY);
-  } catch (err) {
-    console.warn('ZingIt: Failed to clear toolbar position', err);
-  }
+  safeRemove(localStorage, TOOLBAR_POS_KEY, 'toolbar position');
 }
+
+// --- Response state (sessionStorage — persists across auto-refresh only) ---
 
 /**
  * Save response dialog state to sessionStorage (persists across auto-refresh)
  */
 export function saveResponseState(state: ResponseState): void {
-  try {
-    sessionStorage.setItem(RESPONSE_STATE_KEY, JSON.stringify(state));
-  } catch (err) {
-    console.warn('ZingIt: Failed to save response state', err);
-  }
+  safeSet(sessionStorage, RESPONSE_STATE_KEY, state, 'response state');
 }
 
 /**
  * Load response dialog state from sessionStorage
  */
 export function loadResponseState(): ResponseState | null {
-  try {
-    const raw = sessionStorage.getItem(RESPONSE_STATE_KEY);
-    if (!raw) return null;
-    return JSON.parse(raw);
-  } catch {
-    return null;
-  }
+  return safeGet<ResponseState>(sessionStorage, RESPONSE_STATE_KEY);
 }
 
 /**
  * Clear response dialog state from sessionStorage
  */
 export function clearResponseState(): void {
-  try {
-    sessionStorage.removeItem(RESPONSE_STATE_KEY);
-  } catch (err) {
-    console.warn('ZingIt: Failed to clear response state', err);
-  }
+  safeRemove(sessionStorage, RESPONSE_STATE_KEY, 'response state');
 }

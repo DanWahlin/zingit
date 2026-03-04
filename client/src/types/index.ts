@@ -2,6 +2,10 @@
 
 export type MarkerStatus = 'pending' | 'processing' | 'completed';
 
+/**
+ * Canonical definition of a Marker.
+ * Keep in sync with: server/src/types.ts (Marker)
+ */
 export interface Marker {
   id: string;
   selector: string;
@@ -25,7 +29,7 @@ export interface ZingSettings {
   completedColor: string;        // Completed status color (green default)
   projectDir: string;            // Project directory for AI agent to work in
   playSoundOnComplete: boolean;  // Play a ding sound when agent completes
-  selectedAgent: string;         // Selected agent name (claude, copilot, codex)
+  selectedAgent: string;         // Selected agent name (claude, copilot, codex, opencode)
   autoRefresh: boolean;          // Auto refresh page when agent completes
   // Undo/Redo features
   showUndoBar: boolean;          // Show undo toast after changes (default: true)
@@ -41,6 +45,10 @@ export interface AgentInfo {
   installCommand: string;
 }
 
+/**
+ * Canonical definition of BatchData.
+ * Keep in sync with: server/src/types.ts (BatchData)
+ */
 export interface BatchData {
   pageUrl: string;
   pageTitle: string;
@@ -101,12 +109,18 @@ export interface WSMessage {
 // History/Undo Feature Types
 // ============================================
 
+/**
+ * Keep in sync with: server/src/services/git-manager.ts (MarkerSummary)
+ */
 export interface MarkerSummary {
   id: string;           // Marker UUID for precise matching during undo
   identifier: string;
   notes: string;
 }
 
+/**
+ * Keep in sync with: server/src/services/git-manager.ts (CheckpointInfo)
+ */
 export interface CheckpointInfo {
   id: string;
   timestamp: string;

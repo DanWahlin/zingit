@@ -53,10 +53,11 @@ function checkCodexAuth(): boolean {
  */
 export async function detectAgents(): Promise<AgentInfo[]> {
   // Run all CLI checks in parallel for better performance
-  const [claudeCheck, copilotCheck, codexCheck] = await Promise.all([
+  const [claudeCheck, copilotCheck, codexCheck, opencodeCheck] = await Promise.all([
     checkCLI('claude'),
     checkCLI('copilot'),
-    checkCLI('codex')
+    checkCLI('codex'),
+    checkCLI('opencode')
   ]);
 
   const agents: AgentInfo[] = [];
@@ -101,6 +102,16 @@ export async function detectAgents(): Promise<AgentInfo[]> {
       installCommand: 'npm install -g @openai/codex'
     });
   }
+
+  // OpenCode
+  agents.push({
+    name: 'opencode',
+    displayName: 'OpenCode',
+    available: opencodeCheck.installed,
+    version: opencodeCheck.version,
+    reason: opencodeCheck.installed ? undefined : 'OpenCode CLI not found',
+    installCommand: 'npm install -g opencode-ai'
+  });
 
   return agents;
 }

@@ -144,7 +144,7 @@ export class ZingUI extends LitElement {
 
   // Processing timeout to detect when agent hangs
   private processingTimeout: ReturnType<typeof setTimeout> | null = null;
-  private readonly PROCESSING_TIMEOUT_MS = 60000; // 1 minute
+  private readonly PROCESSING_TIMEOUT_MS = 130000; // 2m10s — must exceed server timeout (120s) to avoid premature client-side timeout
 
   // Toolbar position and drag state
   @state() private toolbarPosition: ToolbarPosition | null = loadToolbarPosition();
@@ -250,6 +250,10 @@ export class ZingUI extends LitElement {
     document.removeEventListener('mousemove', this.mouseMoveHandler, true);
     document.removeEventListener('keydown', this.keydownHandler);
   }
+
+  // ============================================
+  // WebSocket & Connection
+  // ============================================
 
   private initWebSocket() {
     this.ws = new WebSocketClient(this.settings.wsUrl);
@@ -500,6 +504,10 @@ export class ZingUI extends LitElement {
     }
   }
 
+  // ============================================
+  // Document Event Handlers (click, mousemove, keydown)
+  // ============================================
+
   private handleDocumentClick(e: MouseEvent) {
     // Ignore if mark mode is paused
     if (!this.markActive) {
@@ -731,6 +739,10 @@ export class ZingUI extends LitElement {
     return null;
   }
 
+  // ============================================
+  // Render
+  // ============================================
+
   render() {
     // When hidden, only render toast for notifications
     if (this.isHidden) {
@@ -865,6 +877,10 @@ export class ZingUI extends LitElement {
       <zing-toast></zing-toast>
     `;
   }
+
+  // ============================================
+  // Modal & Screenshot Handlers
+  // ============================================
 
   private handleModalCancel() {
     this.modalOpen = false;
@@ -1100,6 +1116,10 @@ export class ZingUI extends LitElement {
 
     this.toast?.success('Marker restored');
   }
+
+  // ============================================
+  // Marker & Batch Operations
+  // ============================================
 
   private handleSend() {
     // Open the agent response panel
@@ -1490,6 +1510,10 @@ export class ZingUI extends LitElement {
       setTimeout(() => window.location.reload(), 500);
     }
   }
+
+  // ============================================
+  // Toolbar Drag Handlers
+  // ============================================
 
   // Toolbar drag handlers
   private handleToolbarDragStart(e: CustomEvent<{ clientX: number; clientY: number }>) {

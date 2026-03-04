@@ -6,7 +6,7 @@ import {
   CopilotProvider,
   ClaudeProvider,
   CodexProvider,
-  detectAgents as coreDetectAgents,
+  OpenCodeProvider,
 } from '@codewithdan/agent-sdk-core';
 import type { SpawnOptions, SpawnedProcess } from '@anthropic-ai/claude-agent-sdk';
 import { spawn } from 'node:child_process';
@@ -83,6 +83,7 @@ function createAgentFactory(): Record<string, () => Agent> {
     copilot: () => new CoreProviderAdapter(new CopilotProvider()),
     claude: () => new CoreProviderAdapter(new ClaudeProvider(claudeOpts)),
     codex: () => new CoreProviderAdapter(new CodexProvider()),
+    opencode: () => new CoreProviderAdapter(new OpenCodeProvider()),
   };
 }
 const agentFactories = createAgentFactory();

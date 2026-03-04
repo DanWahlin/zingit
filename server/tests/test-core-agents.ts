@@ -21,7 +21,7 @@ const TIMEOUT_MS = 120_000;
 // Parse args
 const args = process.argv.slice(2);
 const specificAgent = args.find(a => a.startsWith('--agent='))?.split('=')[1];
-const agents = specificAgent ? [specificAgent] : ['copilot', 'claude', 'codex'];
+const agents = specificAgent ? [specificAgent] : ['copilot', 'claude', 'codex', 'opencode'];
 
 interface TestResult {
   agent: string;

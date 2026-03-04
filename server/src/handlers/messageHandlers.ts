@@ -332,7 +332,7 @@ export async function handleMessage(
     }
 
     // Add timeout to detect if SDK hangs
-    const timeoutMs = 120000; // 2 minutes
+    const timeoutMs = 120000; // 2 minutes — client timeout (zing-ui.ts) must exceed this
     const sendPromise = state.session.send({ prompt });
     const timeoutPromise = new Promise((_, reject) =>
       setTimeout(() => reject(new Error('Agent response timeout')), timeoutMs)
