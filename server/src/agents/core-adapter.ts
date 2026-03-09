@@ -148,7 +148,7 @@ IMPORTANT: Format all responses using markdown.
             }
           }
 
-          await coreSession.execute(msg.prompt);
+          await coreSession.execute(msg.prompt, attachments);
         } catch (err) {
           send({ type: 'error', message: (err as Error).message });
         }
