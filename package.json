@@ -1,6 +1,6 @@
 {
   "name": "@codewithdan/zingit",
-  "version": "0.17.10",
+  "version": "0.17.11",
   "description": "AI-powered UI marker tool - point, mark, and let AI fix it",
   "type": "module",
   "engines": {
@@ -52,7 +52,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/danwahlin/zingit"
+    "url": "git+https://github.com/DanWahlin/zingit.git"
   },
   "bugs": {
     "url": "https://github.com/danwahlin/zingit/issues"
