@@ -21,18 +21,24 @@ import { randomUUID } from 'crypto';
  * Zingit uses a simpler event model: delta, tool_start, tool_end, idle, error.
  */
 function mapCoreEventToWS(event: AgentEvent): WSOutgoingMessage | null {
+  const content = event.content?.trim();
+
   switch (event.type) {
     case 'output':
+      return content ? { type: 'delta', content: event.content, replace: event.metadata?.replace } : null;
     case 'thinking':
     case 'command_output':
     case 'test_result':
-      return { type: 'delta', content: event.content };
+      return null;
     case 'command':
+      return { type: 'tool_start', tool: formatToolStatus(event, 'Running command') };
     case 'file_read':
+      return { type: 'tool_start', tool: formatToolStatus(event, 'Reading file') };
     case 'file_write':
     case 'file_edit':
+      return { type: 'tool_start', tool: formatToolStatus(event, 'Updating file') };
     case 'tool_call':
-      return { type: 'tool_start', tool: event.metadata?.command || event.content };
+      return { type: 'tool_start', tool: formatToolStatus(event, 'Using tool') };
     case 'complete':
       return { type: 'idle' };
     case 'error':
@@ -40,6 +46,19 @@ function mapCoreEventToWS(event: AgentEvent): WSOutgoingMessage | null {
     default:
       return null;
   }
+}
+
+function formatToolStatus(event: AgentEvent, fallback: string): string {
+  if (event.metadata?.file) {
+    return `${fallback}: ${path.basename(event.metadata.file)}`;
+  }
+
+  const command = event.metadata?.command || event.content?.split('\n')[0]?.trim();
+  if (!command) return fallback;
+
+  if (command === 'report_intent') return 'Planning next step';
+
+  return command.length > 80 ? `${command.slice(0, 77)}...` : command;
 }
 
 /**

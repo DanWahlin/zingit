@@ -117,6 +117,7 @@ export interface AgentInfoMessage {
 export interface WSOutgoingMessage {
   type: WSOutgoingType;
   content?: string;
+  replace?: boolean;
   message?: string;
   tool?: string;
   agent?: string;

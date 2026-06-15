@@ -91,6 +91,7 @@ export type WSMessageType =
 export interface WSMessage {
   type: WSMessageType;
   content?: string;
+  replace?: boolean;
   message?: string;
   tool?: string;
   agent?: string;

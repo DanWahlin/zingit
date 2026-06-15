@@ -349,7 +349,7 @@ export class ZingUI extends LitElement {
         break;
 
       case 'delta':
-        this.responseContent += msg.content || '';
+        this.appendResponseContent(msg.content || '', msg.replace);
         // Save response state on every delta so it persists across page reloads
         // (Vite HMR may reload when agent edits project files mid-stream)
         if (this.responseContent) {
@@ -502,6 +502,34 @@ export class ZingUI extends LitElement {
         this.toast.info('History cleared');
         break;
     }
+  }
+
+  private appendResponseContent(content: string, replace = false) {
+    if (!content) return;
+
+    if (replace) {
+      this.responseContent = content;
+      return;
+    }
+
+    if (!this.responseContent) {
+      this.responseContent = content;
+      return;
+    }
+
+    this.responseContent += this.getResponseContentBoundary(this.responseContent, content) + content;
+  }
+
+  private getResponseContentBoundary(existing: string, incoming: string): string {
+    if (!existing || !incoming || /\s$/.test(existing) || /^\s/.test(incoming)) {
+      return '';
+    }
+
+    const startsNewThought =
+      /^(#{1,6}\s|[-*]\s|\d+\.\s|(?:I['’]ll|I\s|The\s|Updated\s|Added\s|Changed\s|Fixed\s|Created\s|Removed\s|Done\b|All\s|No\s|Yes\s))/u
+        .test(incoming);
+
+    return startsNewThought ? '\n\n' : '';
   }
 
   // ============================================

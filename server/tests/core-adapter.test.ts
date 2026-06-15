@@ -290,7 +290,9 @@ describe('CoreProviderAdapter session image handling', () => {
           execute: async () => {
             // Simulate agent producing events
             if (capturedOnEvent) {
+              capturedOnEvent({ id: '0', contextId: config.contextId, type: 'thinking', content: 'Starting a new turn...', timestamp: Date.now() });
               capturedOnEvent({ id: '1', contextId: config.contextId, type: 'output', content: 'Working...', timestamp: Date.now() });
+              capturedOnEvent({ id: '1b', contextId: config.contextId, type: 'command_output', content: 'raw grep output', timestamp: Date.now() });
               capturedOnEvent({ id: '2', contextId: config.contextId, type: 'complete', content: 'Done', timestamp: Date.now() });
             }
             return { status: 'complete' as const };
@@ -314,6 +316,8 @@ describe('CoreProviderAdapter session image handling', () => {
     const delta = messages.find((m: any) => m.type === 'delta');
     assert.ok(delta, 'should have a delta message');
     assert.equal(delta.content, 'Working...');
+    assert.equal(messages.some((m: any) => m.content === 'Starting a new turn...'), false);
+    assert.equal(messages.some((m: any) => m.content === 'raw grep output'), false);
 
     const idle = messages.find((m: any) => m.type === 'idle');
     assert.ok(idle, 'should have an idle message');
