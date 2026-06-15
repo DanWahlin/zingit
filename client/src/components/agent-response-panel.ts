@@ -523,9 +523,9 @@ export class ZingAgentResponsePanel extends LitElement {
             <div class="error">${this.error}</div>
           ` : ''}
 
-          ${this._renderDiagnostics()}
-
           ${this._renderContent()}
+
+          ${this._renderDiagnostics()}
         </div>
 
         <div class="footer">
