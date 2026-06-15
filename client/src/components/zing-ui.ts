@@ -115,6 +115,7 @@ export class ZingUI extends LitElement {
   // Response panel state
   @state() private responseOpen = false;
   @state() private responseContent = '';
+  @state() private responseDiagnostics: string[] = [];
   @state() private responseToolStatus = '';
   @state() private responseError = '';
   @state() private responseScreenshotCount = 0;
@@ -201,9 +202,10 @@ export class ZingUI extends LitElement {
 
     // Restore response dialog state if it was saved before auto-refresh
     const savedResponseState = loadResponseState();
-    if (savedResponseState && savedResponseState.content) {
+    if (savedResponseState && (savedResponseState.content || savedResponseState.error || savedResponseState.diagnostics?.length)) {
       this.responseOpen = true;  // Always show dialog if we have saved content
       this.responseContent = savedResponseState.content;
+      this.responseDiagnostics = savedResponseState.diagnostics || [];
       this.responseError = savedResponseState.error;
       this.responseScreenshotCount = savedResponseState.screenshotCount;
       // Clear saved state after restoring (one-time restore)
@@ -343,6 +345,7 @@ export class ZingUI extends LitElement {
         // Only clear content for new conversations, not follow-ups
         if (!this.isFollowUpMessage) {
           this.responseContent = '';
+          this.responseDiagnostics = [];
         }
         this.responseError = '';
         this.startProcessingTimeout(); // Start timeout to detect hangs
@@ -355,6 +358,11 @@ export class ZingUI extends LitElement {
         if (this.responseContent) {
           this.saveCurrentResponseState();
         }
+        break;
+
+      case 'diagnostic':
+        this.appendResponseDiagnostic(msg.content || '');
+        this.saveCurrentResponseState();
         break;
 
       case 'tool_start':
@@ -414,6 +422,7 @@ export class ZingUI extends LitElement {
 
       case 'reset_complete':
         this.responseContent = '';
+        this.responseDiagnostics = [];
         this.responseError = '';
         break;
 
@@ -517,7 +526,24 @@ export class ZingUI extends LitElement {
       return;
     }
 
+    const normalizedContent = this.normalizeResponseText(content);
+    const normalizedResponse = this.normalizeResponseText(this.responseContent);
+    if (!normalizedContent || normalizedResponse.endsWith(normalizedContent)) return;
+
+    if (normalizedContent.startsWith(normalizedResponse)) {
+      const delta = normalizedContent.slice(normalizedResponse.length);
+      this.responseContent += this.getResponseContentBoundary(this.responseContent, delta) + delta;
+      return;
+    }
+
     this.responseContent += this.getResponseContentBoundary(this.responseContent, content) + content;
+  }
+
+  private appendResponseDiagnostic(content: string) {
+    const normalized = content.trim();
+    if (!normalized || this.responseDiagnostics.includes(normalized)) return;
+
+    this.responseDiagnostics = [...this.responseDiagnostics, normalized];
   }
 
   private getResponseContentBoundary(existing: string, incoming: string): string {
@@ -526,10 +552,16 @@ export class ZingUI extends LitElement {
     }
 
     const startsNewThought =
-      /^(#{1,6}\s|[-*]\s|\d+\.\s|(?:I['’]ll|I\s|The\s|Updated\s|Added\s|Changed\s|Fixed\s|Created\s|Removed\s|Done\b|All\s|No\s|Yes\s))/u
+      /^(#{1,6}\s|[-*]\s|\d+\.\s|(?:I['’]ll|I\s|The\s|Found\s|Only\s|Other\s|Updated\s|Added\s|Changed\s|Fixed\s|Created\s|Removed\s|Done\b|All\s|No\s|Yes\s))/u
         .test(incoming);
 
-    return startsNewThought ? '\n\n' : '';
+    return startsNewThought || /[.!?][)"'`]*$/.test(existing) && /^[A-Z]/.test(incoming)
+      ? '\n\n'
+      : '';
+  }
+
+  private normalizeResponseText(content: string): string {
+    return content.replace(/\r\n/g, '\n').trim();
   }
 
   // ============================================
@@ -870,6 +902,7 @@ export class ZingUI extends LitElement {
         .processing=${this.processing}
         .autoRefresh=${this.settings.autoRefresh}
         .content=${this.responseContent}
+        .diagnostics=${this.responseDiagnostics}
         .toolStatus=${this.responseToolStatus}
         .error=${this.responseError}
         .screenshotCount=${this.responseScreenshotCount}
@@ -1495,6 +1528,7 @@ export class ZingUI extends LitElement {
     saveResponseState({
       open: this.responseOpen,
       content: this.responseContent,
+      diagnostics: this.responseDiagnostics,
       error: this.responseError,
       screenshotCount: this.responseScreenshotCount
     });

@@ -27,9 +27,11 @@ function mapCoreEventToWS(event: AgentEvent): WSOutgoingMessage | null {
     case 'output':
       return content ? { type: 'delta', content: event.content, replace: event.metadata?.replace } : null;
     case 'thinking':
-    case 'command_output':
-    case 'test_result':
       return null;
+    case 'command_output':
+      return mapDiagnosticEvent(event.content, false);
+    case 'test_result':
+      return mapDiagnosticEvent(event.content, true);
     case 'command':
       return { type: 'tool_start', tool: formatToolStatus(event, 'Running command') };
     case 'file_read':
@@ -46,6 +48,112 @@ function mapCoreEventToWS(event: AgentEvent): WSOutgoingMessage | null {
     default:
       return null;
   }
+}
+
+function createCoreEventMapper(): (event: AgentEvent) => WSOutgoingMessage | null {
+  let accumulatedOutput = '';
+  const diagnosticsSeen = new Set<string>();
+
+  return (event: AgentEvent) => {
+    if (event.type === 'complete' || event.type === 'error') {
+      accumulatedOutput = '';
+      diagnosticsSeen.clear();
+    }
+
+    const wsMsg = mapCoreEventToWS(event);
+
+    if (wsMsg?.type === 'diagnostic') {
+      const normalized = normalizeForComparison(wsMsg.content || '');
+      const key = `${wsMsg.level || 'info'}:${normalized}`;
+      if (!normalized || diagnosticsSeen.has(key)) return null;
+      diagnosticsSeen.add(key);
+      return { ...wsMsg, content: formatDiagnosticContent(wsMsg.content || '') };
+    }
+
+    if (wsMsg?.type !== 'delta') return wsMsg;
+
+    const content = wsMsg.content || '';
+    const diagnostic = classifyStandaloneDiffOutput(content);
+    if (diagnostic) {
+      const key = `${diagnostic.level}:${normalizeForComparison(diagnostic.content)}`;
+      if (diagnosticsSeen.has(key)) return null;
+      diagnosticsSeen.add(key);
+      return { type: 'diagnostic', ...diagnostic };
+    }
+
+    if (isSuppressibleToolOutput(content)) return null;
+
+    const comparableContent = normalizeForComparison(content);
+    const comparableAccumulated = normalizeForComparison(accumulatedOutput);
+    if (!comparableContent) return null;
+
+    if (wsMsg.replace) {
+      accumulatedOutput = content;
+      return wsMsg;
+    }
+
+    if (comparableContent === comparableAccumulated || comparableAccumulated.endsWith(comparableContent)) {
+      return null;
+    }
+
+    if (comparableAccumulated && comparableContent.startsWith(comparableAccumulated)) {
+      const snapshotStart = content.indexOf(comparableAccumulated);
+      const delta = snapshotStart >= 0
+        ? content.slice(snapshotStart + comparableAccumulated.length)
+        : comparableContent.slice(comparableAccumulated.length);
+
+      accumulatedOutput = content;
+      return normalizeForComparison(delta) ? { ...wsMsg, content: delta } : null;
+    }
+
+    accumulatedOutput += content;
+    return wsMsg;
+  };
+}
+
+function classifyStandaloneDiffOutput(content: string): { content: string; level: 'info' } | null {
+  const trimmed = content.trim();
+  return /^(diff --git\s|@@\s+-\d+)/.test(trimmed)
+    ? { content: trimmed, level: 'info' }
+    : null;
+}
+
+function mapDiagnosticEvent(content: string | undefined, alwaysInclude: boolean): WSOutgoingMessage | null {
+  const trimmed = content?.trim();
+  if (!trimmed || (!alwaysInclude && !isImportantCommandOutput(trimmed))) return null;
+
+  return {
+    type: 'diagnostic',
+    content: trimmed,
+    level: getDiagnosticLevel(trimmed),
+  };
+}
+
+function isImportantCommandOutput(content: string): boolean {
+  return /\b(error|failed|failure|exception|traceback|warning|warn|tests?\s+failed|failing|exit code\s+[1-9]\d*)\b/i.test(content);
+}
+
+function isSuppressibleToolOutput(content: string): boolean {
+  const trimmed = content.trim();
+  return /^(vite v\d|transforming\.\.\.|rendering chunks\.\.\.|computing gzip size\.\.\.|dist\/|✓ \d+ modules transformed|✓ built in \d|npm (run|notice))/m.test(trimmed);
+}
+
+function getDiagnosticLevel(content: string): 'info' | 'warning' | 'error' {
+  if (/\b(error|failed|failure|exception|traceback|tests?\s+failed|failing|exit code\s+[1-9]\d*)\b/i.test(content)) {
+    return 'error';
+  }
+
+  return isImportantCommandOutput(content) ? 'warning' : 'info';
+}
+
+function formatDiagnosticContent(content: string): string {
+  const maxLength = 6000;
+  const trimmed = content.trim();
+  return trimmed.length > maxLength ? `${trimmed.slice(0, maxLength)}\n...` : trimmed;
+}
+
+function normalizeForComparison(content: string): string {
+  return content.replace(/\r\n/g, '\n').trim();
 }
 
 function formatToolStatus(event: AgentEvent, fallback: string): string {
@@ -118,6 +226,7 @@ export class CoreProviderAdapter extends BaseAgent {
 
     const contextId = `zingit-${randomUUID()}`;
     const sessionTempFiles: string[] = [];
+    const mapEvent = createCoreEventMapper();
 
     // Build system prompt for the zingit context
     const systemPrompt = `
@@ -139,7 +248,7 @@ IMPORTANT: Format all responses using markdown.
       systemPrompt,
       resumeSessionId: resumeSessionId || undefined,
       onEvent: (event: AgentEvent) => {
-        const wsMsg = mapCoreEventToWS(event);
+        const wsMsg = mapEvent(event);
         if (wsMsg) send(wsMsg);
       },
     });

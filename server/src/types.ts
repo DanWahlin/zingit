@@ -90,6 +90,7 @@ export type WSOutgoingType =
   | 'processing'
   | 'response'
   | 'delta'
+  | 'diagnostic'
   | 'tool_start'
   | 'tool_end'
   | 'idle'
@@ -118,6 +119,7 @@ export interface WSOutgoingMessage {
   type: WSOutgoingType;
   content?: string;
   replace?: boolean;
+  level?: 'info' | 'warning' | 'error';
   message?: string;
   tool?: string;
   agent?: string;

@@ -275,6 +275,36 @@ export class ZingAgentResponsePanel extends LitElement {
       border-left: 3px solid #f87171;
     }
 
+    .diagnostics {
+      margin: 12px 0;
+      border: 1px solid rgba(251, 191, 36, 0.3);
+      border-radius: 6px;
+      background: rgba(251, 191, 36, 0.08);
+      overflow: hidden;
+    }
+
+    .diagnostics summary {
+      cursor: pointer;
+      padding: 8px 12px;
+      color: #fbbf24;
+      font-size: 13px;
+      font-weight: 600;
+      user-select: none;
+    }
+
+    .diagnostic-entry {
+      margin: 0;
+      padding: 10px 12px;
+      border-top: 1px solid rgba(251, 191, 36, 0.2);
+      color: #e5e7eb;
+      font-family: 'SF Mono', Monaco, 'Consolas', monospace;
+      font-size: 12px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-word;
+      overflow-wrap: break-word;
+    }
+
     .footer {
       padding: 12px 16px;
       border-top: 1px solid #374151;
@@ -417,6 +447,7 @@ export class ZingAgentResponsePanel extends LitElement {
   @property({ type: Boolean }) processing = false;
   @property({ type: Boolean }) autoRefresh = false;
   @property({ type: String }) content = '';
+  @property({ attribute: false }) diagnostics: string[] = [];
   @property({ type: String }) toolStatus = '';
   @property({ type: String }) error = '';
   @property({ type: Number }) screenshotCount = 0;
@@ -492,6 +523,8 @@ export class ZingAgentResponsePanel extends LitElement {
             <div class="error">${this.error}</div>
           ` : ''}
 
+          ${this._renderDiagnostics()}
+
           ${this._renderContent()}
         </div>
 
@@ -520,7 +553,7 @@ export class ZingAgentResponsePanel extends LitElement {
 
   private _parseContent(content: string): ContentSegment[] {
     const segments: ContentSegment[] = [];
-    const codeBlockRegex = /```(\w*)\n?([\s\S]*?)```/g;
+    const codeBlockRegex = /```([\w-]*)\n?([\s\S]*?)```/g;
 
     let lastIndex = 0;
     let match;
@@ -569,7 +602,7 @@ export class ZingAgentResponsePanel extends LitElement {
       return html`<div class="text-block" style="color: #6b7280;">Add markers or type a message below to get started.</div>`;
     }
 
-    const segments = this._parseContent(this.content);
+    const segments = this._parseContent(this._normalizeDisplayContent(this.content));
 
     return segments.map(segment => {
       if (segment.type === 'code') {
@@ -580,7 +613,22 @@ export class ZingAgentResponsePanel extends LitElement {
     });
   }
 
+  private _renderDiagnostics() {
+    if (!this.diagnostics.length) return html``;
+
+    return html`
+      <details class="diagnostics">
+        <summary>Diagnostics (${this.diagnostics.length})</summary>
+        ${this.diagnostics.map(entry => html`<pre class="diagnostic-entry">${entry}</pre>`)}
+      </details>
+    `;
+  }
+
   private _renderTextAsSteps(text: string) {
+    if (this._looksLikeCodeOutput(text)) {
+      return html`<div class="code-block">${text.trim()}</div>`;
+    }
+
     // Split on clear sentence boundaries or markdown headers
     // Look for: period/newline followed by space and capital letter, or markdown ## headers
     const steps = text
@@ -598,6 +646,33 @@ export class ZingAgentResponsePanel extends LitElement {
       // Parse markdown and return safe Lit template
       return html`<div class="action-step ${stepClass}">${this._parseMarkdownToTemplate(step)}</div>`;
     });
+  }
+
+  private _normalizeDisplayContent(content: string): string {
+    const withBoundaries = content
+      .replace(/\r\n/g, '\n')
+      .replace(/([.!?][)"'`]*)(?=(?:I['’]ll|I\s|The\s|Found\s|Only\s|Other\s|Updated\s|Added\s|Changed\s|Fixed\s|Created\s|Removed\s|Done\b|All\s|No\s|Yes\s)\b)/gu, '$1\n\n');
+
+    const blocks = withBoundaries
+      .split(/\n{2,}/)
+      .map(block => block.trim())
+      .filter(Boolean);
+
+    const uniqueBlocks: string[] = [];
+    for (const block of blocks) {
+      if (uniqueBlocks[uniqueBlocks.length - 1] !== block) {
+        uniqueBlocks.push(block);
+      }
+    }
+
+    return uniqueBlocks.join('\n\n');
+  }
+
+  private _looksLikeCodeOutput(text: string): boolean {
+    const trimmed = text.trim();
+    return /^diff --git\s/m.test(trimmed) ||
+      /^@@\s+-\d+/m.test(trimmed) ||
+      /^[+-]\s*</m.test(trimmed);
   }
 
   private _parseMarkdownToTemplate(text: string) {

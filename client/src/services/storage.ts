@@ -12,6 +12,7 @@ const RESPONSE_STATE_KEY = 'zingit_response_state';
 export interface ResponseState {
   open: boolean;
   content: string;
+  diagnostics?: string[];
   error: string;
   screenshotCount: number;
 }

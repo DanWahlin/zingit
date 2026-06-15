@@ -292,7 +292,15 @@ describe('CoreProviderAdapter session image handling', () => {
             if (capturedOnEvent) {
               capturedOnEvent({ id: '0', contextId: config.contextId, type: 'thinking', content: 'Starting a new turn...', timestamp: Date.now() });
               capturedOnEvent({ id: '1', contextId: config.contextId, type: 'output', content: 'Working...', timestamp: Date.now() });
-              capturedOnEvent({ id: '1b', contextId: config.contextId, type: 'command_output', content: 'raw grep output', timestamp: Date.now() });
+              capturedOnEvent({ id: '1a', contextId: config.contextId, type: 'output', content: '\n\nWorking...', timestamp: Date.now() });
+              capturedOnEvent({ id: '1b', contextId: config.contextId, type: 'output', content: 'Working...Found the file.', timestamp: Date.now() });
+              capturedOnEvent({ id: '1c', contextId: config.contextId, type: 'output', content: 'Working...Found the file.', timestamp: Date.now() });
+              capturedOnEvent({ id: '1c-build', contextId: config.contextId, type: 'output', content: 'vite v7.3.5 building client environment for production...', timestamp: Date.now() });
+              capturedOnEvent({ id: '1d', contextId: config.contextId, type: 'output', content: 'diff --git a/client/index.html b/client/index.html\n@@ -1 +1 @@\n-ZingIt\n+ThrowIt', timestamp: Date.now() });
+              capturedOnEvent({ id: '1d-prose', contextId: config.contextId, type: 'output', content: 'I fixed the error handling copy.', timestamp: Date.now() });
+              capturedOnEvent({ id: '1e', contextId: config.contextId, type: 'command_output', content: 'raw grep output', timestamp: Date.now() });
+              capturedOnEvent({ id: '1f', contextId: config.contextId, type: 'command_output', content: 'Warning: bundle has mixed exports', timestamp: Date.now() });
+              capturedOnEvent({ id: '1g', contextId: config.contextId, type: 'test_result', content: '1 test failed', timestamp: Date.now() });
               capturedOnEvent({ id: '2', contextId: config.contextId, type: 'complete', content: 'Done', timestamp: Date.now() });
             }
             return { status: 'complete' as const };
@@ -314,10 +322,21 @@ describe('CoreProviderAdapter session image handling', () => {
     // Should have forwarded events as WS messages
     const messages = wsSent.map(s => JSON.parse(s));
     const delta = messages.find((m: any) => m.type === 'delta');
+    const deltas = messages.filter((m: any) => m.type === 'delta');
     assert.ok(delta, 'should have a delta message');
     assert.equal(delta.content, 'Working...');
+    assert.deepEqual(deltas.map((m: any) => m.content), ['Working...', 'Found the file.', 'I fixed the error handling copy.']);
     assert.equal(messages.some((m: any) => m.content === 'Starting a new turn...'), false);
     assert.equal(messages.some((m: any) => m.content === 'raw grep output'), false);
+    assert.equal(messages.some((m: any) => m.content === 'vite v7.3.5 building client environment for production...'), false);
+    assert.deepEqual(
+      messages.filter((m: any) => m.type === 'diagnostic').map((m: any) => [m.level, m.content]),
+      [
+        ['info', 'diff --git a/client/index.html b/client/index.html\n@@ -1 +1 @@\n-ZingIt\n+ThrowIt'],
+        ['warning', 'Warning: bundle has mixed exports'],
+        ['error', '1 test failed'],
+      ],
+    );
 
     const idle = messages.find((m: any) => m.type === 'idle');
     assert.ok(idle, 'should have an idle message');

@@ -63,6 +63,7 @@ export type WSMessageType =
   | 'processing'
   | 'response'
   | 'delta'
+  | 'diagnostic'
   | 'tool_start'
   | 'tool_end'
   | 'idle'
@@ -92,6 +93,7 @@ export interface WSMessage {
   type: WSMessageType;
   content?: string;
   replace?: boolean;
+  level?: 'info' | 'warning' | 'error';
   message?: string;
   tool?: string;
   agent?: string;
