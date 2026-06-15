@@ -34,7 +34,8 @@
     "test": "npm run test -w client",
     "test:watch": "npm run test:watch -w client",
     "test:ui": "npm run test:ui -w client",
-    "release": "commit-and-tag-version && npm run build && npm publish --access public"
+    "release": "commit-and-tag-version && npm run build && npm publish --access public",
+    "smoke:published": "node scripts/smoke-published-package.js"
   },
   "keywords": [
     "ui",

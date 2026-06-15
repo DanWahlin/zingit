@@ -39,6 +39,9 @@ jobs:
       - name: Publish to npm
         run: npm publish --provenance --access public
 
+      - name: Smoke test published package
+        run: npm run smoke:published
+
       - name: Configure Git
         run: |
           git config --global user.name "GitHub Actions"
