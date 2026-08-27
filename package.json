@@ -74,6 +74,7 @@
     "concurrently": "^10.0.5"
   },
   "overrides": {
+    "@github/copilot": "1.0.80",
     "minimatch": "^10.2.1"
   }
 }
