@@ -37,7 +37,27 @@ jobs:
         run: npm run build
 
       - name: Publish to npm
-        run: npm publish --provenance --access public
+        run: |
+          PACKAGE_SPEC=$(node -p "const pkg = require('./package.json'); pkg.name + '@' + pkg.version")
+          if npm view "$PACKAGE_SPEC" version >/dev/null 2>&1; then
+            echo "$PACKAGE_SPEC is already published; skipping publish."
+          else
+            npm publish --provenance --access public
+          fi
+
+      - name: Wait for npm registry
+        run: |
+          PACKAGE_SPEC=$(node -p "const pkg = require('./package.json'); pkg.name + '@' + pkg.version")
+          for attempt in {1..12}; do
+            if npm view "$PACKAGE_SPEC" version >/dev/null 2>&1; then
+              echo "$PACKAGE_SPEC is available from npm."
+              exit 0
+            fi
+            echo "Waiting for $PACKAGE_SPEC to become available (attempt $attempt/12)..."
+            sleep 10
+          done
+          echo "$PACKAGE_SPEC was not available after 120 seconds."
+          exit 1
 
       - name: Smoke test published package
         run: npm run smoke:published
