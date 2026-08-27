@@ -95,6 +95,7 @@ async function main() {
       npm_config_yes: 'true',
     },
     stdio: ['ignore', 'pipe', 'pipe'],
+    detached: process.platform !== 'win32',
   });
 
   let output = '';
@@ -116,8 +117,22 @@ async function main() {
     ]);
     console.log(`Published package smoke test passed for ${packageSpec}.`);
   } finally {
-    child.kill('SIGTERM');
-    await rm(projectDir, { recursive: true, force: true });
+    try {
+      if (process.platform !== 'win32' && child.pid) {
+        process.kill(-child.pid, 'SIGTERM');
+      } else {
+        child.kill('SIGTERM');
+      }
+    } catch (err) {
+      if (err.code !== 'ESRCH') {
+        throw err;
+      }
+    } finally {
+      child.stdout.destroy();
+      child.stderr.destroy();
+      child.unref();
+      await rm(projectDir, { recursive: true, force: true });
+    }
   }
 }
 
