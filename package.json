@@ -60,20 +60,21 @@
   },
   "homepage": "https://github.com/danwahlin/zingit#readme",
   "dependencies": {
-    "@anthropic-ai/claude-agent-sdk": "^0.3.177",
-    "@codewithdan/agent-sdk-core": "^0.6.2",
-    "@github/copilot-sdk": "1.0.1",
-    "@openai/codex-sdk": "^0.139.0",
+    "@anthropic-ai/claude-agent-sdk": "^0.3.247",
+    "@codewithdan/agent-sdk-core": "^0.7.0",
+    "@github/copilot-sdk": "^1.0.11",
+    "@openai/codex-sdk": "^0.150.1",
     "diff": "^9.0.0",
-    "uuid": "^14.0.0",
-    "ws": "^8.21.0",
+    "uuid": "^14.0.2",
+    "ws": "^8.21.3",
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "commit-and-tag-version": "^12.7.3",
-    "concurrently": "^10.0.3"
+    "commit-and-tag-version": "^13.1.2",
+    "concurrently": "^10.0.5"
   },
   "overrides": {
+    "@github/copilot": "1.0.80",
     "minimatch": "^10.2.1"
   }
 }
